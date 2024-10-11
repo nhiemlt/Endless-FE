@@ -39,67 +39,7 @@ const routes = [
   {
     path: '/app/dashboard',
     icon: <Squares2X2Icon className={iconClasses} />,
-    name: 'Bảng điều khiển',
-  },
-  {
-    path: '/app/transactions', // url
-    icon: <BanknotesIcon className={iconClasses} />, // icon component
-    name: 'Giao dịch', // name that appear in Sidebar
-  },
-  {
-    path: '/app/entry', // url
-    icon: <CalendarDaysIcon className={iconClasses} />, // icon component
-    name: 'Nhập Hàng', // name that appear in Sidebar
-  },
-  {
-    path: '/app/voucher', // url
-    icon: <TicketIcon className={iconClasses} />, // icon component
-    name: 'Voucher', // name that appear in Sidebar
-  },
-  {
-    path: '/app/promotion', // url
-    icon: <BoltIcon className={iconClasses} />, // icon component
-    name: 'Khuyến Mãi', // name that appear in Sidebar
-  },
-  {
-    path: '/app/notification', // url
-    icon: <BellAlertIcon className={iconClasses} />, // icon component
-    name: 'Thông Báo', // name that appear in Sidebar
-  },
-  {
-    path: '', //no url needed as this has submenu
-    icon: <UserIcon className={`${iconClasses} inline`} />, // icon component
-    name: 'Người dùng', // name that appear in Sidebar
-    submenu: [
-      {
-        path: '/app/user', // url
-        icon: <UserCircleIcon className={iconClasses} />, // icon component
-        name: 'Tài khoản', // name that appear in Sidebar
-      },
-      {
-        path: '/app/role', // url
-        icon: <KeyIcon className={iconClasses} />, // icon component
-        name: 'Vai trò', // name that appear in Sidebar
-      },
-    ]
-  },
-  {
-    path: '', //no url needed as this has submenu
-    icon: <RectangleStackIcon className={`${iconClasses} inline`} />, // icon component
-    name: 'Danh mục và Thương hiệu', // name that appear in Sidebar
-    submenu: [
-
-      {
-        path: '/app/category', // url
-        icon: <ListBulletIcon className={iconClasses} />, // icon component
-        name: 'Danh mục', // name that appear in Sidebar
-      },
-      {
-        path: '/app/brand', // url
-        icon: <BuildingStorefrontIcon className={iconClasses} />, // icon component
-        name: 'Thương hiệu', // name that appear in Sidebar
-      },
-    ]
+    name: 'BẢNG ĐIỀU KHIỂN',
   },
   {
     path: '', //no url needed as this has submenu
@@ -130,6 +70,24 @@ const routes = [
   },
   {
     path: '', //no url needed as this has submenu
+    icon: <RectangleStackIcon className={`${iconClasses} inline`} />, // icon component
+    name: 'Danh mục và Thương hiệu', // name that appear in Sidebar
+    submenu: [
+
+      {
+        path: '/app/category', // url
+        icon: <ListBulletIcon className={iconClasses} />, // icon component
+        name: 'Danh mục', // name that appear in Sidebar
+      },
+      {
+        path: '/app/brand', // url
+        icon: <BuildingStorefrontIcon className={iconClasses} />, // icon component
+        name: 'Thương hiệu', // name that appear in Sidebar
+      },
+    ]
+  },
+  {
+    path: '', //no url needed as this has submenu
     icon: <ChartBarIcon className={`${iconClasses} inline`} />, // icon component
     name: 'Thống kê', // name that appear in Sidebar
     submenu: [
@@ -154,6 +112,48 @@ const routes = [
         name: 'Đánh giá', // name that appear in Sidebar
       },
     ]
+  },
+  {
+    path: '', //no url needed as this has submenu
+    icon: <UserIcon className={`${iconClasses} inline`} />, // icon component
+    name: 'Người dùng', // name that appear in Sidebar
+    submenu: [
+      {
+        path: '/app/user', // url
+        icon: <UserCircleIcon className={iconClasses} />, // icon component
+        name: 'Tài khoản', // name that appear in Sidebar
+      },
+      {
+        path: '/app/role', // url
+        icon: <KeyIcon className={iconClasses} />, // icon component
+        name: 'Vai trò', // name that appear in Sidebar
+      },
+    ]
+  },
+  {
+    path: '/app/transactions', // url
+    icon: <BanknotesIcon className={iconClasses} />, // icon component
+    name: 'Giao dịch', // name that appear in Sidebar
+  },
+  {
+    path: '/app/entry', // url
+    icon: <CalendarDaysIcon className={iconClasses} />, // icon component
+    name: 'Nhập Hàng', // name that appear in Sidebar
+  },
+  {
+    path: '/app/voucher', // url
+    icon: <TicketIcon className={iconClasses} />, // icon component
+    name: 'Voucher', // name that appear in Sidebar
+  },
+  {
+    path: '/app/promotion', // url
+    icon: <BoltIcon className={iconClasses} />, // icon component
+    name: 'Khuyến Mãi', // name that appear in Sidebar
+  },
+  {
+    path: '/app/notification', // url
+    icon: <BellAlertIcon className={iconClasses} />, // icon component
+    name: 'Thông Báo', // name that appear in Sidebar
   },
 ]
 
