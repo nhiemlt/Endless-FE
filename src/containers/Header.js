@@ -92,19 +92,19 @@ function Header(){
                 <div className="dropdown dropdown-end ml-4">
                     <label tabIndex={0} className="btn btn-ghost btn-circle avatar">
                         <div className="w-10 rounded-full">
-                        <img src="https://placeimg.com/80/80/people" alt="profile" />
+                        <img src="https://scontent.fsgn10-2.fna.fbcdn.net/v/t39.30808-1/438231080_1679997752760769_814690727467529669_n.jpg?stp=dst-jpg_s200x200&_nc_cat=106&ccb=1-7&_nc_sid=50d2ac&_nc_ohc=B-N4CJiVMHMQ7kNvgHVbQQc&_nc_ht=scontent.fsgn10-2.fna&_nc_gid=AVzFsVWqXvMxmrvZQ-LPaS6&oh=00_AYBg1wL1O514-uk5iNVjR1PPh1jtAQlGXG0ApVgT8Dhbqg&oe=670E7608" alt="profile" />
                         </div>
                     </label>
                     <ul tabIndex={0} className="menu menu-compact dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box w-52">
                         <li className="justify-between">
                         <Link to={'/app/settings-profile'}>
-                            Profile Settings
-                            <span className="badge">New</span>
+                            Thông tin cá nhân
+                            {/* <span className="badge">New</span> */}
                             </Link>
                         </li>
-                        <li className=''><Link to={'/app/settings-billing'}>Bill History</Link></li>
+                        <li className=''><Link to={'/app/settings-billing'}>Thay đổi mật khẩu</Link></li>
                         <div className="divider mt-0 mb-0"></div>
-                        <li><a onClick={logoutUser}>Logout</a></li>
+                        <li><a onClick={logoutUser}>Đăng xuất</a></li>
                     </ul>
                 </div>
             </div>
