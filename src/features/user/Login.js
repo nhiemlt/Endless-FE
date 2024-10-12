@@ -42,8 +42,8 @@ function Login(){
                 <div className=''>
                         <LandingIntro />
                 </div>
-                <div className='py-24 px-10'>
-                    <h2 className='text-2xl font-semibold mb-2 text-center'>Đăng nhập</h2>
+                <div className='py-24 px-10 mt-9'>
+                    <h2 className='text-3xl font-bold mb-2 mt-34 text-center'>Đăng nhập</h2>
                     <form onSubmit={(e) => submitForm(e)}>
 
                         <div className="mb-4">
