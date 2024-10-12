@@ -19,8 +19,8 @@ function Login(){
         e.preventDefault()
         setErrorMessage("")
 
-        if(loginObj.emailId.trim() === "")return setErrorMessage("Email Id is required! (use any value)")
-        if(loginObj.password.trim() === "")return setErrorMessage("Password is required! (use any value)")
+        if(loginObj.emailId.trim() === "")return setErrorMessage("Email không được bỏ trống!")
+        if(loginObj.password.trim() === "")return setErrorMessage("Mật khẩu không được bỏ trống!")
         else{
             setLoading(true)
             // Call API to check user credentials and save token in localstorage
@@ -43,7 +43,7 @@ function Login(){
                         <LandingIntro />
                 </div>
                 <div className='py-24 px-10'>
-                    <h2 className='text-2xl font-semibold mb-2 text-center'>Login</h2>
+                    <h2 className='text-2xl font-semibold mb-2 text-center'>Đăng nhập</h2>
                     <form onSubmit={(e) => submitForm(e)}>
 
                         <div className="mb-4">
@@ -54,13 +54,13 @@ function Login(){
 
                         </div>
 
-                        <div className='text-right text-primary'><Link to="/forgot-password"><span className="text-sm  inline-block  hover:text-primary hover:underline hover:cursor-pointer transition duration-200">Forgot Password?</span></Link>
+                        <div className='text-right text-primary'><Link to="/forgot-password"><span className="text-sm  inline-block  hover:text-primary hover:underline hover:cursor-pointer transition duration-200">Quên mật khẩu?</span></Link>
                         </div>
 
                         <ErrorText styleClass="mt-8">{errorMessage}</ErrorText>
-                        <button type="submit" className={"btn mt-2 w-full btn-primary" + (loading ? " loading" : "")}>Login</button>
+                        <button type="submit" className={"btn mt-2 w-full btn-primary" + (loading ? " loading" : "")}>Đăng nhập</button>
 
-                        <div className='text-center mt-4'>Don't have an account yet? <Link to="/register"><span className="  inline-block  hover:text-primary hover:underline hover:cursor-pointer transition duration-200">Register</span></Link></div>
+                        <div className='text-center mt-4'>Chưa có tài khoản? <Link to="/register"><span className="  inline-block  hover:text-primary hover:underline hover:cursor-pointer transition duration-200">Đăng ký</span></Link></div>
                     </form>
                 </div>
             </div>
