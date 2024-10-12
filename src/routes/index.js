@@ -28,7 +28,7 @@ const ProductVersion = lazy(() => import('../pages/protected/ProductVersion'))
 const Promotion = lazy(() => import('../pages/protected/Promotion'))
 const Rating = lazy(() => import('../pages/protected/Rating'))
 const Role = lazy(() => import('../pages/protected/Role'))
-const StatisticalInvendory = lazy(() => import('../pages/protected/StatisticalInvendory'))
+const StatisticalInventory = lazy(() => import('../pages/protected/StatisticalInventory'))
 const StatisticalProduct = lazy(() => import('../pages/protected/StatisticalProduct'))
 const StatisticalRevenue = lazy(() => import('../pages/protected/StatisticalRevenue'))
 const Voucher = lazy(() => import('../pages/protected/Voucher'))
@@ -79,8 +79,8 @@ const routes = [
     component: Role, // view rendered
   },
   {
-    path: '/statistical-invendory', // the url
-    component: StatisticalInvendory, // view rendered
+    path: '/statistical-inventory', // the url
+    component: StatisticalInventory, // view rendered
   },
   {
     path: '/statistical-product', // the url

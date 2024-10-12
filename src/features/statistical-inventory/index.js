@@ -1,7 +1,7 @@
 import {useState, useRef} from 'react'
 import {Link} from 'react-router-dom'
 
-function StatisticalInvendory(){
+function StatisticalInventory(){
 
 
     return(
@@ -11,7 +11,7 @@ function StatisticalInvendory(){
       src="https://img.daisyui.com/images/stock/photo-1635805737707-575885ab0820.webp"
       className="max-w-sm rounded-lg shadow-2xl" />
     <div>
-      <h1 className="text-5xl font-bold">statistical-invendory</h1>
+      <h1 className="text-5xl font-bold">statistical-inventory</h1>
       <p className="py-6">
         Hello world!!!
       </p>
@@ -22,4 +22,4 @@ function StatisticalInvendory(){
     )
 }
 
-export default StatisticalInvendory
+export default StatisticalInventory
