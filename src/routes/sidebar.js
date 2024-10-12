@@ -47,7 +47,7 @@ const routes = [
     name: 'Sản phẩm', // name that appear in Sidebar
     submenu: [
       {
-        path: '/app/product-version', // url
+        path: '/app/product', // url
         icon: <InboxIcon className={submenuIconClasses} />, // icon component
         name: 'Sản phẩm', // name that appear in Sidebar
       },

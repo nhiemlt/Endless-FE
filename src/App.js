@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 import { themeChange } from 'theme-change'
 import checkAuth from './app/auth';
 import initializeApp from './app/init';
+import usePageTitle from './hooks/usePageTitle';
 
 // Importing pages
 const Layout = lazy(() => import('./containers/Layout'))
@@ -22,6 +23,8 @@ const token = checkAuth()
 
 
 function App() {
+  
+
 
   useEffect(() => {
     // 👆 daisy UI themes initialization
@@ -47,6 +50,8 @@ function App() {
       </Router>
     </>
   )
+  
+
 }
 
 export default App

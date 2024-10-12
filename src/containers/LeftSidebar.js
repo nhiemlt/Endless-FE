@@ -42,12 +42,16 @@ function LeftSidebar(){
                                                 aria-hidden="true"></span>) : null
                                             }
                                     </NavLink>)
+                                    
                                 }
                                 
                             </li>
                         )
-                    })
+                    })  
                 }
+                <li className="mt-4">
+                    <img className="w-50" src="/robo-welcome.png" alt="Description of the image" />
+                </li>
 
             </ul>
         </div>
