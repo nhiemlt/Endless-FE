@@ -1,7 +1,7 @@
 import {useState, useRef} from 'react'
 import {Link} from 'react-router-dom'
 
-function Brand(){
+function Notification(){
 
 
     return(
