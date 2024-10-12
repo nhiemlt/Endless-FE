@@ -17,9 +17,14 @@ const ProfileSettings = lazy(() => import('../pages/protected/ProfileSettings'))
 const GettingStarted = lazy(() => import('../pages/GettingStarted'))
 const DocFeatures = lazy(() => import('../pages/DocFeatures'))
 const DocComponents = lazy(() => import('../pages/DocComponents'))
+const Attribute = lazy(() => import('../pages/protected/Attribute'))
 
 
 const routes = [
+  {
+    path: '/attribute', // the url
+    component: Attribute, // view rendered
+  },
   {
     path: '/dashboard', // the url
     component: Dashboard, // view rendered

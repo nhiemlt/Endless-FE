@@ -7,7 +7,7 @@ function InternalPage(){
     const dispatch = useDispatch()
 
     useEffect(() => {
-        dispatch(setPageTitle({ title : "Calendar"}))
+        dispatch(setPageTitle({ title : "Lịch"}))
       }, [])
 
 

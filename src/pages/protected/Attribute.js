@@ -1,18 +1,18 @@
 import { useEffect } from 'react'
 import { useDispatch } from 'react-redux'
 import { setPageTitle } from '../../features/common/headerSlice'
-import Billing from '../../features/settings/billing'
+import Attribute from '../../features/attribute/index'
 
 function InternalPage(){
     const dispatch = useDispatch()
 
     useEffect(() => {
-        dispatch(setPageTitle({ title : "Hóa đơn"}))
+        dispatch(setPageTitle({ title : "Atribute"}))
       }, [])
 
 
     return(
-        <Billing />
+        <Attribute />
     )
 }
 
