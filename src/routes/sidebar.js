@@ -30,6 +30,9 @@ import CurrencyDollarIcon from '@heroicons/react/24/outline/CurrencyDollarIcon'
 import ArchiveBoxIcon from '@heroicons/react/24/outline/ArchiveBoxIcon'
 import StarIcon from '@heroicons/react/24/outline/StarIcon'
 import BanknotesIcon from '@heroicons/react/24/outline/BanknotesIcon'
+import UserGroupIcon from '@heroicons/react/24/outline/UserGroupIcon'
+import UsersIcon from '@heroicons/react/24/outline/UsersIcon'
+
 
 const iconClasses = `h-6 w-6`
 const submenuIconClasses = `h-5 w-5`
@@ -149,6 +152,16 @@ const routes = [
     path: '/app/promotion', // url
     icon: <BoltIcon className={iconClasses} />, // icon component
     name: 'Khuyến Mãi', // name that appear in Sidebar
+  },
+  {
+    path: '/app/employee', // url
+    icon: <UsersIcon className={iconClasses} />, // icon component
+    name: 'Nhân viên', // name that appear in Sidebar
+  },
+  {
+    path: '/app/customer', // url
+    icon: <UserGroupIcon className={iconClasses} />, // icon component
+    name: 'Khách hàng', // name that appear in Sidebar
   },
   {
     path: '/app/notification', // url

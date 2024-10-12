@@ -32,6 +32,8 @@ const StatisticalInventory = lazy(() => import('../pages/protected/StatisticalIn
 const StatisticalProduct = lazy(() => import('../pages/protected/StatisticalProduct'))
 const StatisticalRevenue = lazy(() => import('../pages/protected/StatisticalRevenue'))
 const Voucher = lazy(() => import('../pages/protected/Voucher'))
+const Customer = lazy(() => import('../pages/protected/Customer'))
+const Employee = lazy(() => import('../pages/protected/Employee'))
 
 const routes = [
   {
@@ -93,6 +95,14 @@ const routes = [
   {
     path: '/voucher', // the url
     component: Voucher, // view rendered
+  },
+  {
+    path: '/customer', // the url
+    component: Customer, // view rendered
+  },
+  {
+    path: '/employee', // the url
+    component: Employee, // view rendered
   },
   {
     path: '/dashboard', // the url
