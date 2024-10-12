@@ -63,18 +63,19 @@ function Register(){
                     <div className=''>
                         <LandingIntro />
                     </div>
-                    <div className='py-24 px-10'>
-                        <h2 className='text-3xl font-bold mb-2 text-center'>Đăng ký</h2>
+                    <div className='py-2 px-10'>
+                    <h1 className='text-2xl text-center font-bold '><img src="logo-text-dark.png" className="w-20 inline-block mr-2" alt="endless-logo" /></h1>
+                        <h2 className='text-3xl font-bold text-center'>Đăng ký</h2>
                         <form onSubmit={(e) => submitForm(e)}>
 
-                            <div className="mb-4">
-                                <InputText defaultValue={registerObj.username} updateType="username" containerStyle="mt-4" labelTitle="Tên đăng nhập" updateFormValue={updateFormValue} />
+                            <div className="mb-2">
+                                <InputText defaultValue={registerObj.username} updateType="username" containerStyle="mt-2" labelTitle="Tên đăng nhập" updateFormValue={updateFormValue} />
 
-                                <InputText defaultValue={registerObj.fullName} updateType="fullName" containerStyle="mt-4" labelTitle="Họ và tên" updateFormValue={updateFormValue} />
+                                <InputText defaultValue={registerObj.fullName} updateType="fullName" containerStyle="mt-2" labelTitle="Họ và tên" updateFormValue={updateFormValue} />
 
-                                <InputText defaultValue={registerObj.emailId} updateType="emailId" containerStyle="mt-4" labelTitle="Email" updateFormValue={updateFormValue} />
+                                <InputText defaultValue={registerObj.emailId} updateType="emailId" containerStyle="mt-2" labelTitle="Email" updateFormValue={updateFormValue} />
 
-                                <InputText defaultValue={registerObj.password} type="password" updateType="password" containerStyle="mt-4" labelTitle="Mật khẩu" updateFormValue={updateFormValue} />
+                                <InputText defaultValue={registerObj.password} type="password" updateType="password" containerStyle="mt-2" labelTitle="Mật khẩu" updateFormValue={updateFormValue} />
 
                                 <InputText defaultValue={registerObj.confirmPassword} type="password" updateType="confirmPassword" containerStyle="mt-4" labelTitle="Nhập lại mật khẩu" updateFormValue={updateFormValue} />
                             </div>
