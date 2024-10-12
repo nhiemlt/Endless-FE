@@ -63,7 +63,7 @@ function Register(){
                     <div className=''>
                         <LandingIntro />
                     </div>
-                    <div className='py-24 px-10'>
+                    <div className='py-5 px-10'>
                         <h2 className='text-3xl font-bold mb-2 text-center'>Đăng ký</h2>
                         <form onSubmit={(e) => submitForm(e)}>
 
