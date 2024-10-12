@@ -4,22 +4,22 @@ const setupAxiosInterceptors = () => {
   // Cấu hình interceptor để hiển thị/ẩn chỉ báo tải
   axios.interceptors.request.use(
     (config) => {
-      document.body.classList.add('loading-indicator');
+      document.body.classList.add('loading-spinner loading-lg');
       return config;
     },
     (error) => {
-      document.body.classList.remove('loading-indicator');
+      document.body.classList.remove('loading-spinner loading-lg');
       return Promise.reject(error);
     }
   );
 
   axios.interceptors.response.use(
     (response) => {
-      document.body.classList.remove('loading-indicator');
+      document.body.classList.remove('loading-spinner loading-lg');
       return response;
     },
     (error) => {
-      document.body.classList.remove('loading-indicator');
+      document.body.classList.remove('loading-spinner loading-lg');
       return Promise.reject(error);
     }
   );

@@ -41,8 +41,9 @@ function ForgotPassword(){
                 <div className=''>
                         <LandingIntro />
                 </div>
-                <div className='py-24 px-10 mt-9'>
-                    <h2 className='text-3xl font-bold mt-9 mb-2 text-center'>Quên mật khẩu</h2>
+                <div className='py-24 px-10'>
+                <h1 className='text-2xl text-center font-bold '><img src="logo-text-dark.png" className="w-32 inline-block mr-2" alt="endless-logo" /></h1>
+                    <h2 className='text-3xl font-bold mt-4 mb-2 text-center'>Quên mật khẩu</h2>
 
                     {
                         linkSent && 
