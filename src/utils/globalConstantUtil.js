@@ -1,5 +1,5 @@
-
 module.exports = Object.freeze({
+    API_BASE_URL: "http://localhost:8080",
     MODAL_BODY_TYPES : {
         USER_DETAIL : "USER_DETAIL",
         LEAD_ADD_NEW : "LEAD_ADD_NEW",
