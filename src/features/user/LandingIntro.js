@@ -10,7 +10,6 @@ function LandingIntro(){
               <div className="max-w-md">
                 <div className="text-center"><img src="./intro.gif" alt="Endless Admin Template" className="w-70 inline-block"></img></div>
               </div>
-
             </div>
           </div>
     )

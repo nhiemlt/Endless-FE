@@ -10,34 +10,13 @@
       content="Endless - Điểm đến của bạn cho các thiết bị công nghệ mới nhất và sản phẩm điện tử."
     />
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
-    <!--
-      manifest.json cung cấp metadata sử dụng khi ứng dụng web của bạn được cài đặt trên
-      thiết bị di động hoặc máy tính để bàn của người dùng.
-    -->
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <!--
-      Lưu ý việc sử dụng %PUBLIC_URL% trong các thẻ trên.
-      Nó sẽ được thay thế bằng URL của thư mục `public` trong quá trình build.
-      Chỉ các tệp bên trong thư mục `public` mới có thể được tham chiếu từ HTML.
-
-      Không giống như "/favicon.ico" hoặc "favicon.ico", "%PUBLIC_URL%/favicon.ico" sẽ
-      hoạt động chính xác cả khi định tuyến phía client và một URL public không phải gốc.
-    -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script> <!-- Đã thay đổi -->
     <title>Endless</title>
     <meta name="description" content="Mua sắm thiết bị công nghệ hàng đầu tại Endless. Khám phá sản phẩm điện tử chất lượng cao, từ điện thoại, laptop đến phụ kiện công nghệ, với giá tốt nhất.">
   </head>
   <body>
     <noscript>Bạn cần bật JavaScript để sử dụng trang web này.</noscript>
     <div id="root"></div>
-    <!--
-      File HTML này là một template.
-      Nếu bạn mở trực tiếp trong trình duyệt, bạn sẽ thấy một trang trống.
-
-      Bạn có thể thêm webfonts, thẻ meta, hoặc phân tích trang web vào file này.
-      Bước build sẽ đặt các tập tin đã đóng gói vào thẻ <body>.
-
-      Để bắt đầu phát triển, chạy `npm start` hoặc `yarn start`.
-      Để tạo một gói sản phẩm hoàn chỉnh, sử dụng `npm run build` hoặc `yarn build`.
-    -->
   </body>
 </html>
