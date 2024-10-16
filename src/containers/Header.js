@@ -46,7 +46,7 @@ function Header(){
         deleteCookie("token");
     
         // Điều hướng về trang chủ (hoặc trang đăng nhập)
-        window.location.href = '/';
+        window.location.href = '/login';
     }
     
 
