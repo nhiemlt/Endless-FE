@@ -27,7 +27,7 @@ const setupAxiosInterceptors = () => {
 
 const checkAuth = () => {
   const TOKEN = localStorage.getItem("token");
-  const PUBLIC_ROUTES = ["/login", "/forgot-password", "/register", "/documentation"];
+  const PUBLIC_ROUTES = ["/login", "/forgot-password", "/register", "/logout"];
   
   // Kiểm tra xem đường dẫn hiện tại có phải là trang công khai không
   const isPublicPage = PUBLIC_ROUTES.some(route => window.location.pathname.includes(route));

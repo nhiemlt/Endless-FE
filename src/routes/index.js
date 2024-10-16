@@ -163,7 +163,7 @@ const routes = [
   {
     path: '/blank',
     component: Blank,
-  },
+  }
 ]
 
 export default routes

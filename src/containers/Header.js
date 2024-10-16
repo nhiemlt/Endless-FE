@@ -36,10 +36,19 @@ function Header(){
     }
 
 
-    function logoutUser(){
-        localStorage.clear();
-        window.location.href = '/'
+    function logoutUser() {
+        // Hàm xóa cookie bằng tên
+        const deleteCookie = (name) => {
+            document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+        };
+    
+        // Xóa token khỏi cookies
+        deleteCookie("token");
+    
+        // Điều hướng về trang chủ (hoặc trang đăng nhập)
+        window.location.href = '/';
     }
+    
 
     return(
         // navbar fixed  flex-none justify-between bg-base-300  z-10 shadow-md
