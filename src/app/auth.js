@@ -1,5 +1,11 @@
 import axios from "axios";
 
+const getCookie = (name) => {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+};
+
 const setupAxiosInterceptors = () => {
   // Cấu hình interceptor để hiển thị/ẩn chỉ báo tải
   axios.interceptors.request.use(
@@ -26,7 +32,7 @@ const setupAxiosInterceptors = () => {
 };
 
 const checkAuth = () => {
-  const TOKEN = localStorage.getItem("token");
+  const TOKEN = getCookie("token"); // Lấy token từ cookie
   const PUBLIC_ROUTES = ["/login", "/forgot-password", "/register", "/logout"];
   
   // Kiểm tra xem đường dẫn hiện tại có phải là trang công khai không
