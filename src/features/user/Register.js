@@ -1,87 +1,130 @@
-import {useState} from 'react'
-import {Link} from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import LandingIntro from './LandingIntro'
-import ErrorText from  '../../components/Typography/ErrorText'
 import InputText from '../../components/Input/InputText'
+import axios from 'axios'
+import constants from '../../utils/globalConstantUtil'
 
-function Register(){
-
+function Register() {
     const INITIAL_REGISTER_OBJ = {
         username: "",
-        fullName: "",
         emailId: "",
         password: "",
         confirmPassword: ""
     }
 
     const [loading, setLoading] = useState(false)
-    const [errorMessage, setErrorMessage] = useState("")
+    const [alert, setAlert] = useState({ type: "", message: "" })
     const [registerObj, setRegisterObj] = useState(INITIAL_REGISTER_OBJ)
+    const navigate = useNavigate()
 
-    const validateEmail = (email) => {
-        // Kiểm tra định dạng email
-        const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-        return regex.test(email)
-    }
-
-    const validatePasswordStrength = (password) => {
-        // Kiểm tra độ dài mật khẩu (ít nhất 6 ký tự)
-        return password.length >= 6
-    }
-
-    const submitForm = (e) =>{
+    const submitForm = async (e) => {
         e.preventDefault()
-        setErrorMessage("")
+        setAlert({ type: "", message: "" })
 
-        // Kiểm tra các trường nhập liệu
-        if (registerObj.username.trim() === "") return setErrorMessage("Tên đăng nhập là bắt buộc!")
-        if (registerObj.fullName.trim() === "") return setErrorMessage("Họ và tên là bắt buộc!")
-        if (registerObj.emailId.trim() === "") return setErrorMessage("Email là bắt buộc!")
-        if (!validateEmail(registerObj.emailId)) return setErrorMessage("Email không hợp lệ!")
-        if (registerObj.password.trim() === "") return setErrorMessage("Mật khẩu là bắt buộc!")
-        if (!validatePasswordStrength(registerObj.password)) return setErrorMessage("Mật khẩu phải có ít nhất 6 ký tự!")
-        if (registerObj.confirmPassword.trim() === "") return setErrorMessage("Vui lòng nhập lại mật khẩu!")
-        if (registerObj.password !== registerObj.confirmPassword) return setErrorMessage("Mật khẩu không khớp!")
+        // Kiểm tra tính hợp lệ của form bằng HTML5
+        if (!e.target.checkValidity()) {
+            return // Ngừng nếu form không hợp lệ
+        }
 
-        // Gọi API để đăng ký người dùng
         setLoading(true)
-        // Giả lập lưu token và chuyển hướng
-        localStorage.setItem("token", "DumyTokenHere")
-        setLoading(false)
-        window.location.href = '/app/welcome'
+
+        try {
+            const response = await axios.post(`${constants.API_BASE_URL}/register`, {
+                username: registerObj.username,
+                email: registerObj.emailId,
+                password: registerObj.password,
+            })
+
+            // Nếu đăng ký thành công
+            if (response.data.success) {
+                setAlert({ type: "success", message: "Đăng ký thành công! Vui lòng kiểm tra email để xác minh tài khoản." })
+                setRegisterObj(INITIAL_REGISTER_OBJ) // Xóa dữ liệu form sau khi đăng ký thành công
+                setTimeout(() => {
+                    setAlert({ type: "", message: "" })
+                    navigate('/login') // Chuyển hướng đến trang đăng nhập sau 3 giây
+                }, 3000)
+            }
+        } catch (error) {
+            if (error.response) {
+                setAlert({ type: "error", message: "Đã xảy ra lỗi trong quá trình đăng ký." })
+                console.log(error.response.message)
+            } else {
+                setAlert({ type: "error", message: "Không thể kết nối với máy chủ. Vui lòng thử lại sau." })
+            }
+        } finally {
+            setLoading(false)
+        }
     }
 
-    const updateFormValue = ({updateType, value}) => {
-        setErrorMessage("")
-        setRegisterObj({...registerObj, [updateType]: value})
+    const updateFormValue = ({ updateType, value }) => {
+        setAlert({ type: "", message: "" })
+        setRegisterObj({ ...registerObj, [updateType]: value })
     }
 
-    return(
+    return (
         <div className="min-h-screen bg-base-200 flex items-center">
             <div className="card mx-auto w-full max-w-5xl shadow-xl">
                 <div className="grid md:grid-cols-2 grid-cols-1 bg-base-100 rounded-xl">
-                    <div className=''>
+                    <div className="">
                         <LandingIntro />
                     </div>
-                    <div className='py-2 px-10'>
-                    <h1 className='text-2xl text-center font-bold '><img src="logo-text-dark.png" className="w-20 inline-block mr-2" alt="endless-logo" /></h1>
-                        <h2 className='text-3xl font-bold text-center'>Đăng ký</h2>
-                        <form onSubmit={(e) => submitForm(e)}>
+                    <div className="py-2 px-10">
+                        <h1 className="text-2xl text-center font-bold ">
+                            <img src="logo-text-dark.png" className="w-20 inline-block mr-2" alt="endless-logo" />
+                        </h1>
+                        <h2 className="text-3xl font-bold text-center">Đăng ký</h2>
 
-                            <div className="mb-2">
-                                <InputText defaultValue={registerObj.username} updateType="username" containerStyle="mt-2" labelTitle="Tên đăng nhập" updateFormValue={updateFormValue} />
-
-                                <InputText defaultValue={registerObj.fullName} updateType="fullName" containerStyle="mt-2" labelTitle="Họ và tên" updateFormValue={updateFormValue} />
-
-                                <InputText defaultValue={registerObj.emailId} updateType="emailId" containerStyle="mt-2" labelTitle="Email" updateFormValue={updateFormValue} />
-
-                                <InputText defaultValue={registerObj.password} type="password" updateType="password" containerStyle="mt-2" labelTitle="Mật khẩu" updateFormValue={updateFormValue} />
-
-                                <InputText defaultValue={registerObj.confirmPassword} type="password" updateType="confirmPassword" containerStyle="mt-4" labelTitle="Nhập lại mật khẩu" updateFormValue={updateFormValue} />
+                        {alert.message && (
+                            <div role="alert" className={`alert alert-${alert.type}`}>
+                                <span>{alert.message}</span>
                             </div>
+                        )}
 
-                            <ErrorText styleClass="mt-8">{errorMessage}</ErrorText>
-                            <button type="submit" className={"btn mt-2 w-full btn-primary" + (loading ? " loading" : "")}>Đăng ký</button>
+                        <form onSubmit={submitForm} noValidate>
+                            <InputText
+                                defaultValue={registerObj.username}
+                                updateType="username"
+                                containerStyle="mt-2"
+                                labelTitle="Tên đăng nhập"
+                                updateFormValue={updateFormValue}
+                                required
+                                minLength={5} // Đặt quy tắc cho tên đăng nhập
+                            />
+
+                            <InputText
+                                defaultValue={registerObj.emailId}
+                                updateType="emailId"
+                                containerStyle="mt-2"
+                                labelTitle="Email"
+                                updateFormValue={updateFormValue}
+                                type="email" // Sử dụng type email để kích hoạt kiểm tra HTML5
+                                required
+                            />
+
+                            <InputText
+                                defaultValue={registerObj.password}
+                                type="password"
+                                updateType="password"
+                                containerStyle="mt-2"
+                                labelTitle="Mật khẩu"
+                                updateFormValue={updateFormValue}
+                                required
+                                minLength={8} // Đặt quy tắc cho mật khẩu
+                                pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$" // Quy tắc mạnh cho mật khẩu
+                            />
+
+                            <InputText
+                                defaultValue={registerObj.confirmPassword}
+                                type="password"
+                                updateType="confirmPassword"
+                                containerStyle="mt-4"
+                                labelTitle="Nhập lại mật khẩu"
+                                updateFormValue={updateFormValue}
+                                required
+                            />
+
+                            <button type="submit" className={`btn mt-2 w-full btn-primary ${loading ? 'loading' : ''}`}>Đăng ký</button>
 
                             <div className='text-center mt-4'>Đã có tài khoản? <Link to="/login"><span className="inline-block hover:text-primary hover:underline hover:cursor-pointer transition duration-200">Đăng nhập</span></Link></div>
                         </form>
