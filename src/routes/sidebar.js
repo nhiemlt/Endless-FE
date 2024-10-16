@@ -122,9 +122,14 @@ const routes = [
     name: 'Người dùng', // name that appear in Sidebar
     submenu: [
       {
-        path: '/app/user', // url
-        icon: <UserCircleIcon className={iconClasses} />, // icon component
-        name: 'Tài khoản', // name that appear in Sidebar
+        path: '/app/employee', // url
+        icon: <UsersIcon className={iconClasses} />, // icon component
+        name: 'Nhân viên', // name that appear in Sidebar
+      },
+      {
+        path: '/app/customer', // url
+        icon: <UserGroupIcon className={iconClasses} />, // icon component
+        name: 'Khách hàng', // name that appear in Sidebar
       },
       {
         path: '/app/role', // url
@@ -152,16 +157,6 @@ const routes = [
     path: '/app/promotion', // url
     icon: <BoltIcon className={iconClasses} />, // icon component
     name: 'Khuyến Mãi', // name that appear in Sidebar
-  },
-  {
-    path: '/app/employee', // url
-    icon: <UsersIcon className={iconClasses} />, // icon component
-    name: 'Nhân viên', // name that appear in Sidebar
-  },
-  {
-    path: '/app/customer', // url
-    icon: <UserGroupIcon className={iconClasses} />, // icon component
-    name: 'Khách hàng', // name that appear in Sidebar
   },
   {
     path: '/app/notification', // url

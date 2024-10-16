@@ -13,7 +13,9 @@ const INITIAL_LEAD_OBJ = {
     email: ""
 }
 
-function AddLeadModalBody({ closeModal }) {
+
+function AddVoucherModalBody({closeModal}){
+
     const dispatch = useDispatch()
     const [loading, setLoading] = useState(false)
     const [errorMessage, setErrorMessage] = useState("")
@@ -103,4 +105,5 @@ function AddLeadModalBody({ closeModal }) {
     )
 }
 
-export default AddLeadModalBody
+export default AddVoucherModalBody
+
