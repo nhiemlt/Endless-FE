@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom'; // Import useNavigate
+import { Link, useNavigate } from 'react-router-dom';
 import LandingIntro from './LandingIntro';
 import InputText from '../../components/Input/InputText';
 import { getAuth, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
@@ -29,7 +29,7 @@ function Login() {
     const [loading, setLoading] = useState(false);
     const [alert, setAlert] = useState({ type: "", message: "" });
     const [loginObj, setLoginObj] = useState(INITIAL_LOGIN_OBJ);
-    const navigate = useNavigate(); // Khởi tạo navigate
+    const navigate = useNavigate();
 
     // Sử dụng auth sau khi Firebase đã được khởi tạo
     const auth = getAuth(app);
@@ -38,17 +38,14 @@ function Login() {
     useEffect(() => {
         const token = getCookie("token");
         if (token) {
-            // Gửi yêu cầu xác thực token
             fetch(`${constants.API_BASE_URL}/verify-auth-token?token=${token}`, {
                 method: "GET",
                 headers: { "Content-Type": "application/json" },
             })
                 .then(response => {
                     if (response.ok) {
-                        // Nếu token hợp lệ, chuyển đến trang welcome
                         navigate("/app/welcome");
                     } else {
-                        // Nếu token không hợp lệ, có thể xóa cookie
                         document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
                     }
                 })
@@ -96,11 +93,9 @@ function Login() {
             } else {
                 const token = data.token;
                 if (token) {
-                    // Lưu token vào cookie
                     document.cookie = `token=${token}; path=/;`;
-
                     setAlert({ type: "success", message: "Đăng nhập thành công!" });
-                    navigate("/app/welcome"); // Sử dụng navigate để chuyển trang
+                    navigate("/app/welcome");
                 } else {
                     setAlert({ type: "error", message: "Token không hợp lệ!" });
                 }
@@ -114,12 +109,10 @@ function Login() {
 
     const handleGoogleLogin = async () => {
         const provider = new GoogleAuthProvider();
-        setLoading(true);
         try {
             const result = await signInWithPopup(auth, provider);
             const user = result.user;
 
-            // Lấy thông tin từ Firebase user
             const googleLoginModel = {
                 googleId: user.uid,
                 email: user.email,
@@ -127,7 +120,6 @@ function Login() {
                 avatar: user.photoURL
             };
 
-            // Gửi thông tin này về backend
             const response = await fetch(`${constants.API_BASE_URL}/login/google`, {
                 method: "POST",
                 headers: {
@@ -140,16 +132,12 @@ function Login() {
             if (!response.ok) {
                 setAlert({ type: "error", message: data.error || "Đăng nhập bằng Google thất bại!" });
             } else {
-                // Lưu token vào cookie
                 document.cookie = `token=${data.token}; path=/;`;
-
                 setAlert({ type: "success", message: "Đăng nhập thành công!" });
-                navigate("/app/welcome"); // Sử dụng navigate để chuyển trang
+                navigate("/app/welcome");
             }
         } catch (error) {
             setAlert({ type: "error", message: error.message });
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -211,7 +199,11 @@ function Login() {
                                 </div>
                             </div>
 
-                            <button type="submit" className={`btn mt-2 w-full btn-primary`}>Đăng nhập</button>
+                            <button type="submit" className="btn mt-5 w-full btn-primary">
+                                <span className={loading ? 'loading loading-dots loading-lg' : ''}>
+                                    {!loading ? 'Đăng nhập' : ''}
+                                </span>
+                            </button>
 
                             <div className="mt-4 flex items-center justify-center">
                                 <div className="border-t border-gray-300 w-full"></div>

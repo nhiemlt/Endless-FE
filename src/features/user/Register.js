@@ -124,9 +124,14 @@ function Register() {
                                 required
                             />
 
-                            <button type="submit" className={`btn mt-2 w-full btn-primary ${loading ? 'loading' : ''}`}>Đăng ký</button>
+                            <button type="submit" className="btn mt-5 w-full btn-primary">
+                                <span className={loading ? 'loading loading-dots loading-lg' : ''}>
+                                    {!loading ? 'Đăng ký' : ''}
+                                </span>
+                            </button>
 
-                            <div className='text-center mt-4'>Đã có tài khoản? <Link to="/login"><span className="inline-block hover:text-primary hover:underline hover:cursor-pointer transition duration-200">Đăng nhập</span></Link></div>
+
+                            <div className='text-center mt-2'>Đã có tài khoản? <Link to="/login"><span className="inline-block hover:text-primary hover:underline hover:cursor-pointer transition duration-200">Đăng nhập</span></Link></div>
                         </form>
                     </div>
                 </div>

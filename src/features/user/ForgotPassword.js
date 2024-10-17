@@ -28,7 +28,7 @@ function ForgotPassword() {
         setLoading(true);
         try {
             // Gọi API để gửi link đặt lại mật khẩu
-            const response = await fetch(`${constants.API_BASE_URL}/forgot-password?email=`+ encodeURIComponent(userObj.emailId), {
+            const response = await fetch(`${constants.API_BASE_URL}/forgot-password?email=` + encodeURIComponent(userObj.emailId), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -97,7 +97,11 @@ function ForgotPassword() {
                                     </div>
 
                                     <ErrorText styleClass="mt-12">{errorMessage}</ErrorText>
-                                    <button type="submit" className={"btn mt-2 w-full btn-primary" + (loading ? " loading" : "")}>Gửi liên kết</button>
+                                    <button type="submit" className="btn mt-5 w-full btn-primary">
+                                        <span className={loading ? 'loading loading-dots loading-lg' : ''}>
+                                            {!loading ? 'Gửi liên kết' : ''}
+                                        </span>
+                                    </button>
 
                                     <div className='text-center mt-4'>
                                         Chưa có tài khoản? <Link to="/register"><button className="inline-block hover:text-primary hover:underline hover:cursor-pointer transition duration-200">Đăng ký</button></Link>
