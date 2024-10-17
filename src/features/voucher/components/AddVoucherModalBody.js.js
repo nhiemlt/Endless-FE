@@ -1,146 +1,153 @@
-import { useState } from "react"
-import { useDispatch } from "react-redux"
-import InputText from '../../../components/Input/InputText'
-import ErrorText from '../../../components/Typography/ErrorText'
-import { showNotification } from "../../common/headerSlice"
-import { addNewVoucher } from "../voucherSlice"
+import React, { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { addVoucher } from "../voucherSlice";
+import { closeModal } from "../../common/modalSlice";
+import { showNotification } from "../../common/headerSlice";
 
-const INITIAL_VOUCHER_OBJ = {
-    voucherID: "",
-    voucherCode: "",
-    leastBill: "",
-    leastDiscount: "",
-    biggestDiscount: "",
-    discountLevel: "",
-    discountForm: "",
-    startDate: "",
-    endDate: ""
-}
+// Component thân modal để thêm voucher mới
+const AddVoucherModalBody = () => {
+    const dispatch = useDispatch();
+    const [voucherData, setVoucherData] = useState({
+        voucherCode: '',
+        leastDiscount: '',
+        discountLevel: '',
+        startDate: '',
+        leastBill: '',
+        biggestDiscount: '',
+        discountForm: '',
+        endDate: '',
+    });
 
-function AddVoucherModalBody({ closeModal }) {
-    const dispatch = useDispatch()
-    const [loading, setLoading] = useState(false)
-    const [errorMessage, setErrorMessage] = useState("")
-    const [voucherObj, setVoucherObj] = useState(INITIAL_VOUCHER_OBJ)
+    const { isLoading } = useSelector((state) => state.voucher);
 
-    const saveNewVoucher = () => {
-        // Kiểm tra các trường bắt buộc
-        if (voucherObj.voucherCode.trim() === "") return setErrorMessage("Voucher Code is required!");
-        if (voucherObj.leastBill.trim() === "") return setErrorMessage("Least Bill is required!");
-        if (voucherObj.startDate.trim() === "") return setErrorMessage("Start Date is required!");
-        if (voucherObj.endDate.trim() === "") return setErrorMessage("End Date is required!");
-
-        // Tạo voucher mới với ID tự động
-        let newVoucherObj = {
-            "voucherID": new Date().getTime(), // Tạo ID tự động
-            "voucherCode": voucherObj.voucherCode,
-            "leastBill": voucherObj.leastBill,
-            "leastDiscount": voucherObj.leastDiscount || 0, // Mặc định nếu trống
-            "biggestDiscount": voucherObj.biggestDiscount || 0,
-            "discountLevel": voucherObj.discountLevel || 0,
-            "discountForm": voucherObj.discountForm || "Percentage", // Mặc định "Percentage"
-            "startDate": voucherObj.startDate,
-            "endDate": voucherObj.endDate
-        };
-
-        // Dispatch action để thêm voucher mới
-        dispatch(addNewVoucher({ newVoucherObj }));
-        dispatch(showNotification({ message: "New Voucher Added!", status: 1 }));
-        closeModal();
+    // Cập nhật dữ liệu từ input
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setVoucherData({
+            ...voucherData,
+            [name]: value,
+        });
     };
 
-    const updateFormValue = ({ updateType, value }) => {
-        setErrorMessage("") // Xóa thông báo lỗi
-        setVoucherObj({ ...voucherObj, [updateType]: value }) // Cập nhật giá trị của voucher
-    }
-
+    // Xử lý thêm voucher mới
+    const handleAddVoucher = () => {
+        dispatch(addVoucher(voucherData))
+            .then(() => {
+                dispatch(showNotification({
+                    message: "Voucher added successfully!",
+                    status: 1
+                }));
+                dispatch(closeModal());
+                window.location.reload();
+            })
+            .catch(() => {
+                dispatch(showNotification({
+                    message: "Failed to add voucher.",
+                    status: 0
+                }));
+            });
+    };
 
     return (
-        <>
-            {/* Các trường nhập liệu cho voucher */}
+        <div>
             <div className="flex">
                 <div className="w-1/2 pr-2">
-                    <InputText
-                        type="text"
-                        defaultValue={voucherObj.voucherCode}
-                        updateType="voucherCode"
-                        containerStyle="mt-4"
-                        labelTitle="Mã voucher:"
-                        placeholder={"Nhập voucher code"}
-                        updateFormValue={updateFormValue}
-                    />
-                    <InputText
-                        type="number"
-                        defaultValue={voucherObj.leastBill}
-                        updateType="leastBill"
-                        containerStyle="mt-4"
-                        labelTitle="Giá giảm tối thiểu:"
-                        placeholder={"Nhập giá giảm tối thiểu"}
-                        updateFormValue={updateFormValue}
-                    />
-                    <InputText
-                        type="number"
-                        defaultValue={voucherObj.leastDiscount}
-                        updateType="leastDiscount"
-                        containerStyle="mt-4"
-                        labelTitle="Mức giảm giá:"
-                        placeholder={"Nhập mức giảm giá"}
-                        updateFormValue={updateFormValue}
-                    />
-                    <InputText
-                        type="date"
-                        defaultValue={voucherObj.startDate}
-                        updateType="startDate"
-                        containerStyle="mt-4"
-                        labelTitle="Ngày bắt đầu:"
-                        updateFormValue={updateFormValue}
-                    />
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700">Mã Voucher</label>
+                        <input
+                            type="text"
+                            name="voucherCode"
+                            value={voucherData.voucherCode}
+                            onChange={handleInputChange}
+                            className="input input-bordered w-full"
+                        />
+                    </div>
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700">Giá giảm tối thiểu</label>
+                        <input
+                            type="number"
+                            name="leastDiscount"
+                            value={voucherData.leastDiscount}
+                            onChange={handleInputChange}
+                            className="input input-bordered w-full"
+                        />
+                    </div>
+
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700">Hóa đơn tối thiểu</label>
+                        <input
+                            type="number"
+                            name="leastBill"
+                            value={voucherData.leastBill}
+                            onChange={handleInputChange}
+                            className="input input-bordered w-full"
+                        />
+                    </div>
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700">Ngày bắt đầu</label>
+                        <input
+                            type="date"
+                            name="startDate"
+                            value={voucherData.startDate}
+                            onChange={handleInputChange}
+                            className="input input-bordered w-full"
+                        />
+                    </div>
                 </div>
                 <div className="w-1/2 pl-2">
-                    <InputText
-                        type="number"
-                        defaultValue={voucherObj.discountLevel}
-                        updateType="discountLevel"
-                        containerStyle="mt-4"
-                        labelTitle="Hóa đơn tối thiểu:"
-                        placeholder={"Nhập hóa đơn tối thiểu"}
-                        updateFormValue={updateFormValue}
-                    />
-                    <InputText
-                        type="number"
-                        defaultValue={voucherObj.biggestDiscount}
-                        updateType="biggestDiscount"
-                        containerStyle="mt-4"
-                        labelTitle="Giá giảm tối đa:"
-                        placeholder={"Nhập giá giảm tối đa"}
-                        updateFormValue={updateFormValue}
-                    />
-                    <InputText
-                        type="text"
-                        defaultValue={voucherObj.discountForm}
-                        updateType="discountForm"
-                        containerStyle="mt-4"
-                        labelTitle="Hình thức giá giảm:"
-                        placeholder={"Nhập hình thức giảm giá "}
-                        updateFormValue={updateFormValue}
-                    />
-                    <InputText
-                        type="date"
-                        defaultValue={voucherObj.endDate}
-                        updateType="endDate"
-                        containerStyle="mt-4"
-                        labelTitle="Ngày kết thúc:"
-                        updateFormValue={updateFormValue}
-                    />
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700">Mức giảm giá</label>
+                        <input
+                            type="number"
+                            name="discountLevel"
+                            value={voucherData.discountLevel}
+                            onChange={handleInputChange}
+                            className="input input-bordered w-full"
+                        />
+                    </div>
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700">Giá giảm tối đa</label>
+                        <input
+                            type="number"
+                            name="biggestDiscount"
+                            value={voucherData.biggestDiscount}
+                            onChange={handleInputChange}
+                            className="input input-bordered w-full"
+                        />
+                    </div>
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700">Hình thức giảm giá</label>
+                        <input
+                            type="text"
+                            name="discountForm"
+                            value={voucherData.discountForm}
+                            onChange={handleInputChange}
+                            className="input input-bordered w-full"
+                        />
+                    </div>
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700">Ngày kết</label>
+                        <input
+                            type="date"
+                            name="endDate"
+                            value={voucherData.endDate}
+                            onChange={handleInputChange}
+                            className="input input-bordered w-full"
+                        />
+                    </div>
                 </div>
             </div>
-            <ErrorText styleClass="mt-16">{errorMessage}</ErrorText>
-            <div className="modal-action">
-                <button className="btn btn-sm btn-outline btn-dark btn-ghost" onClick={() => closeModal()}>Hủy</button>
-                <button className="btn btn-sm btn-outline btn-success px-6" onClick={() => saveNewVoucher()}>Thêm</button>
+            <div className="flex justify-end">
+                <button
+                    className={`btn btn-primary ${isLoading ? 'loading' : ''}`}
+                    onClick={handleAddVoucher}
+                    disabled={isLoading}
+                >
+                    {isLoading ? 'Adding...' : 'Add Voucher'}
+                </button>
             </div>
-        </>
-    )
-}
+        </div>
+    );
+};
 
-export default AddVoucherModalBody
+export default AddVoucherModalBody;
