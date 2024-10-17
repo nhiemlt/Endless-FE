@@ -45,6 +45,7 @@ function Login() {
                 .then(response => {
                     if (response.ok) {
                         navigate("/app/welcome");
+                        window.location.reload(); 
                     } else {
                         document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
                     }
@@ -135,6 +136,7 @@ function Login() {
                 document.cookie = `token=${data.token}; path=/;`;
                 setAlert({ type: "success", message: "Đăng nhập thành công!" });
                 navigate("/app/welcome");
+                window.location.reload(); 
             }
         } catch (error) {
             setAlert({ type: "error", message: error.message });

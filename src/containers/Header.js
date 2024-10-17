@@ -1,6 +1,6 @@
-import { themeChange } from 'theme-change';
 import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { fetchUnreadCount } from '../features/common/headerSlice'; // Nhập thunk
 import BellIcon from '@heroicons/react/24/outline/BellIcon';
 import Bars3Icon from '@heroicons/react/24/outline/Bars3Icon';
 import MoonIcon from '@heroicons/react/24/outline/MoonIcon';
@@ -8,31 +8,35 @@ import SunIcon from '@heroicons/react/24/outline/SunIcon';
 import { openRightDrawer } from '../features/common/rightDrawerSlice';
 import { RIGHT_DRAWER_TYPES } from '../utils/globalConstantUtil';
 import { Link } from 'react-router-dom';
-import useCurrentUser from '../hooks/useCurrentUser'; // Import hook sử dụng để lấy thông tin người dùng
+import useCurrentUser from '../hooks/useCurrentUser';
 
 function Header() {
     const dispatch = useDispatch();
     const { noOfNotifications, pageTitle } = useSelector(state => state.header);
-    const { userInfo } = useSelector(state => state.user); // Lấy thông tin người dùng từ Redux
+    const { userInfo } = useSelector(state => state.user);
     const [currentTheme, setCurrentTheme] = useState(localStorage.getItem("theme"));
 
-    useCurrentUser(); // Gọi hook để lấy thông tin người dùng
+    useCurrentUser();
+
+    // Hàm long polling
+    const longPolling = async () => {
+        while (true) {
+            await dispatch(fetchUnreadCount()); // Gọi thunk để lấy số lượng thông báo chưa đọc
+            await new Promise(resolve => setTimeout(resolve, 5000)); // Chờ 5 giây trước khi gọi lại
+        }
+    };
 
     useEffect(() => {
-        themeChange(false);
-        if (currentTheme === null) {
-            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                setCurrentTheme("dark");
-            } else {
-                setCurrentTheme("light");
-            }
-        }
-    }, [currentTheme]);
+        const polling = longPolling(); // Bắt đầu long polling
 
-    // Mở thông báo
+        return () => {
+            polling.cancel(); // Dọn dẹp khi component unmount
+        };
+    }, [dispatch]);
+
     const openNotification = () => {
-        dispatch(openRightDrawer({ header: "Notifications", bodyType: RIGHT_DRAWER_TYPES.NOTIFICATION }));
-    }
+        dispatch(openRightDrawer({ header: "Danh sách thông báo", bodyType: RIGHT_DRAWER_TYPES.NOTIFICATION }));
+    };
 
     function logoutUser() {
         const deleteCookie = (name) => {
@@ -68,11 +72,10 @@ function Header() {
                 <div className="dropdown dropdown-end ml-4">
                     <label tabIndex={0} className="btn btn-ghost btn-circle avatar">
                         <div className="w-10 rounded-full overflow-hidden">
-                            {/* Sử dụng avatar từ thông tin người dùng hoặc hình ảnh mặc định */}
                             <img 
-                                src={userInfo?.avatar || 'https://th.bing.com/th/id/R.8914f8408a735b357b399d9f3a89a960?rik=%2bsWx0BlA%2bOW9lQ&pid=ImgRaw&r=0'} // Thay thế bằng hình ảnh mặc định nếu không có
+                                src={userInfo?.avatar || 'https://th.bing.com/th/id/R.8914f8408a735b357b399d9f3a89a960?rik=%2bsWx0BlA%2bOW9lQ&pid=ImgRaw&r=0'} 
                                 alt="profile"
-                                className="object-cover w-full h-full" // Đảm bảo hình ảnh vừa khít
+                                className="object-cover w-full h-full"
                             />
                         </div>
                     </label>

@@ -7,31 +7,6 @@ const getCookie = (name) => {
   if (parts.length === 2) return parts.pop().split(';').shift();
 };
 
-const setupAxiosInterceptors = () => {
-  // Cấu hình interceptor để hiển thị/ẩn chỉ báo tải
-  axios.interceptors.request.use(
-    (config) => {
-      document.body.classList.add('loading-ball');
-      return config;
-    },
-    (error) => {
-      document.body.classList.remove('loading-ball');
-      return Promise.reject(error);
-    }
-  );
-
-  axios.interceptors.response.use(
-    (response) => {
-      document.body.classList.remove('loading-ball');
-      return response;
-    },
-    (error) => {
-      document.body.classList.remove('loading-ball');
-      return Promise.reject(error);
-    }
-  );
-};
-
 const checkAuth = async (navigate) => {
   const TOKEN = getCookie("token"); // Lấy token từ cookie
   const PUBLIC_ROUTES = ["/login", "/forgot-password", "/register", "/logout"];
@@ -62,8 +37,8 @@ const checkAuth = async (navigate) => {
 
       // Nếu token hợp lệ, cấu hình axios và trả về token
       axios.defaults.headers.common['Authorization'] = `Bearer ${TOKEN}`;
-      setupAxiosInterceptors();
       navigate && navigate("/app/welcome"); // Điều hướng đến trang welcome nếu cần
+      
     } catch (error) {
       console.error("Error verifying token:", error);
       document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
