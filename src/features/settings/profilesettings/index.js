@@ -1,20 +1,44 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { showNotification } from '../../common/headerSlice';
-import TitleCard from "../../../components/Cards/TitleCard"
+import TitleCard from "../../../components/Cards/TitleCard";
+import axios from "axios";
 
 function ProfileSettings() {
     const dispatch = useDispatch();
 
     const [profileData, setProfileData] = useState({
-        userID: "252e1a91-3413-4246-ae8d-d0f6ab18555c",
-        username: "9QAF3BACtkguPJ182HWOo91wm0n2",
-        fullname: "Thảo Nguyên Võ Thị",
-        phone: null,
-        email: "vothithaonguyen3426@gmail.com",
-        avatar: "https://lh3.googleusercontent.com/a/ACg8ocIIMLxhXYgM_0xcyzxs949_zN3nANs21kqRi27hjq1NectqByfNNQ=s96-c",
-        language: "vietnam",
+        userID: "",
+        username: "",
+        fullname: "",
+        phone: "",
+        email: "",
+        avatar: "",
+        language: "",
     });
+
+    // Gọi API để lấy thông tin người dùng hiện tại
+    useEffect(() => {
+        axios.get("http://localhost:8080/api/users/current")
+            .then(response => {
+                const userData = response.data;
+                console.log("User data from API:", userData); // Thêm log để kiểm tra dữ liệu trả về
+                setProfileData({
+                    userID: userData.userID,
+                    username: userData.username,
+                    fullname: userData.fullname || "",
+                    phone: userData.phone || "",
+                    email: userData.email,
+                    avatar: userData.avatar || "",
+                    language: userData.language || "",
+                });
+            })
+            .catch(error => {
+                console.error("Error fetching user data:", error);
+                dispatch(showNotification({ message: "Failed to load user data", status: 0 }));
+            });
+    }, [dispatch]);
+
 
     const updateProfile = (e) => {
         e.preventDefault();
@@ -30,9 +54,8 @@ function ProfileSettings() {
     };
 
     return (
-        <TitleCard>
+        <TitleCard title={"Thông tin cá nhân"}>
             <div>
-                <h1 className="lg:text-3xl md:text-2xl sm:text-xl xs:text-xl font-serif font-extrabold mb-2 dark:text-white">Profile</h1>
                 <form onSubmit={updateProfile}>
                     <div className="flex flex-col items-center mb-4">
                         <div className="mx-auto flex justify-center w-[141px] h-[141px] bg-blue-300/20 rounded-full" style={{ backgroundImage: `url(${profileData.avatar})` }}>
@@ -48,32 +71,32 @@ function ProfileSettings() {
                     </div>
                     <div className="flex lg:flex-row md:flex-col sm:flex-col xs:flex-col gap-2 justify-center w-full">
                         <div className="w-full mb-4 mt-6">
-                            <label htmlFor="userID" className="mb-2 dark:text-gray-300">User ID</label>
-                            <input type="text" name="userID" className="mt-2 p-4 w-full border-2 rounded-lg" placeholder="User ID" value={profileData.userID} readOnly />
+                            <label htmlFor="userID" className="mb-2 dark:text-gray-300">ID người dùng</label>
+                            <input type="text" name="userID" className="mt-2 p-4 w-full border-2 rounded-lg" value={profileData.userID} readOnly />
                         </div>
                         <div className="w-full mb-4 lg:mt-6">
-                            <label htmlFor="username" className="mb-2 dark:text-gray-300">Username</label>
-                            <input type="text" name="username" className="mt-2 p-4 w-full border-2 rounded-lg" placeholder="Username" value={profileData.username} onChange={handleInputChange} />
+                            <label htmlFor="username" className="mb-2 dark:text-gray-300">Tên người dùng</label>
+                            <input type="text" name="username" className="mt-2 p-4 w-full border-2 rounded-lg" value={profileData.username} readOnly/>
                         </div>
                     </div>
                     <div className="flex lg:flex-row md:flex-col sm:flex-col xs:flex-col gap-2 justify-center w-full">
                         <div className="w-full mb-4">
-                            <label htmlFor="fullname" className="mb-2 dark:text-gray-300">Full Name</label>
-                            <input type="text" name="fullname" className="mt-2 p-4 w-full border-2 rounded-lg" placeholder="Full Name" value={profileData.fullname} onChange={handleInputChange} />
+                            <label htmlFor="fullname" className="mb-2 dark:text-gray-300">Họ và Tên:</label>
+                            <input type="text" name="fullname" className="mt-2 p-4 w-full border-2 rounded-lg" placeholder="Nhập họ tên" value={profileData.fullname} onChange={handleInputChange} />
                         </div>
                         <div className="w-full mb-4">
                             <label htmlFor="email" className="mb-2 dark:text-gray-300">Email</label>
-                            <input type="email" name="email" className="mt-2 p-4 w-full border-2 rounded-lg" placeholder="Email" value={profileData.email} onChange={handleInputChange} />
+                            <input type="email" name="email" className="mt-2 p-4 w-full border-2 rounded-lg" placeholder="Nhập email" value={profileData.email} onChange={handleInputChange} />
                         </div>
                     </div>
                     <div className="flex lg:flex-row md:flex-col sm:flex-col xs:flex-col gap-2 justify-center w-full">
                         <div className="w-full mb-4">
-                            <label htmlFor="phone" className="mb-2 dark:text-gray-300">Phone</label>
-                            <input type="tel" name="phone" className="mt-2 p-4 w-full border-2 rounded-lg" placeholder="Phone Number" value={profileData.phone} onChange={handleInputChange} />
+                            <label htmlFor="phone" className="mb-2 dark:text-gray-300">Số điện thoại</label>
+                            <input type="tel" name="phone" className="mt-2 p-4 w-full border-2 rounded-lg" placeholder="Nhập số điện thoại" value={profileData.phone} onChange={handleInputChange} />
                         </div>
                         <div className="w-full mb-4">
-                            <label htmlFor="language" className="mb-2 dark:text-gray-300">Language</label>
-                            <input type="text" name="language" className="mt-2 p-4 w-full border-2 rounded-lg" placeholder="Language" value={profileData.language} onChange={handleInputChange} />
+                            <label htmlFor="language" className="mb-2 dark:text-gray-300">Ngôn ngữ</label>
+                            <input type="text" name="language" className="mt-2 p-4 w-full border-2 rounded-lg" placeholder="Nhập ngôn ngữ" value={profileData.language} onChange={handleInputChange} />
                         </div>
                     </div>
                     <div className="w-full rounded-lg bg-blue-500 mt-4 text-white text-lg font-semibold">
