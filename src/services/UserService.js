@@ -6,7 +6,6 @@ const UserService = {
     async getCurrentUser() {
         try {
             const response = await axios.get(`${constants.API_BASE_URL}/api/users/current`);
-            console.log(response.data);
             return response.data; // Dữ liệu người dùng
         } catch (error) {
             console.error("Error fetching user data:", error);
