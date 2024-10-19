@@ -143,7 +143,7 @@ const AddVoucherModalBody = () => {
                     onClick={handleAddVoucher}
                     disabled={isLoading}
                 >
-                    {isLoading ? 'Adding...' : 'Add Voucher'}
+                    {isLoading ? 'Đang thêm....' : 'Thêm'}
                 </button>
             </div>
         </div>

@@ -8,6 +8,7 @@ import { MODAL_BODY_TYPES } from '../../utils/globalConstantUtil';
 import TrashIcon from '@heroicons/react/24/outline/TrashIcon';
 import PencilIcon from '@heroicons/react/24/outline/PencilIcon';
 import { showNotification } from '../common/headerSlice.js';
+import { fetchVoucherById } from './voucherSlice.js';
 import UpdateVoucherModalBody from "./components/UpdateVoucherModalBody.js";
 
 // Component để thêm nút "Add New" voucher
@@ -16,18 +17,15 @@ const TopSideButtons = () => {
 
     const openAddNewVoucherModal = () => {
         dispatch(openModal({
-            title: "Add New Voucher",
+            title: "Thêm voucher mới",
             bodyType: MODAL_BODY_TYPES.VOUCHER_ADD_NEW
         }));
     };
-    // const openUpdateVoucherModal = (voucher) => {
-    //     dispatch(openModal(<UpdateVoucherModalBody voucher={voucher} />));
-    // };
 
     return (
         <div className="inline-block float-right">
             <button className="btn px-6 btn-sm normal-case btn-primary" onClick={openAddNewVoucherModal}>
-                Add New
+                Thêm voucher
             </button>
         </div>
     );
@@ -60,6 +58,22 @@ function Vouchers() {
                 }));
             });
         window.location.reload();
+    };
+
+    const handleEditVoucher = async (voucherID) => {
+        try {
+            // Gọi API để lấy thông tin voucher theo ID
+            const voucherData = await dispatch(fetchVoucherById(voucherID)).unwrap(); // Sử dụng unwrap để lấy dữ liệu
+
+            // Khi đã có dữ liệu voucher, mở modal với dữ liệu voucher
+            dispatch(openModal({
+                title: "Cập nhật voucher",
+                bodyType: MODAL_BODY_TYPES.UPDATE_VOUCHER,
+                data: voucherData, // Truyền dữ liệu voucher vào modal
+            }));
+        } catch (error) {
+            console.error("Failed to fetch voucher:", error);
+        }
     };
 
 
@@ -114,12 +128,12 @@ function Vouchers() {
                                         >
                                             <TrashIcon className="h-4 w-4" />
                                         </button>
-                                        {/* <button
+                                        <button
                                             className="btn btn-sm btn-outline btn-warning border-0"
-                                            onClick={() => openUpdateVoucherModal(voucher)}
+                                            onClick={() => handleEditVoucher(voucher.voucherID)} // Gọi hàm chỉnh sửa
                                         >
                                             <PencilIcon className="h-4 w-4" />
-                                        </button> */}
+                                        </button>
                                     </td>
                                 </tr>
                             ))}

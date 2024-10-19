@@ -21,7 +21,21 @@ export const fetchVouchers = createAsyncThunk(
     }
 );
 
-export const getVouchersContent = fetchVouchers; // Xuất như tên mới
+export const fetchVoucherById = createAsyncThunk(
+    "vouchers/fetchVoucherById",
+    async (id) => {
+        const response = await axios.get(`${API_URL}/${id}`);
+        return response.data;
+    }
+);
+
+export const updateVoucher = createAsyncThunk(
+    "vouchers/updateVoucher",
+    async (voucherModel) => {
+        const response = await axios.put(`${API_URL}/update`, voucherModel);
+        return response.data;
+    }
+);
 
 export const addVoucher = createAsyncThunk(
     "vouchers/addVoucher",
@@ -45,12 +59,14 @@ const voucherSlice = createSlice({
         vouchers: [],
         loading: false,
         error: null,
+        voucher: null,
     },
     reducers: {},
     extraReducers: (builder) => {
         builder
             .addCase(fetchVouchers.pending, (state) => {
                 state.loading = true;
+                state.error = null; // Reset lỗi trước khi fetch
             })
             .addCase(fetchVouchers.fulfilled, (state, action) => {
                 state.loading = false;
@@ -60,13 +76,24 @@ const voucherSlice = createSlice({
                 state.loading = false;
                 state.error = action.error.message;
             })
-            .addCase(addVoucher.fulfilled, (state, action) => {
-                state.vouchers.push(action.payload);
+            .addCase(fetchVoucherById.pending, (state) => {
+                state.voucher = null; // Reset voucher khi đang fetch
             })
-            .addCase(deleteVoucher.fulfilled, (state, action) => {
-                state.vouchers = state.vouchers.filter(voucher => voucher.id !== action.meta.arg);
+            .addCase(fetchVoucherById.fulfilled, (state, action) => {
+                state.voucher = action.payload;
+            })
+            .addCase(fetchVoucherById.rejected, (state, action) => {
+                state.error = action.error.message; // Xử lý lỗi
+            })
+            .addCase(updateVoucher.fulfilled, (state, action) => {
+                const updatedVoucher = action.payload;
+                const index = state.vouchers.findIndex(voucher => voucher.voucherID === updatedVoucher.voucherID);
+                if (index !== -1) {
+                    state.vouchers[index] = updatedVoucher;
+                }
             });
     },
 });
 
+export const getVouchersContent = fetchVouchers; 
 export default voucherSlice.reducer;
