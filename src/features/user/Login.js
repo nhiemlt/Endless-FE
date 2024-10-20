@@ -97,6 +97,7 @@ function Login() {
                     document.cookie = `token=${token}; path=/;`;
                     setAlert({ type: "success", message: "Đăng nhập thành công!" });
                     navigate("/app/welcome");
+                    window.location.reload(); 
                 } else {
                     setAlert({ type: "error", message: "Token không hợp lệ!" });
                 }
