@@ -8,12 +8,10 @@ import { showNotification } from '../common/headerSlice';
 function BrandPage() {
   const dispatch = useDispatch();
 
-  // State quản lý danh sách brands và brand mới
   const [brands, setBrands] = useState([]);
   const [brand, setBrand] = useState({ name: '', logo: '' });
   const [searchText, setSearchText] = useState('');
 
-  // Giả lập dữ liệu thương hiệu ban đầu
   useEffect(() => {
     const mockData = [
       { BrandID: '1', name: 'Apple', logo: 'apple-logo.png' },
@@ -23,13 +21,11 @@ function BrandPage() {
     setBrands(mockData);
   }, []);
 
-  // Hàm cập nhật thông tin brand mới
   const updateFormValue = (e) => {
     const { name, value } = e.target;
     setBrand((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Xử lý upload file logo
   const handleLogoUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -41,12 +37,14 @@ function BrandPage() {
     reader.readAsDataURL(file);
   };
 
-  // Thêm thương hiệu mới vào danh sách
+
   const saveBrand = () => {
     if (!brand.name || !brand.logo) {
       dispatch(showNotification({ message: 'Please provide both name and logo.', status: 0 }));
       return;
     }
+
+
 
     const newBrand = {
       BrandID: (brands.length + 1).toString(),
@@ -56,17 +54,15 @@ function BrandPage() {
 
     setBrands([...brands, newBrand]);
     dispatch(showNotification({ message: 'Brand Added Successfully!', status: 1 }));
-    setBrand({ name: '', logo: '' }); // Reset form
+    setBrand({ name: '', logo: '' });
   };
 
-  // Lọc danh sách thương hiệu theo từ khóa tìm kiếm
   const filteredBrands = brands.filter((b) =>
     b.name.toLowerCase().includes(searchText.toLowerCase())
   );
 
   return (
     <TitleCard title="Manage Brands" topMargin="mt-6">
-
       <div className="mb-12 flex">
         <div className="flex-grow mr-2">
           <div className="p-8 items-center bg-white">
@@ -79,34 +75,18 @@ function BrandPage() {
               />
             </div>
 
-            {/* Chia bố cục 50-50 cho form chọn ảnh và nút Save */}
             <div className="mt-5 flex flex-wrap">
-              {/* Form chọn và remove ảnh */}
-              <div className="w-full md:w-1/2 relative grid grid-cols-1 md:grid-cols-3 border border-gray-300 bg-gray-100 rounded-lg">
-                <div className="rounded-l-lg p-4 bg-gray-200 flex flex-col justify-center items-center border-0 border-r border-gray-300">
-                  <label
-                    className="cursor-pointer hover:opacity-80 inline-flex items-center shadow-md my-2 px-2 py-2 bg-gray-900 text-gray-50 border border-transparent rounded-md font-semibold text-xs uppercase tracking-widest hover:bg-gray-700 active:bg-gray-900 focus:outline-none focus:border-gray-900 focus:ring ring-gray-300 transition ease-in-out duration-150"
-                    htmlFor="restaurantImage"
-                  >
-                    Select logo
-                    <input
-                      id="restaurantImage"
-                      className="text-sm cursor-pointer w-36 hidden"
-                      type="file"
-                      onChange={handleLogoUpload}
-                    />
-                  </label>
-                  <button
-                    className="inline-flex items-center shadow-md my-2 px-2 py-2 bg-gray-900 text-gray-50 border border-transparent rounded-md font-semibold text-xs uppercase tracking-widest hover:bg-gray-700 active:bg-gray-900 focus:outline-none focus:border-gray-900 focus:ring ring-gray-300 transition ease-in-out duration-150"
-                    onClick={() => setBrand({ ...brand, logo: '' })}
-                  >
-                    Remove logo
-                  </button>
-                </div>
-
+              <div className="w-full relative border border-gray-300 bg-gray-100 rounded-lg">
+                <input
+                  id="logoInput"
+                  type="file"
+                  className="hidden"
+                  onChange={handleLogoUpload}
+                />
                 <div
-                  className="relative order-first md:order-last h-28 md:h-auto flex justify-center items-center border border-dashed border-gray-400 col-span-2 m-2 rounded-lg bg-no-repeat bg-center bg-origin-padding bg-cover"
+                  className="h-40 flex justify-center items-center border border-dashed border-gray-400 rounded-lg bg-no-repeat bg-center bg-cover cursor-pointer"
                   style={{ backgroundImage: `url(${brand.logo})` }}
+                  onClick={() => document.getElementById('logoInput').click()}
                 >
                   {!brand.logo && (
                     <span className="text-gray-400 opacity-75">
@@ -129,8 +109,7 @@ function BrandPage() {
                 </div>
               </div>
 
-              {/* Nút Save Brand */}
-              <div className="w-full md:w-1/2 flex justify-end items-center mt-2 md:mt-0">
+              <div className="w-full flex justify-end items-center mt-2">
                 <button className="btn btn-primary" onClick={saveBrand}>
                   Save Brand
                 </button>
@@ -139,7 +118,6 @@ function BrandPage() {
           </div>
         </div>
       </div>
-
 
       <hr />
 

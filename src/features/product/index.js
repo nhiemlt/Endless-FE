@@ -89,7 +89,7 @@ function ProductPage() {
               name="categoryID"
               value={product.categoryID}
               onChange={updateFormValue}
-              className="select w-full appearance-none bg-gray-100 text-gray-500 border-2 border-gray-300 rounded-lg focus:bg-white focus:text-black focus:ring-2 focus:ring-sky-600 focus:outline-none"
+              className="select w-full appearance-none text-gray-500 border-2 border-gray-300 rounded-lg focus:bg-white focus:text-black focus:ring-2 focus:ring-sky-600 focus:outline-none"
             >
               <option value="" disabled>
                 Select Category
@@ -107,7 +107,7 @@ function ProductPage() {
               name="brandID"
               value={product.brandID}
               onChange={updateFormValue}
-              className="select w-full appearance-none bg-gray-100 text-gray-500 border-2 border-gray-300 rounded-lg focus:bg-white focus:text-black focus:ring-2 focus:ring-sky-600 focus:outline-none"
+              className="select w-full appearance-none text-gray-500 border-2 border-gray-300 rounded-lg focus:bg-white focus:text-black focus:ring-2 focus:ring-sky-600 focus:outline-none"
             >
               <option value="" disabled>
                 Select Brand
