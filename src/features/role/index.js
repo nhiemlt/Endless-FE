@@ -1,22 +1,28 @@
 import React, { useState, useEffect } from "react";
+import RoleService from "../../services/roleService";
 import axios from "axios";
 
 function Role() {
   const [roles, setRoles] = useState([]);
   const [permissions, setPermissions] = useState([]);
+  const [users, setUsers] = useState([]);
   const [newRoleName, setNewRoleName] = useState("");
-  const [activeTab, setActiveTab] = useState("createRole");
+  const [activeTab, setActiveTab] = useState("manageRole");
+  const [showModal, setShowModal] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedUsers, setSelectedUsers] = useState([]);
+  const [currentRoleId, setCurrentRoleId] = useState(null);
 
   useEffect(() => {
     loadRoles();
     loadPermissions();
+    loadUsers();
   }, []);
 
   const loadRoles = async () => {
     try {
-      const response = await axios.get("/api/roles");
-      setRoles(response.data);
-      console.log("Roles loaded:", response.data); // Debugging line
+      const response = await RoleService.getAllRoles();
+      setRoles(response);
     } catch (error) {
       console.error("Error loading roles:", error);
     }
@@ -24,260 +30,260 @@ function Role() {
 
   const loadPermissions = async () => {
     try {
-      const response = await axios.get("/api/roles/permissions");
-      setPermissions(response.data);
-      console.log("Permissions loaded:", response.data); // Debugging line
+      const response = await RoleService.getAllPermissions();
+      setPermissions(response);
     } catch (error) {
       console.error("Error loading permissions:", error);
     }
   };
 
-  const handleDelete = async (id) => {
+  const loadUsers = async () => {
     try {
-      await axios.delete(`/api/roles/${id}`);
-      setRoles(roles.filter((role) => role.roleId !== id));
+      const response = await axios.get("/api/users");
+      setUsers(response.data);
     } catch (error) {
-      console.error("Error deleting role:", error);
+      console.error("Error loading users:", error);
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleCreateRole = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post("/api/roles", { name: newRoleName });
-      setRoles([...roles, response.data]); // Assuming API returns the newly created role
+      const response = await RoleService.createRole({
+        roleName: newRoleName,
+        permissionIds: permissions
+          .filter((p) => p.selected)
+          .map((p) => p.permissionId),
+      });
+      setRoles([...roles, response]);
       setNewRoleName("");
+      setActiveTab("manageRole");
     } catch (error) {
       console.error("Error creating role:", error);
     }
   };
 
+  const togglePermission = (permissionId) => {
+    setPermissions((prevPermissions) =>
+      prevPermissions.map((perm) =>
+        perm.permissionId === permissionId
+          ? { ...perm, selected: !perm.selected }
+          : perm
+      )
+    );
+  };
+
+  const handleAssignRole = () => {
+    console.log(`Assigning role ${currentRoleId} to users:`, selectedUsers);
+    setShowModal(false);
+  };
+
   return (
     <div className="container mx-auto mt-8">
-      <div className="tabs mb-4">
-        <button
-          className={`tab ${activeTab === "createRole" ? "active" : ""}`}
+      {/* Tab Navigation */}
+      <div className="tabs">
+        <a
+          className={`tab ${activeTab === "manageRole" ? "tab-active" : ""}`}
+          onClick={() => setActiveTab("manageRole")}
+        >
+          Manage Roles
+        </a>
+        <a
+          className={`tab ${activeTab === "createRole" ? "tab-active" : ""}`}
           onClick={() => setActiveTab("createRole")}
         >
           Create Role
-        </button>
-        <button
-          className={`tab ${activeTab === "assignRole" ? "active" : ""}`}
+        </a>
+        <a
+          className={`tab ${activeTab === "assignRole" ? "tab-active" : ""}`}
           onClick={() => setActiveTab("assignRole")}
         >
           Assign Role
-        </button>
+        </a>
       </div>
 
-      {activeTab === "createRole" && (
-        <div className="card mb-4">
-          <div className="card-header">
-            <h5>Create New Role</h5>
+      {/* Manage Roles Tab */}
+      {activeTab === "manageRole" && (
+        <div className="mt-6">
+          <div className="flex mb-4">
+            <input
+              type="text"
+              className="input mr-2"
+              placeholder="Search role..."
+            />
+            <button
+              className="btn btn-primary"
+              onClick={() => setActiveTab("createRole")}
+            >
+              Create Role
+            </button>
           </div>
-          <div className="card-body">
-            <form onSubmit={handleSubmit}>
-              <div className="mb-3">
-                <label htmlFor="roleName" className="form-label">
-                  Role Name
-                </label>
+          <table className="table w-full">
+            <thead>
+              <tr>
+                <th>Role Name</th>
+                <th>User Count</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {roles.map((role) => (
+                <tr key={role.roleId}>
+                  <td>{role.roleName}</td>
+                  <td>{role.userCount}</td>
+                  <td>
+                    <button
+                      className="btn btn-sm btn-warning"
+                      onClick={() => {
+                        setNewRoleName(role.roleName);
+                        setActiveTab("createRole");
+                      }}
+                    >
+                      Edit
+                    </button>
+                    <button className="btn btn-sm btn-danger ml-2">
+                      Delete
+                    </button>
+                    <button
+                      className="btn btn-sm btn-success ml-2"
+                      onClick={() => {
+                        setCurrentRoleId(role.roleId);
+                        setShowModal(true);
+                      }}
+                    >
+                      +
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Create Role Tab */}
+      {activeTab === "createRole" && (
+        <div className="mt-6">
+          <h5 className="text-lg font-bold">Create/Edit Role</h5>
+          <form onSubmit={handleCreateRole}>
+            <div className="mb-4">
+              <label className="label">
+                <span className="label-text">Role Name</span>
                 <input
                   type="text"
-                  className="form-input"
-                  id="roleName"
+                  className="input"
                   placeholder="Enter role name"
                   value={newRoleName}
                   onChange={(e) => setNewRoleName(e.target.value)}
                 />
+              </label>
+            </div>
+            <div className="mb-4">
+              <span className="label-text">Permissions</span>
+              <div className="grid grid-cols-2 gap-4">
+                {permissions.map((permission) => (
+                  <label
+                    className="cursor-pointer flex items-center"
+                    key={permission.permissionId}
+                  >
+                    <input
+                      type="checkbox"
+                      className="checkbox mr-2"
+                      checked={permission.selected || false}
+                      onChange={() => togglePermission(permission.permissionId)}
+                    />
+                    <span className="label-text">
+                      {permission.permissionName}
+                    </span>
+                  </label>
+                ))}
               </div>
-              <div className="mb-3">
-                <label className="form-label">Permissions</label>
-                <div className="permission-switches">
-                  {permissions.map((permission) => (
-                    <div className="form-check" key={permission.permissionId}>
-                      <label className="form-check-label" htmlFor={permission.permissionId}>
-                        {permission.permissionName}
-                      </label>
-                      <label className="switch">
-                        <input type="checkbox" />
-                        <span className="slider"></span>
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <button type="submit" className="btn btn-primary">
-                Create Role
-              </button>
-            </form>
-          </div>
+            </div>
+
+            <button type="submit" className="btn btn-primary">
+              Save Role
+            </button>
+          </form>
         </div>
       )}
 
+      {/* Assign Role Tab */}
       {activeTab === "assignRole" && (
-        <div className="card mb-4">
-          <div className="card-header">
-            <h5>Assign Roles to Users</h5>
+        <div className="mt-6">
+          <h5 className="text-lg font-bold">Assign Roles to Users</h5>
+          <table className="table w-full">
+            <thead>
+              <tr>
+                <th>Role</th>
+                <th>Assign</th>
+              </tr>
+            </thead>
+            <tbody>
+              {roles.map((role) => (
+                <tr key={role.roleId}>
+                  <td>{role.roleName}</td>
+                  <td>
+                    <button
+                      className="btn btn-sm btn-success"
+                      onClick={() => {
+                        setCurrentRoleId(role.roleId); // Lưu roleId vào state
+                        setShowModal(true);
+                      }}
+                    >
+                      +
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Modal for Assigning Users */}
+      {showModal && (
+        <div className="modal">
+          <div className="modal-box">
+            <h2 className="font-bold text-lg">Assign Users</h2>
             <input
               type="text"
-              className="form-input"
-              placeholder="Search by role name"
+              placeholder="Search user..."
+              className="input mb-4"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
-          </div>
-          <div className="card-body">
-            <table className="table w-full border-collapse">
-              <thead>
-                <tr>
-                  <th>Role Name</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {roles.length > 0 ? (
-                  roles.map((role) => (
-                    <tr key={role.roleId}>
-                      <td>{role.roleName}</td>
-                      <td>
-                        <button className="btn btn-warning btn-sm">Edit</button>
-                        <button
-                          className="btn btn-danger btn-sm"
-                          onClick={() => handleDelete(role.roleId)}
-                        >
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="2">No roles available</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+            <div className="max-h-40 overflow-y-auto mb-4">
+              {users
+                .filter((user) =>
+                  user.name.toLowerCase().includes(searchTerm.toLowerCase())
+                )
+                .map((user) => (
+                  <label key={user.id} className="cursor-pointer block">
+                    <input
+                      type="checkbox"
+                      className="checkbox"
+                      checked={selectedUsers.includes(user.id)}
+                      onChange={() => {
+                        setSelectedUsers((prev) =>
+                          prev.includes(user.id)
+                            ? prev.filter((id) => id !== user.id)
+                            : [...prev, user.id]
+                        );
+                      }}
+                    />
+                    {user.name}
+                  </label>
+                ))}
+            </div>
+            <button className="btn btn-primary" onClick={handleAssignRole}>
+              Add Member
+            </button>
+            <button className="btn" onClick={() => setShowModal(false)}>
+              Cancel
+            </button>
           </div>
         </div>
       )}
-
-      <style jsx>{`
-        .tabs {
-          display: flex;
-          margin-bottom: 1rem;
-          border-bottom: 2px solid #007bff;
-        }
-
-        .tab {
-          cursor: pointer;
-          border: 1px solid transparent;
-          border-radius: 5px;
-          transition: background-color 0.3s, color 0.3s;
-        }
-
-        .tab:hover {
-          background-color: rgba(0, 123, 255, 0.1);
-        }
-
-        .tab.active {
-          border: 1px solid #007bff;
-          background-color: rgba(0, 123, 255, 0.2);
-          color: #007bff;
-        }
-
-        .card {
-          border: 1px solid #ccc;
-          border-radius: 5px;
-          overflow: hidden;
-          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-        .card-header {
-          background: #32567d;
-          color: white;
-          padding: 1rem;
-          font-weight: bold;
-        }
-        .form-input {
-          width: 100%;
-          padding: 0.5rem;
-          border: 1px solid #ccc;
-          border-radius: 5px;
-          transition: border 0.3s;
-        }
-        .form-input:focus {
-          border-color: #007bff;
-          outline: none;
-        }
-        .btn {
-          padding: 0.5rem 1rem;
-          border: none;
-          border-radius: 5px;
-          cursor: pointer;
-          margin-top: 0.5rem;
-          transition: background 0.3s;
-        }
-        .btn-primary {
-          background: #007bff;
-          color: white;
-        }
-        .btn-warning {
-          background: #ffc107;
-          color: black;
-        }
-        .btn-danger {
-          background: #dc3545;
-          color: white;
-        }
-        .permission-switches {
-          display: flex;
-          flex-direction: column;
-        }
-        .form-check {
-          display: flex;
-          align-items: center;
-          margin-bottom: 0.5rem;
-        }
-        .form-check-label {
-          margin-right: 1rem;
-          font-weight: bold;
-        }
-        .switch {
-          position: relative;
-          display: inline-block;
-          width: 50px;
-          height: 24px;
-        }
-        .switch input {
-          opacity: 0;
-          width: 0;
-          height: 0;
-        }
-        .slider {
-          position: absolute;
-          cursor: pointer;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background-color: #ccc;
-          transition: 0.4s;
-          border-radius: 24px;
-        }
-        .slider:before {
-          position: absolute;
-          content: "";
-          height: 20px;
-          width: 20px;
-          left: 2px;
-          bottom: 2px;
-          background-color: white;
-          transition: 0.4s;
-          border-radius: 50%;
-        }
-        input:checked + .slider {
-          background-color: #007bff;
-        }
-        input:checked + .slider:before {
-          transform: translateX(26px);
-        }
-      `}</style>
     </div>
   );
 }
