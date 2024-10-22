@@ -4,6 +4,7 @@ import { showNotification } from '../../common/headerSlice';
 import TitleCard from "../../../components/Cards/TitleCard";
 import ProfileService from '../../../services/profileService';
 import GHNService from '../../../services/GHNService';
+import UserAddressService from "../../../services/userAddressService";
 
 function ProfileSettings() {
     const dispatch = useDispatch();
@@ -18,23 +19,10 @@ function ProfileSettings() {
         avatar: "",
     });
 
-    // State quản lý danh sách địa chỉ và thông tin địa chỉ mới
-    const [addresses, setAddresses] = useState([]);
-    const [newAddress, setNewAddress] = useState({
-        houseNumberStreet: "",
-        province: "",
-        district: "",
-        ward: "",
-    });
 
     // State cho avatar và tab hiện tại
     const [avatarFile, setAvatarFile] = useState(null);
     const [activeTab, setActiveTab] = useState("info");
-
-    // State cho danh sách tỉnh, quận/huyện, phường/xã
-    const [provinces, setProvinces] = useState([]);
-    const [districts, setDistricts] = useState([]);
-    const [wards, setWards] = useState([]);
 
     // Lấy thông tin người dùng và địa chỉ
     useEffect(() => {
@@ -51,6 +39,7 @@ function ProfileSettings() {
                 });
 
                 const userAddresses = await ProfileService.getUserAddresses(userData.userID);
+                console.log(setProfileData.avatar)
                 setAddresses(userAddresses);
             } catch (error) {
                 dispatch(showNotification({ message: "Failed to load user data", status: 0 }));
@@ -60,89 +49,6 @@ function ProfileSettings() {
         fetchUserData();
     }, [dispatch]);
 
-    // Lấy danh sách tỉnh
-    useEffect(() => {
-        const fetchProvinces = async () => {
-            try {
-                const data = await GHNService.getProvinces();
-                console.log(data); // Thêm dòng này để kiểm tra dữ liệu
-                setProvinces(data.data); // Giả định API trả về { data: [...] }
-            } catch (error) {
-                console.error("Error fetching provinces: ", error);
-            }
-        };
-
-        fetchProvinces();
-    }, []);
-
-    // Thay đổi tỉnh và lấy danh sách quận/huyện
-    const handleProvinceChange = async (provinceId) => {
-        setNewAddress((prevData) => ({ ...prevData, province: provinceId }));
-        try {
-            const districtData = await GHNService.getDistrictsByProvince(provinceId);
-            setDistricts(districtData.data);
-            resetDistrictAndWard();
-        } catch (error) {
-            console.error("Error fetching districts:", error);
-        }
-    };
-
-    // Thay đổi quận/huyện và lấy danh sách phường/xã
-    const handleDistrictChange = async (districtId) => {
-        setNewAddress((prevData) => ({ ...prevData, district: districtId }));
-        try {
-            const wardData = await GHNService.getWardsByDistrict(districtId);
-            setWards(wardData.data);
-            resetWard();
-        } catch (error) {
-            console.error("Error fetching wards:", error);
-        }
-    };
-
-    // Reset trạng thái quận/huyện và phường/xã
-    const resetDistrictAndWard = () => {
-        setNewAddress((prevData) => ({ ...prevData, district: "" }));
-        setWards([]);
-    };
-
-    const resetWard = () => {
-        setNewAddress((prevData) => ({ ...prevData, ward: "" }));
-    };
-
-    // Cập nhật thông tin địa chỉ mới
-    const handleNewAddressChange = (e) => {
-        const { name, value } = e.target;
-        setNewAddress((prevData) => ({ ...prevData, [name]: value }));
-    };
-
-    // Thêm địa chỉ mới
-    const handleAddNewAddress = async (e) => {
-        e.preventDefault();
-        if (!newAddress.houseNumberStreet || !newAddress.province || !newAddress.district || !newAddress.ward) {
-            dispatch(showNotification({ message: "Vui lòng điền đầy đủ thông tin địa chỉ", status: 0 }));
-            return;
-        }
-
-        try {
-            await ProfileService.addAddress(newAddress);
-            const updatedAddresses = await ProfileService.getUserAddresses(profileData.userID);
-            setAddresses(updatedAddresses);
-            resetNewAddressForm();
-            dispatch(showNotification({ message: "Thêm địa chỉ thành công", status: 1 }));
-        } catch (error) {
-            dispatch(showNotification({ message: "Thêm địa chỉ thất bại", status: 0 }));
-        }
-    };
-
-    // Reset form thêm địa chỉ mới
-    const resetNewAddressForm = () => {
-        setNewAddress({
-            houseNumberStreet: "",
-            province: "",
-            district: "",
-            ward: "",
-        });
-    };
 
     // Cập nhật thông tin người dùng
     const handleInputChange = (e) => {
@@ -177,6 +83,128 @@ function ProfileSettings() {
         }
     };
 
+
+
+
+    // State cho danh sách tỉnh, quận/huyện, phường/xã
+    const [provinceIDs, setProvinces] = useState([]);
+    const [districtIDs, setDistricts] = useState([]);
+    const [wardCodes, setWards] = useState([]);
+
+    // Lấy danh sách tỉnh
+    useEffect(() => {
+        const fetchProvinces = async () => {
+            try {
+                const data = await GHNService.getProvinces();
+                console.log(data); // Thêm dòng này để kiểm tra dữ liệu
+                setProvinces(data.data); // Giả định API trả về { data: [...] }
+            } catch (error) {
+                console.error("Error fetching provinceIDs: ", error);
+            }
+        };
+
+        fetchProvinces();
+    }, []);
+
+    // Thay đổi tỉnh và lấy danh sách quận/huyện
+    const handleProvinceChange = async (provinceID) => {
+        setNewAddress((prevData) => ({ ...prevData, provinceID: provinceID }));
+        try {
+            const districtIDData = await GHNService.getDistrictsByProvince(provinceID);
+            setDistricts(districtIDData.data);
+            resetDistrictAndWard();
+        } catch (error) {
+            console.error("Error fetching districtIDs:", error);
+        }
+    };
+
+    // Thay đổi quận/huyện và lấy danh sách phường/xã
+    const handleDistrictChange = async (districtID) => {
+        setNewAddress((prevData) => ({ ...prevData, districtID: districtID }));
+        try {
+            const wardCodeData = await GHNService.getWardsByDistrict(districtID);
+            setWards(wardCodeData.data);
+            resetWard();
+        } catch (error) {
+            console.error("Error fetching wardCodes:", error);
+        }
+    };
+
+    // Reset trạng thái quận/huyện và phường/xã
+    const resetDistrictAndWard = () => {
+        setNewAddress((prevData) => ({ ...prevData, districtID: "" }));
+        setWards([]);
+    };
+
+    const resetWard = () => {
+        setNewAddress((prevData) => ({ ...prevData, wardCode: "" }));
+    };
+
+    // State quản lý danh sách địa chỉ và thông tin địa chỉ mới
+    const [addresses, setAddresses] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [newAddress, setNewAddress] = useState({
+        detailAddress: '',
+        wardCode: '',
+        districtID: '',
+        provinceID: '',
+    });
+
+
+    // Hàm xử lý thay đổi input cho địa chỉ mới
+    const handleNewAddressChange = (e) => {
+        const { name, value } = e.target;
+        setNewAddress((prev) => ({
+            ...prev,
+            [name]: value,
+        }));
+    };
+
+    // Hàm xử lý thêm địa chỉ mới
+    const handleAddNewAddress = async (e) => {
+        e.preventDefault();
+
+        // Kiểm tra các trường có hợp lệ không
+        if (!newAddress?.detailAddress || !newAddress?.provinceID || !newAddress?.districtID || !newAddress?.wardCode) {
+            dispatch(showNotification({ message: "Vui lòng điền đầy đủ thông tin địa chỉ", status: 0 }));
+            return;
+        }
+
+        try {
+            await UserAddressService.addUserAddressCurrent(newAddress);
+            dispatch(showNotification({ message: "Thêm địa chỉ thành công", status: 1 }));
+            setNewAddress({ detailAddress: '', wardCode: '', districtID: '', provinceID: '' });
+        } catch (error) {
+            console.error('Failed to add new address:', error.response ? error.response.data : error.message);
+            if (error.response && error.response.data) {
+                dispatch(showNotification({ message: `Thêm địa chỉ thất bại: ${error.response.data.message}`, status: 0 }));
+            } else {
+                dispatch(showNotification({ message: "Thêm địa chỉ thất bại", status: 0 }));
+            }
+        }
+    };
+
+    // Hàm để fetch danh sách địa chỉ
+    const fetchAddresses = async () => {
+        try {
+            setLoading(true); // Bắt đầu tải dữ liệu
+            const userAddresses = await UserAddressService.fetchUserAddresses(); // Gọi service để lấy địa chỉ (không cần userID)
+            setAddresses(userAddresses); // Cập nhật state với danh sách địa chỉ
+        } catch (err) {
+            console.error('Error fetching addresses:', err);
+            setError('Không thể lấy danh sách địa chỉ.'); // Cập nhật state khi gặp lỗi
+        } finally {
+            setLoading(false); // Kết thúc tải dữ liệu
+        }
+    };
+
+    // Sử dụng useEffect để fetch dữ liệu khi component được render
+    useEffect(() => {
+        fetchAddresses(); // Gọi hàm fetchAddresses ngay khi component được render
+    }, []); // Không cần phụ thuộc vào userID nữa
+
+
     return (
         <TitleCard title="Thông tin cá nhân">
             {/* Tabs */}
@@ -197,11 +225,10 @@ function ProfileSettings() {
                 </a>
             </div>
 
-            {/* Form */}
-            <form onSubmit={activeTab === "info" ? handleUpdateProfile : handleAddNewAddress}>
+            {/* Form thông tin cá nhân*/}
+            <form onSubmit={handleUpdateProfile}>
                 {activeTab === "info" && (
                     <div>
-                        {/* Form Thông tin cá nhân */}
                         <div className="flex flex-col items-center mb-4 mt-5">
                             <div
                                 className="mx-auto flex justify-center w-[141px] h-[141px] bg-blue-300/20 rounded-full cursor-pointer"
@@ -284,30 +311,33 @@ function ProfileSettings() {
                         </div>
                     </div>
                 )}
+            </form>
 
+            {/* Form địa chỉ*/}
+            <form onSubmit={handleAddNewAddress}>
                 {activeTab === "addresses" && (
                     <div>
-                        {/* Form Địa chỉ */}
                         <div className="mb-4 mt-5">
                             <div className="flex gap-4">
-                                <label htmlFor="houseNumberStreet">Số nhà, Đường</label>
+                                <label htmlFor="detailAddress">Địa chỉ chi tiết:</label>
                                 <input
                                     type="text"
-                                    name="houseNumberStreet"
+                                    name="detailAddress"
                                     className="p-2 border-2 rounded-lg flex-1"
-                                    value={newAddress.houseNumberStreet}
-                                    onChange={handleNewAddressChange}></input>
+                                    value={newAddress.detailAddress}
+                                    onChange={handleNewAddressChange}
+                                    required></input>
                                 <select
-                                    name="province"
+                                    name="provinceID"
                                     className="p-2 border-2 rounded-lg flex-1"
-                                    value={newAddress.province}
+                                    value={newAddress.provinceID}
                                     onChange={(e) => handleProvinceChange(e.target.value)}
                                 >
                                     <option value="">Chọn tỉnh/thành phố</option>
-                                    {provinces.length > 0 ? (
-                                        provinces.map((province) => (
-                                            <option key={province.ProvinceID} value={province.ProvinceID}>
-                                                {province.ProvinceName}
+                                    {provinceIDs.length > 0 ? (
+                                        provinceIDs.map((provinceID) => (
+                                            <option key={provinceID.ProvinceID} value={provinceID.ProvinceID}>
+                                                {provinceID.ProvinceName}
                                             </option>
                                         ))
                                     ) : (
@@ -315,30 +345,30 @@ function ProfileSettings() {
                                     )}
                                 </select>
                                 <select
-                                    name="district"
+                                    name="districtID"
                                     className="p-2 border-2 rounded-lg flex-1"
-                                    value={newAddress.district}
+                                    value={newAddress.districtID}
                                     onChange={(e) => handleDistrictChange(e.target.value)}
-                                    disabled={!newAddress.province}
+                                    disabled={!newAddress.provinceID}
                                 >
                                     <option value="">Chọn quận/huyện</option>
-                                    {districts.map((district) => (
-                                        <option key={district.DistrictID} value={district.DistrictID}>
-                                            {district.DistrictName}
+                                    {districtIDs.map((districtID) => (
+                                        <option key={districtID.DistrictID} value={districtID.DistrictID}>
+                                            {districtID.DistrictName}
                                         </option>
                                     ))}
                                 </select>
                                 <select
-                                    name="ward"
+                                    name="wardCode"
                                     className="p-2 border-2 rounded-lg flex-1"
-                                    value={newAddress.ward}
+                                    value={newAddress.wardCode}
                                     onChange={handleNewAddressChange}
-                                    disabled={!newAddress.district}
+                                    disabled={!newAddress.districtID}
                                 >
                                     <option value="">Chọn phường/xã</option>
-                                    {wards.map((ward) => (
-                                        <option key={ward.WardCode} value={ward.WardCode}>
-                                            {ward.WardName}
+                                    {wardCodes.map((wardCode) => (
+                                        <option key={wardCode.WardCode} value={wardCode.WardCode}>
+                                            {wardCode.WardName}
                                         </option>
                                     ))}
                                 </select>
@@ -348,9 +378,22 @@ function ProfileSettings() {
                             </div>
                             <hr></hr>
                             <div>
-                                <h2>Địa chỉ:</h2>
-                                <p>Số nhà/đường, phường/xã, quận/huyện/, tỉnh/thành phố</p>
-                                <p>Không có địa chỉ nào !!!</p>
+                                <h2>Danh sách địa chỉ của bạn</h2>
+                                {loading ? (
+                                    <p>Đang tải dữ liệu...</p> // Hiển thị thông báo khi dữ liệu đang được tải
+                                ) : error ? (
+                                    <p>{error}</p> // Hiển thị lỗi nếu có
+                                ) : addresses.length > 0 ? (
+                                    <ul>
+                                        {addresses.map((address) => (
+                                            <li key={address.id}>
+                                                <p>{address.detailAddress}, {address.wardCode}, {address.districtID}, {address.provinceID}</p><hr></hr>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                    <p>Bạn chưa có địa chỉ nào.</p> // Hiển thị khi không có địa chỉ nào
+                                )}
                             </div>
                         </div>
                     </div>
