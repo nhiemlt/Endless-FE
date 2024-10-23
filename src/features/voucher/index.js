@@ -8,7 +8,6 @@ import VoucherService from "../../services/voucherService";
 function Vouchers() {
     const [vouchers, setVouchers] = useState([]);
     const [loading, setIsLoading] = useState(true);
-    const [error, setError] = useState(null);
     const [formState, setFormState] = useState({
         voucherCode: "",
         discountLevel: 0,
@@ -24,34 +23,35 @@ function Vouchers() {
     const dispatch = useDispatch();
 
     // Hàm để lấy danh sách vouchers
-    useEffect(() => {
-        const loadVouchers = async () => {
-            setIsLoading(true);
-            try {
-                const response = await VoucherService.fetchVouchers({
-                    page: 0,
-                    size: 10,
-                    sortBy: 'voucherID',
-                    sortDir: 'asc'
-                });
-                const fetchedVouchers = response.content;
+    const loadVouchers = async () => {
+        setIsLoading(true);
+        try {
+            const response = await VoucherService.fetchVouchers({
+                page: 0,
+                size: 10,
+                sortBy: 'voucherID',
+                sortDir: 'asc'
+            });
+            const fetchedVouchers = response.content;
 
-                if (Array.isArray(fetchedVouchers)) {
-                    const formattedVouchers = fetchedVouchers.map(voucher => ({
-                        ...voucher,
-                        startDate: moment(voucher.startDate).format('YYYY-MM-DD'),
-                        endDate: moment(voucher.endDate).format('YYYY-MM-DD'),
-                    }));
-                    setVouchers(formattedVouchers);
-                } else {
-                    setError("Không thể tải voucher, dữ liệu không hợp lệ.");
-                }
-            } catch (err) {
-                setError("Không thể tải voucher.");
-            } finally {
-                setIsLoading(false);
+            if (Array.isArray(fetchedVouchers)) {
+                const formattedVouchers = fetchedVouchers.map(voucher => ({
+                    ...voucher,
+                    startDate: moment(voucher.startDate).format('YYYY-MM-DD'),
+                    endDate: moment(voucher.endDate).format('YYYY-MM-DD'),
+                }));
+                setVouchers(formattedVouchers);
+            } else {
+                dispatch(showNotification({ message: "Không thể tải voucher, dữ liệu không hợp lệ.", status: 0 }));
             }
-        };
+        } catch (err) {
+            dispatch(showNotification({ message: "Không thể tải voucher", status: 0 }));
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
         loadVouchers();
     }, [dispatch]);
 
@@ -63,9 +63,42 @@ function Vouchers() {
         });
     };
 
-    // Hàm xử lý thêm hoặc cập nhật voucher
-    voucherService.js:38 
- POST http://localhost:8080/api/vouchers/add-to-all-active-users 500 (Internal Server Error)
+    // Sau khi thêm hoặc cập nhật, cần gọi lại hàm loadVouchers
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            if (isEditing) {
+                await VoucherService.updateVoucher(editingVoucherId, formState);
+                dispatch(showNotification({ message: "Cập nhật voucher thành công", status: 1 }));
+            } else {
+                await VoucherService.addVoucherToAllActiveUsers(formState);
+                dispatch(showNotification({ message: "Thêm voucher thành công", status: 1 }));
+            }
+            // Tắt modal và load lại danh sách voucher
+            document.getElementById('my_modal_4').close();
+            loadVouchers(); // Load lại danh sách vouchers
+        } catch (error) {
+            dispatch(showNotification({ message: "Lỗi trong quá trình thêm/cập nhật voucher", status: 0 }));
+        }
+    };
+
+    // Hàm để mở modal trong chế độ cập nhật
+    const handleEdit = (voucher) => {
+        setFormState({
+            voucherCode: voucher.voucherCode,
+            discountLevel: voucher.discountLevel,
+            leastDiscount: voucher.leastDiscount,
+            biggestDiscount: voucher.biggestDiscount,
+            leastBill: voucher.leastBill,
+            discountForm: voucher.discountForm,
+            startDate: voucher.startDate,
+            endDate: voucher.endDate,
+        });
+        setEditingVoucherId(voucher.voucherID);
+        setIsEditing(true);
+        document.getElementById('my_modal_4').showModal();
+    };
+
     // Hàm để mở modal trong chế độ thêm mới
     const handleAdd = () => {
         setFormState({
@@ -206,7 +239,7 @@ function Vouchers() {
                             </div>
                         </form>
                     </div>
-                </dialog >
+                </dialog>
 
                 {/* Bảng hiển thị danh sách vouchers */}
                 {
