@@ -17,17 +17,18 @@ function ProfileSettings() {
         phone: "",
         email: "",
         avatar: "",
+        language: "vie"  // Thêm trường language với giá trị mặc định
     });
 
+    const [formData, setFormData] = useState({ ...profileData });
+    const [avatarFile, setAvatarFile] = useState(null); // Quản lý file avatar người dùng đã chọn
+    const [activeTab, setActiveTab] = useState("info"); // Quản lý tab hiện tại
 
-    // State cho avatar và tab hiện tại
-    const [avatarFile, setAvatarFile] = useState(null);
-    const [activeTab, setActiveTab] = useState("info");
-
-    // Lấy thông tin người dùng và địa chỉ
+    // Lấy thông tin người dùng khi component mount
     useEffect(() => {
         const fetchUserData = async () => {
             try {
+                // Lấy dữ liệu người dùng từ API
                 const userData = await ProfileService.fetchCurrentUser();
                 setProfileData({
                     userID: userData.userID,
@@ -36,12 +37,14 @@ function ProfileSettings() {
                     phone: userData.phone || "",
                     email: userData.email,
                     avatar: userData.avatar || "",
+                    language: userData.language || "vie"  // Cập nhật ngôn ngữ từ server nếu có
                 });
 
+                // Lấy danh sách địa chỉ người dùng
                 const userAddresses = await ProfileService.getUserAddresses(userData.userID);
-                console.log(setProfileData.avatar)
-                setAddresses(userAddresses);
+                setAddresses(userAddresses); // Giả sử có hàm setAddresses đã định nghĩa
             } catch (error) {
+                // Thông báo lỗi nếu không lấy được dữ liệu
                 dispatch(showNotification({ message: "Failed to load user data", status: 0 }));
             }
         };
@@ -49,39 +52,55 @@ function ProfileSettings() {
         fetchUserData();
     }, [dispatch]);
 
-
-    // Cập nhật thông tin người dùng
+    // Hàm xử lý khi có thay đổi dữ liệu trong form
     const handleInputChange = (e) => {
         const { name, value, files } = e.target;
-        if (name === "profileImage" && files.length > 0) {
+
+        if (name === "profileImage" && files && files.length > 0) {
             const file = files[0];
             const reader = new FileReader();
             reader.onloadend = () => {
-                setProfileData((prevData) => ({ ...prevData, avatar: reader.result }));
-                setAvatarFile(file);
+                setProfileData((prevData) => ({
+                    ...prevData,
+                    avatar: reader.result // Cập nhật avatar dưới dạng base64
+                }));
+                setAvatarFile(file); // Lưu trữ file avatar đã chọn
+                console.log(profileData.avatar)
             };
             reader.readAsDataURL(file);
         } else {
-            setProfileData((prevData) => ({ ...prevData, [name]: value }));
+            setProfileData((prevData) => ({
+                ...prevData,
+                [name]: value
+            }));
         }
     };
 
-    // Cập nhật thông tin profile
+    // Hàm xử lý cập nhật thông tin người dùng
     const handleUpdateProfile = async (e) => {
         e.preventDefault();
-        const updatedData = { ...profileData };
+
+        const updatedData = { ...profileData }; // Sao chép dữ liệu hiện tại để chuẩn bị cập nhật
+
+        // Kiểm tra xem các trường dữ liệu đã được nhập đầy đủ chưa
+        if (!updatedData.username.trim() || !updatedData.fullname.trim() ||
+            !updatedData.phone.trim() || !updatedData.email.trim() ||
+            !updatedData.language.trim()) {
+            dispatch(showNotification({ message: "Vui lòng điền đầy đủ thông tin", status: 0 }));
+            return;
+        }
+
         try {
             await ProfileService.updateCurrentUser(updatedData);
-            if (avatarFile) {
-                const formData = new FormData();
-                formData.append("avatar", avatarFile);
-                await ProfileService.updateAvatar(formData);
-            }
             dispatch(showNotification({ message: "Cập nhật thông tin thành công", status: 1 }));
         } catch (error) {
-            dispatch(showNotification({ message: "Cập nhật thông tin thất bại", status: 0 }));
+            dispatch(showNotification({ message: `Cập nhật thông tin thất bại: ${error.message}`, status: 0 }));
+            console.error("Error updating user:", error);
         }
     };
+
+
+
 
 
 
@@ -107,8 +126,12 @@ function ProfileSettings() {
     }, []);
 
     // Thay đổi tỉnh và lấy danh sách quận/huyện
-    const handleProvinceChange = async (provinceID) => {
-        setNewAddress((prevData) => ({ ...prevData, provinceID: provinceID }));
+    const handleProvinceChange = async (provinceID, provinceName) => {
+        setNewAddress((prevData) => ({
+            ...prevData,
+            provinceID: provinceID,
+            provinceName: provinceName // Lưu tên tỉnh
+        }));
         try {
             const districtIDData = await GHNService.getDistrictsByProvince(provinceID);
             setDistricts(districtIDData.data);
@@ -118,9 +141,14 @@ function ProfileSettings() {
         }
     };
 
+
     // Thay đổi quận/huyện và lấy danh sách phường/xã
-    const handleDistrictChange = async (districtID) => {
-        setNewAddress((prevData) => ({ ...prevData, districtID: districtID }));
+    const handleDistrictChange = async (districtID, districtName) => {
+        setNewAddress((prevData) => ({
+            ...prevData,
+            districtID: districtID,
+            districtName: districtName // Lưu tên quận/huyện
+        }));
         try {
             const wardCodeData = await GHNService.getWardsByDistrict(districtID);
             setWards(wardCodeData.data);
@@ -147,18 +175,30 @@ function ProfileSettings() {
     const [newAddress, setNewAddress] = useState({
         detailAddress: '',
         wardCode: '',
+        wardName: '',
         districtID: '',
+        districtName: '',
         provinceID: '',
+        provinceName: '',
     });
-
 
     // Hàm xử lý thay đổi input cho địa chỉ mới
     const handleNewAddressChange = (e) => {
-        const { name, value } = e.target;
-        setNewAddress((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
+        const { name, value, options } = e.target;
+        const selectedOption = options ? options[e.target.selectedIndex] : null;
+
+        if (name === "wardCode") {
+            setNewAddress((prevData) => ({
+                ...prevData,
+                wardCode: value,
+                wardName: selectedOption ? selectedOption.text : "" // Lưu tên phường/xã
+            }));
+        } else {
+            setNewAddress((prevData) => ({
+                ...prevData,
+                [name]: value,
+            }));
+        }
     };
 
     // Hàm xử lý thêm địa chỉ mới
@@ -172,9 +212,9 @@ function ProfileSettings() {
         }
 
         try {
-            await UserAddressService.addUserAddressCurrent(newAddress);
+            await UserAddressService.addUserAddressCurrent(newAddress); // newAddress sẽ chứa cả ID và Name
             dispatch(showNotification({ message: "Thêm địa chỉ thành công", status: 1 }));
-            setNewAddress({ detailAddress: '', wardCode: '', districtID: '', provinceID: '' });
+            setNewAddress({ detailAddress: '', wardCode: '', wardName: '', districtID: '', districtName: '', provinceID: '', provinceName: '' });
         } catch (error) {
             console.error('Failed to add new address:', error.response ? error.response.data : error.message);
             if (error.response && error.response.data) {
@@ -185,11 +225,12 @@ function ProfileSettings() {
         }
     };
 
+
     // Hàm để fetch danh sách địa chỉ
     const fetchAddresses = async () => {
         try {
             setLoading(true); // Bắt đầu tải dữ liệu
-            const userAddresses = await UserAddressService.fetchUserAddresses(); // Gọi service để lấy địa chỉ (không cần userID)
+            const userAddresses = await UserAddressService.fetchUserAddresses(); // Gọi service để lấy địa chỉ
             setAddresses(userAddresses); // Cập nhật state với danh sách địa chỉ
         } catch (err) {
             console.error('Error fetching addresses:', err);
@@ -202,7 +243,7 @@ function ProfileSettings() {
     // Sử dụng useEffect để fetch dữ liệu khi component được render
     useEffect(() => {
         fetchAddresses(); // Gọi hàm fetchAddresses ngay khi component được render
-    }, []); // Không cần phụ thuộc vào userID nữa
+    }, []);
 
 
     return (
@@ -225,7 +266,7 @@ function ProfileSettings() {
                 </a>
             </div>
 
-            {/* Form thông tin cá nhân*/}
+            {/* Form thông tin cá nhân */}
             <form onSubmit={handleUpdateProfile}>
                 {activeTab === "info" && (
                     <div>
@@ -244,15 +285,7 @@ function ProfileSettings() {
                                         onChange={handleInputChange}
                                     />
                                     <label htmlFor="upload_profile">
-                                        <svg
-                                            className="w-6 h-5 text-blue-700"
-                                            fill="none"
-                                            strokeWidth="1.5"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            aria-hidden="true"
-                                        >
+                                        <svg className="w-6 h-5 text-blue-700" fill="none" strokeWidth="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175..."></path>
                                         </svg>
                                     </label>
@@ -301,11 +334,10 @@ function ProfileSettings() {
                                     name="email"
                                     className="mt-2 p-4 w-full border-2 rounded-lg"
                                     value={profileData.email}
-                                    readOnly
+                                    onChange={handleInputChange}
                                 />
                             </div>
                         </div>
-
                         <div className="flex justify-center">
                             <button className="btn btn-primary" type="submit">Cập nhật thông tin</button>
                         </div>
@@ -313,7 +345,7 @@ function ProfileSettings() {
                 )}
             </form>
 
-            {/* Form địa chỉ*/}
+            {/* Form địa chỉ */}
             <form onSubmit={handleAddNewAddress}>
                 {activeTab === "addresses" && (
                     <div>
@@ -326,12 +358,13 @@ function ProfileSettings() {
                                     className="p-2 border-2 rounded-lg flex-1"
                                     value={newAddress.detailAddress}
                                     onChange={handleNewAddressChange}
-                                    required></input>
+                                    required
+                                ></input>
                                 <select
                                     name="provinceID"
                                     className="p-2 border-2 rounded-lg flex-1"
                                     value={newAddress.provinceID}
-                                    onChange={(e) => handleProvinceChange(e.target.value)}
+                                    onChange={(e) => handleProvinceChange(e.target.value, e.target.options[e.target.selectedIndex].text)}
                                 >
                                     <option value="">Chọn tỉnh/thành phố</option>
                                     {provinceIDs.length > 0 ? (
@@ -341,14 +374,14 @@ function ProfileSettings() {
                                             </option>
                                         ))
                                     ) : (
-                                        <option value="">Không có tỉnh nào</option> // Nếu dữ liệu chưa sẵn sàng
+                                        <option value="">Không có tỉnh nào</option>
                                     )}
                                 </select>
                                 <select
                                     name="districtID"
                                     className="p-2 border-2 rounded-lg flex-1"
                                     value={newAddress.districtID}
-                                    onChange={(e) => handleDistrictChange(e.target.value)}
+                                    onChange={(e) => handleDistrictChange(e.target.value, e.target.options[e.target.selectedIndex].text)}
                                     disabled={!newAddress.provinceID}
                                 >
                                     <option value="">Chọn quận/huyện</option>
@@ -380,19 +413,22 @@ function ProfileSettings() {
                             <div>
                                 <h2>Danh sách địa chỉ của bạn</h2>
                                 {loading ? (
-                                    <p>Đang tải dữ liệu...</p> // Hiển thị thông báo khi dữ liệu đang được tải
+                                    <p>Đang tải dữ liệu...</p>
                                 ) : error ? (
-                                    <p>{error}</p> // Hiển thị lỗi nếu có
+                                    <p>{error}</p>
                                 ) : addresses.length > 0 ? (
                                     <ul>
                                         {addresses.map((address) => (
-                                            <li key={address.id}>
-                                                <p>{address.detailAddress}, {address.wardCode}, {address.districtID}, {address.provinceID}</p><hr></hr>
+                                            <li key={address.addressID}>
+                                                <p>
+                                                    {address.detailAddress}, {address.wardName}, {address.districtName}, {address.provinceName}
+                                                </p>
+                                                <hr></hr>
                                             </li>
                                         ))}
                                     </ul>
                                 ) : (
-                                    <p>Bạn chưa có địa chỉ nào.</p> // Hiển thị khi không có địa chỉ nào
+                                    <p>Bạn chưa có địa chỉ nào.</p>
                                 )}
                             </div>
                         </div>
