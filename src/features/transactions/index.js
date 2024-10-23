@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import OrderService from "../../services/OrderService";
-import EyeIcon from '@heroicons/react/24/outline/EyeIcon';
-import TruckIcon from '@heroicons/react/24/outline/TruckIcon';
-import CheckIcon from '@heroicons/react/24/outline/CheckIcon';
+import EyeIcon from '@heroicons/react/24/solid/EyeIcon';
+import TruckIcon from '@heroicons/react/24/solid/TruckIcon';
+import CheckIcon from '@heroicons/react/24/solid/CheckIcon';
 import SearchBar from "../../components/Input/SearchBar";
 import TitleCard from "../../components/Cards/TitleCard";
 
@@ -190,7 +190,7 @@ function Transactions() {
                                         setEndDate(e.target.value);
                                         setCurrentPage(1);
                                     }}
-                                    className="input input-bordered w-full md:w-40 h-8"
+                                    className="input input-bordered w-full md:w-40 h-8 ms-12 md:ms-0"
                                 />
                             </div>
 
@@ -202,7 +202,7 @@ function Transactions() {
                                     onChange={(e) => handleStatusChange(e.target.value)}
                                     className="select select-sm select-bordered w-full md:w-40"
                                 >
-                                    {['Tất cả', 'Chờ xác nhận', 'Đã thanh toán', 'Đang giao hàng', 'Đã giao hàng','Đã hủy'].map(status => (
+                                    {['Tất cả', 'Chờ xác nhận', 'Đã thanh toán', 'Đang giao hàng', 'Đã giao hàng', 'Đã hủy'].map(status => (
                                         <option key={status} value={status}>{status}</option>
                                     ))}
                                 </select>
@@ -227,8 +227,8 @@ function Transactions() {
                 }
             >
 
-                <div className="overflow-x-auto">
-                    <table className="table-auto w-full text-center">
+                <div className="overflow-x-auto w-full">
+                    <table className="table w-full text-center table-xs">
                         <thead>
                             <tr>
                                 <th>Mã đơn hàng</th>
@@ -251,20 +251,39 @@ function Transactions() {
                                     <td className="hidden md:table-cell p-2">{new Date(order.orderDate).toLocaleDateString()}</td>
                                     <td className="hidden md:table-cell p-2">{order?.voucher?.voucherCode || "Không có"}</td>
                                     <td className="p-2">{order.totalMoney.toLocaleString()} VND</td>
-                                    <td className="hidden md:table-cell p-2">{order.status}</td>
+                                    <td className="hidden md:table-cell p-2">
+                                        <span
+                                            className={`badge badge-md ${order.status === "Chờ xác nhận"
+                                                    ? "bg-yellow-500"
+                                                    : order.status === "Đã thanh toán"
+                                                        ? "bg-pink-500"
+                                                        : order.status === "Đã xác nhận"
+                                                        ? "bg-green-500"
+                                                        : order.status === "Đang giao hàng"
+                                                            ? "bg-blue-700"
+                                                            : order.status === "Đã giao hàng"
+                                                                ? "bg-lime-800"
+                                                                : order.status === "Đã hủy"
+                                                                    ? "bg-red-800"
+                                                                    : "bg-gray-400"
+                                                } pt-2 pb-3 text-white badge-outline`}
+                                        >
+                                            {order.status}
+                                        </span>
+                                    </td>
                                     <td className="p-2 text-center">
-                                        <div className="flex justify-center items-center space-x-1">
-                                            <EyeIcon className="w-5 cursor-pointer" onClick={() => handleViewDetails(order)} />
+                                        <div className="flex items-center space-x-1">
+                                            <EyeIcon className="w-5 cursor-pointer text-yellow-600" onClick={() => handleViewDetails(order)} />
                                             {order.status === 'Chờ xác nhận' && (
                                                 <>
-                                                    <CheckIcon className="w-5 cursor-pointer" onClick={() => handleConfirmOrder(order)}>Xác nhận</CheckIcon>
+                                                    <CheckIcon className="w-5 cursor-pointer text-green-700" onClick={() => handleConfirmOrder(order)}>Xác nhận</CheckIcon>
                                                 </>
                                             )}
                                             {order.status === 'Đã xác nhận' && (
-                                                <TruckIcon className="w-5 cursor-pointer" onClick={() => handleMarkOrderAsShipping(order)}>Vận chuyển</TruckIcon>
-                                            )}
+                                                <TruckIcon className="w-5 cursor-pointer text-blue-800" onClick={() => handleMarkOrderAsShipping(order)}>Vận chuyển</TruckIcon>
+                                            )}  
                                             {order.status === 'Đã thanh toán' && (
-                                                <TruckIcon className="w-5 cursor-pointer" onClick={() => handleMarkOrderAsShipping(order)}>Vận chuyển</TruckIcon>
+                                                <TruckIcon className="w-5 cursor-pointer text-blue-800" onClick={() => handleMarkOrderAsShipping(order)}>Vận chuyển</TruckIcon>
                                             )}
                                         </div>
                                     </td>
