@@ -39,10 +39,6 @@ function ProfileSettings() {
                     avatar: userData.avatar || "",
                     language: userData.language || "vie"  // Cập nhật ngôn ngữ từ server nếu có
                 });
-
-                // Lấy danh sách địa chỉ người dùng
-                const userAddresses = await ProfileService.getUserAddresses(userData.userID);
-                setAddresses(userAddresses); // Giả sử có hàm setAddresses đã định nghĩa
             } catch (error) {
                 // Thông báo lỗi nếu không lấy được dữ liệu
                 dispatch(showNotification({ message: "Failed to load user data", status: 0 }));
@@ -115,7 +111,6 @@ function ProfileSettings() {
         const fetchProvinces = async () => {
             try {
                 const data = await GHNService.getProvinces();
-                console.log(data); // Thêm dòng này để kiểm tra dữ liệu
                 setProvinces(data.data); // Giả định API trả về { data: [...] }
             } catch (error) {
                 console.error("Error fetching provinceIDs: ", error);
@@ -172,6 +167,7 @@ function ProfileSettings() {
     const [addresses, setAddresses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [selectedAddressId, setSelectedAddressId] = useState(null);
     const [newAddress, setNewAddress] = useState({
         detailAddress: '',
         wardCode: '',
@@ -215,6 +211,7 @@ function ProfileSettings() {
             await UserAddressService.addUserAddressCurrent(newAddress); // newAddress sẽ chứa cả ID và Name
             dispatch(showNotification({ message: "Thêm địa chỉ thành công", status: 1 }));
             setNewAddress({ detailAddress: '', wardCode: '', wardName: '', districtID: '', districtName: '', provinceID: '', provinceName: '' });
+
         } catch (error) {
             console.error('Failed to add new address:', error.response ? error.response.data : error.message);
             if (error.response && error.response.data) {
@@ -245,6 +242,26 @@ function ProfileSettings() {
         fetchAddresses(); // Gọi hàm fetchAddresses ngay khi component được render
     }, []);
 
+    // Hàm xử lý xóa địa chỉ
+    const handleDeleteAddress = async () => {
+        try {
+            // Gọi service xóa địa chỉ theo addressID
+            await UserAddressService.deleteUserAddressCurrent(selectedAddressId);
+            dispatch(showNotification({ message: "Xóa địa chỉ thành công", status: 1 }));
+            // Cập nhật lại danh sách địa chỉ sau khi xóa
+            setAddresses((prevAddresses) =>
+                prevAddresses.filter((address) => address.addressID !== selectedAddressId)
+            );
+
+            // Reset lại modal và thông tin sau khi xóa thành công
+            setSelectedAddressId(null);
+            document.getElementById('delete_modal').checked = false;
+        } catch (error) {
+            // Xử lý lỗi và hiển thị thông báo trong modal
+            dispatch(showNotification({ message: "Xóa địa chỉ thất bại", status: 1 }));
+            setError(error.message);
+        }
+    };
 
     return (
         <TitleCard title="Thông tin cá nhân">
@@ -271,28 +288,31 @@ function ProfileSettings() {
                 {activeTab === "info" && (
                     <div>
                         <div className="flex flex-col items-center mb-4 mt-5">
-                            <div
-                                className="mx-auto flex justify-center w-[141px] h-[141px] bg-blue-300/20 rounded-full cursor-pointer"
-                                style={{ backgroundImage: `url(${profileData.avatar})`, backgroundSize: 'cover' }}
-                                onClick={() => document.getElementById('upload_profile').click()}
-                            >
-                                <div className="bg-white/90 rounded-full w-6 h-6 text-center ml-28 mt-4">
-                                    <input
-                                        type="file"
-                                        name="profileImage"
-                                        id="upload_profile"
-                                        hidden
-                                        onChange={handleInputChange}
-                                    />
-                                    <label htmlFor="upload_profile">
-                                        <svg className="w-6 h-5 text-blue-700" fill="none" strokeWidth="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175..."></path>
-                                        </svg>
-                                    </label>
+                            <div className="avatar">
+                                <div className="ring-secondary ring-offset-base-100 rounded-full ring ring-offset-2">
+                                    <div
+                                        className="mx-auto flex justify-center w-[141px] h-[141px] bg-blue-300/20 rounded-full cursor-pointer"
+                                        style={{ backgroundImage: `url(${profileData.avatar})`, backgroundSize: 'cover' }}
+                                        onClick={() => document.getElementById('upload_profile').click()}
+                                    >
+                                        <div className="bg-white/90 rounded-full w-6 h-6 text-center ml-28 mt-4">
+                                            <input
+                                                type="file"
+                                                name="profileImage"
+                                                id="upload_profile"
+                                                hidden
+                                                onChange={handleInputChange}
+                                            />
+                                            <label htmlFor="upload_profile">
+                                                <svg className="w-6 h-5 text-blue-700" fill="none" strokeWidth="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                                    <path strokeLinecap="round" strokeLinejoin="round"></path>
+                                                </svg>
+                                            </label>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-
                         <div className="flex gap-2 justify-center w-full">
                             <div className="w-full mb-4">
                                 <label htmlFor="username" className="mb-2 dark:text-gray-300">Tên người dùng</label>
@@ -351,15 +371,6 @@ function ProfileSettings() {
                     <div>
                         <div className="mb-4 mt-5">
                             <div className="flex gap-4">
-                                <label htmlFor="detailAddress">Địa chỉ chi tiết:</label>
-                                <input
-                                    type="text"
-                                    name="detailAddress"
-                                    className="p-2 border-2 rounded-lg flex-1"
-                                    value={newAddress.detailAddress}
-                                    onChange={handleNewAddressChange}
-                                    required
-                                ></input>
                                 <select
                                     name="provinceID"
                                     className="p-2 border-2 rounded-lg flex-1"
@@ -405,6 +416,15 @@ function ProfileSettings() {
                                         </option>
                                     ))}
                                 </select>
+                                <input
+                                    type="text"
+                                    name="detailAddress"
+                                    placeholder="Địa chỉ chi tiết"
+                                    className="p-2 border-2 rounded-lg flex-1"
+                                    value={newAddress.detailAddress}
+                                    onChange={handleNewAddressChange}
+                                    required
+                                ></input>
                             </div>
                             <div className="flex justify-center mt-5 mb-5">
                                 <button className="btn btn-primary" type="submit">Thêm địa chỉ mới</button>
@@ -423,13 +443,43 @@ function ProfileSettings() {
                                                 <p>
                                                     {address.detailAddress}, {address.wardName}, {address.districtName}, {address.provinceName}
                                                 </p>
-                                                <hr></hr>
+                                                <label
+                                                    htmlFor="delete_modal"
+                                                    className="btn"
+                                                    onClick={() => setSelectedAddressId(address.addressID)} // Sử dụng addressID để xác định địa chỉ cần xóa
+                                                >
+                                                    Xóa
+                                                </label>
+                                                <hr />
                                             </li>
                                         ))}
                                     </ul>
                                 ) : (
                                     <p>Bạn chưa có địa chỉ nào.</p>
                                 )}
+
+                                {/* Modal cho việc xác nhận xóa */}
+                                <input type="checkbox" id="delete_modal" className="modal-toggle" />
+                                <div className="modal" role="dialog">
+                                    <div className="modal-box">
+                                        <h3 className="text-lg font-bold">Xóa địa chỉ</h3>
+                                        <p className="py-4">Bạn có chắc chắn muốn xóa địa chỉ này?</p>
+                                        <div className="modal-action">
+                                            {/* Nút xóa địa chỉ */}
+                                            <label
+                                                htmlFor="delete_modal"
+                                                className="btn btn-error"
+                                                onClick={handleDeleteAddress}
+                                            >
+                                                Xóa
+                                            </label>
+                                            {/* Nút đóng modal */}
+                                            <label htmlFor="delete_modal" className="btn">
+                                                Đóng
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

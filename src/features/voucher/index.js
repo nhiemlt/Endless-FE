@@ -1,38 +1,29 @@
 import React, { useEffect, useState } from "react";
-import moment from "moment";
 import { useDispatch } from "react-redux";
+import moment from "moment";
 import TitleCard from "../../components/Cards/TitleCard";
-import { openModal } from "../common/modalSlice";
-import VoucherService from '../../services/voucherService';
-import { MODAL_BODY_TYPES } from '../../utils/globalConstantUtil';
-import PencilIcon from '@heroicons/react/24/outline/PencilIcon';
 import { showNotification } from "../common/headerSlice";
+import VoucherService from "../../services/voucherService";
 
-const TopSideButtons = () => {
-    const dispatch = useDispatch();
-
-    const openAddNewVoucherModal = () => {
-        dispatch(openModal({
-            title: "Thêm voucher mới",
-            bodyType: MODAL_BODY_TYPES.VOUCHER_ADD_NEW
-        }));
-    };
-
-    return (
-        <div className="inline-block float-right">
-            <button className="btn px-6 btn-sm normal-case btn-primary" onClick={openAddNewVoucherModal}>
-                Thêm voucher 
-            </button>
-        </div>
-    );
-};
-
-const Vouchers = () => {
+function Vouchers() {
     const [vouchers, setVouchers] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [loading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [formState, setFormState] = useState({
+        voucherCode: "",
+        discountLevel: 0,
+        leastDiscount: 0,
+        biggestDiscount: 0,
+        leastBill: 0,
+        discountForm: "",
+        startDate: "",
+        endDate: "",
+    });
+    const [isEditing, setIsEditing] = useState(false);
+    const [editingVoucherId, setEditingVoucherId] = useState(null);
     const dispatch = useDispatch();
 
+    // Hàm để lấy danh sách vouchers
     useEffect(() => {
         const loadVouchers = async () => {
             setIsLoading(true);
@@ -51,119 +42,216 @@ const Vouchers = () => {
                         startDate: moment(voucher.startDate).format('YYYY-MM-DD'),
                         endDate: moment(voucher.endDate).format('YYYY-MM-DD'),
                     }));
-
                     setVouchers(formattedVouchers);
                 } else {
-                    console.error("Dữ liệu không hợp lệ:", fetchedVouchers);
                     setError("Không thể tải voucher, dữ liệu không hợp lệ.");
                 }
             } catch (err) {
-                console.error("Không thể tải voucher:", err);
                 setError("Không thể tải voucher.");
             } finally {
                 setIsLoading(false);
             }
         };
-
         loadVouchers();
     }, [dispatch]);
 
-    const handleFetchVoucherById = async (voucher) => {
-        try {
-            console.log(voucher)
-            if (!voucher) {
-                throw new Error("Dữ liệu voucher không tồn tại");
-            }
-            // Mở modal và truyền dữ liệu voucher
-            dispatch(openModal({
-                title: "Chỉnh sửa Voucher",
+    // Xử lý thay đổi giá trị form
+    const handleChange = (e) => {
+        setFormState({
+            ...formState,
+            [e.target.name]: e.target.value,
+        });
+    };
 
-                bodyType: MODAL_BODY_TYPES.VOUCHER_ADD_NEW,
-
-                voucherData: { voucher, isUpdate: true }
-            }));
-        } catch (error) {
-            console.error("Error fetching voucher by ID:", error);
-            dispatch(showNotification({
-                message: "Không thể lấy thông tin voucher.",
-                status: 0,
-            }));
-        }
-    };    
-    
-
-    if (isLoading) return <div className="loading-spinner">Loading...</div>;
-    if (error) return <div>Error: {error}</div>;
-
-    const handleDeleteVoucher = async (voucherID) => {
-        if (window.confirm("Bạn có chắc chắn muốn xóa voucher này không?")) {
-            try {
-                await VoucherService.deleteVoucher(voucherID);
-                setVouchers(vouchers.filter(voucher => voucher.voucherID !== voucherID));
-                dispatch(showNotification({
-                    message: "Xóa voucher thành công!",
-                    status: 1,
-                }));
-            } catch (error) {
-                console.error("Error deleting voucher:", error);
-                dispatch(showNotification({
-                    message: "Xóa voucher thất bại!",
-                    status: 0,
-                }));
-            }
-        }
+    // Hàm xử lý thêm hoặc cập nhật voucher
+    voucherService.js:38 
+ POST http://localhost:8080/api/vouchers/add-to-all-active-users 500 (Internal Server Error)
+    // Hàm để mở modal trong chế độ thêm mới
+    const handleAdd = () => {
+        setFormState({
+            voucherCode: "",
+            discountLevel: 0,
+            leastDiscount: 0,
+            biggestDiscount: 0,
+            leastBill: 0,
+            discountForm: "",
+            startDate: "",
+            endDate: "",
+        });
+        setIsEditing(false);
+        setEditingVoucherId(null);
+        document.getElementById('my_modal_4').showModal();
     };
 
     return (
         <>
-            <TitleCard title="Voucher" topMargin="mt-2" TopSideButtons={<TopSideButtons />} >
-                <div className="overflow-x-auto w-full">
-                    <table className="table table-xs">
-                        <thead>
-                            <tr>
-                                <th>STT</th>
-                                <th>Mã Voucher</th>
-                                <th>Mức giảm giá</th>
-                                <th>Giảm giá tối thiểu</th>
-                                <th>Giảm giá tối đa</th>
-                                <th>Hóa đơn tối thiểu</th>
-                                <th>Hình thức giảm giá</th>
-                                <th>Ngày bắt đầu</th>
-                                <th>Ngày kết thúc</th>
-                                <th>Hành động</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {vouchers.map((voucher, index) => (
-                                <tr key={voucher.voucherID}>
-                                    <td>{index + 1}</td>
-                                    <td>{voucher.voucherCode}</td>
-                                    <td>{voucher.discountLevel}</td>
-                                    <td>{voucher.leastDiscount}</td>
-                                    <td>{voucher.biggestDiscount}</td>
-                                    <td>{voucher.leastBill}</td>
-                                    <td>{voucher.discountForm}</td>
-                                    <td>{voucher.startDate}</td>
-                                    <td>{voucher.endDate}</td>
-                                    <td>
-                                        <button 
-                                            className="btn btn-sm btn-info mr-2" 
-                                            onClick={() => handleFetchVoucherById(voucher)}
-                                        >
-                                            <PencilIcon className="h-5 w-5" />
-                                        </button>
-                                        <button onClick={() => handleDeleteVoucher(voucher.voucherID)} className="btn btn-sm btn-danger">
-                                            Xóa
-                                        </button>
-                                    </td>
+            <TitleCard title="Voucher" topMargin="mt-2">
+                <button className="btn btn-sm btn-primary" onClick={handleAdd}>
+                    {isEditing ? "Cập nhật voucher" : "Thêm voucher"}
+                </button>
+                <dialog id="my_modal_4" className="modal">
+                    <div className="modal-box w-11/12 max-w-5xl">
+                        <h3 className="font-bold text-lg">{isEditing ? "Cập nhật Voucher" : "Thêm Voucher"}</h3>
+                        <form className="mt-3" onSubmit={handleSubmit}>
+                            <div className="flex flex-wrap">
+                                {/* Mã Voucher */}
+                                <div className="w-full md:w-1/2 pr-2 mb-4">
+                                    <label className="block text-sm font-medium text-gray-700">Mã Voucher</label>
+                                    <input
+                                        type="text"
+                                        name="voucherCode"
+                                        value={formState.voucherCode}
+                                        onChange={handleChange}
+                                        className="input input-bordered w-full"
+                                        required
+                                    />
+                                </div>
+
+                                {/* Mức giảm giá */}
+                                <div className="w-full md:w-1/2 pl-2 mb-4">
+                                    <label className="block text-sm font-medium text-gray-700">Mức giảm giá</label>
+                                    <input
+                                        type="number"
+                                        name="discountLevel"
+                                        value={formState.discountLevel}
+                                        onChange={handleChange}
+                                        className="input input-bordered w-full"
+                                        required
+                                    />
+                                </div>
+
+                                {/* Giá giảm tối thiểu */}
+                                <div className="w-full md:w-1/2 pr-2 mb-4">
+                                    <label className="block text-sm font-medium text-gray-700">Giá giảm tối thiểu</label>
+                                    <input
+                                        type="number"
+                                        name="leastDiscount"
+                                        value={formState.leastDiscount}
+                                        onChange={handleChange}
+                                        className="input input-bordered w-full"
+                                        required
+                                    />
+                                </div>
+
+                                {/* Giá giảm tối đa */}
+                                <div className="w-full md:w-1/2 pl-2 mb-4">
+                                    <label className="block text-sm font-medium text-gray-700">Giá giảm tối đa</label>
+                                    <input
+                                        type="number"
+                                        name="biggestDiscount"
+                                        value={formState.biggestDiscount}
+                                        onChange={handleChange}
+                                        className="input input-bordered w-full"
+                                        required
+                                    />
+                                </div>
+
+                                {/* Hóa đơn tối thiểu */}
+                                <div className="w-full md:w-1/2 pr-2 mb-4">
+                                    <label className="block text-sm font-medium text-gray-700">Hóa đơn tối thiểu</label>
+                                    <input
+                                        type="number"
+                                        name="leastBill"
+                                        value={formState.leastBill}
+                                        onChange={handleChange}
+                                        className="input input-bordered w-full"
+                                        required
+                                    />
+                                </div>
+
+                                {/* Hình thức giảm giá */}
+                                <div className="w-full md:w-1/2 pl-2 mb-4">
+                                    <label className="block text-sm font-medium text-gray-700">Hình thức giảm giá</label>
+                                    <input
+                                        type="text"
+                                        name="discountForm"
+                                        value={formState.discountForm}
+                                        onChange={handleChange}
+                                        className="input input-bordered w-full"
+                                        required
+                                    />
+                                </div>
+
+                                {/* Ngày bắt đầu */}
+                                <div className="w-full md:w-1/2 pr-2 mb-4">
+                                    <label className="block text-sm font-medium text-gray-700">Ngày bắt đầu</label>
+                                    <input
+                                        type="date"
+                                        name="startDate"
+                                        value={formState.startDate}
+                                        onChange={handleChange}
+                                        className="input input-bordered w-full"
+                                        required
+                                    />
+                                </div>
+
+                                {/* Ngày kết thúc */}
+                                <div className="w-full md:w-1/2 pl-2 mb-4">
+                                    <label className="block text-sm font-medium text-gray-700">Ngày kết thúc</label>
+                                    <input
+                                        type="date"
+                                        name="endDate"
+                                        value={formState.endDate}
+                                        onChange={handleChange}
+                                        className="input input-bordered w-full"
+                                        required
+                                    />
+                                </div>
+                                <div className="modal-action">
+                                    <button type="submit" className="btn btn-primary btn-sm">
+                                        {isEditing ? "Cập nhật" : "Thêm"}
+                                    </button>
+                                    <button className="btn btn-sm" onClick={() => document.getElementById('my_modal_4').close()}>Hủy</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </dialog >
+
+                {/* Bảng hiển thị danh sách vouchers */}
+                {
+                    loading ? (
+                        <div>Loading...</div>
+                    ) : (
+                        <table className="table table-xs mt-3">
+                            <thead>
+                                <tr>
+                                    <th>STT</th>
+                                    <th>Mã Voucher</th>
+                                    <th>Mức giảm giá</th>
+                                    <th>Giảm giá tối thiểu</th>
+                                    <th>Giảm giá tối đa</th>
+                                    <th>Hóa đơn tối thiểu</th>
+                                    <th>Hình thức giảm giá</th>
+                                    <th>Ngày bắt đầu</th>
+                                    <th>Ngày kết thúc</th>
+                                    <th>Hành động</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </TitleCard>
+                            </thead>
+                            <tbody>
+                                {vouchers.map((voucher, index) => (
+                                    <tr key={voucher.id}>
+                                        <td>{index + 1}</td>
+                                        <td>{voucher.voucherCode}</td>
+                                        <td>{voucher.discountLevel}</td>
+                                        <td>{voucher.leastDiscount}</td>
+                                        <td>{voucher.biggestDiscount}</td>
+                                        <td>{voucher.leastBill}</td>
+                                        <td>{voucher.discountForm}</td>
+                                        <td>{new Date(voucher.startDate).toLocaleDateString()}</td>
+                                        <td>{new Date(voucher.endDate).toLocaleDateString()}</td>
+                                        <td>
+                                            <button className="btn btn-sm" onClick={() => handleEdit(voucher)}>Cập nhật</button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )
+                }
+            </TitleCard >
         </>
     );
-};
+}
 
 export default Vouchers;
