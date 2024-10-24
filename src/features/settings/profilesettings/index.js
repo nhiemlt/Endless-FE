@@ -5,6 +5,7 @@ import TitleCard from "../../../components/Cards/TitleCard";
 import ProfileService from '../../../services/profileService';
 import GHNService from '../../../services/GHNService';
 import UserAddressService from "../../../services/userAddressService";
+import TrashIcon from '@heroicons/react/24/outline/TrashIcon';
 
 function ProfileSettings() {
     const dispatch = useDispatch();
@@ -211,7 +212,7 @@ function ProfileSettings() {
             await UserAddressService.addUserAddressCurrent(newAddress); // newAddress sẽ chứa cả ID và Name
             dispatch(showNotification({ message: "Thêm địa chỉ thành công", status: 1 }));
             setNewAddress({ detailAddress: '', wardCode: '', wardName: '', districtID: '', districtName: '', provinceID: '', provinceName: '' });
-
+            fetchAddresses();
         } catch (error) {
             console.error('Failed to add new address:', error.response ? error.response.data : error.message);
             if (error.response && error.response.data) {
@@ -430,8 +431,8 @@ function ProfileSettings() {
                                 <button className="btn btn-primary" type="submit">Thêm địa chỉ mới</button>
                             </div>
                             <hr></hr>
-                            <div>
-                                <h2>Danh sách địa chỉ của bạn</h2>
+                            <div className="w-full">
+                                <h1><b>Danh sách địa chỉ của bạn:</b></h1>
                                 {loading ? (
                                     <p>Đang tải dữ liệu...</p>
                                 ) : error ? (
@@ -440,16 +441,17 @@ function ProfileSettings() {
                                     <ul>
                                         {addresses.map((address) => (
                                             <li key={address.addressID}>
-                                                <p>
-                                                    {address.detailAddress}, {address.wardName}, {address.districtName}, {address.provinceName}
-                                                </p>
-                                                <label
-                                                    htmlFor="delete_modal"
-                                                    className="btn"
-                                                    onClick={() => setSelectedAddressId(address.addressID)} // Sử dụng addressID để xác định địa chỉ cần xóa
-                                                >
-                                                    Xóa
-                                                </label>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                    <p>
+                                                        {address.detailAddress}, {address.wardName}, {address.districtName}, {address.provinceName}
+                                                    </p>
+                                                    <label
+                                                        htmlFor="delete_modal" 
+                                                        onClick={() => setSelectedAddressId(address.addressID)}
+                                                    ><TrashIcon className="h-10 w-5 text-error"/>
+                                                    </label>
+                                                </div>
+
                                                 <hr />
                                             </li>
                                         ))}
