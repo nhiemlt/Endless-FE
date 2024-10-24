@@ -11,6 +11,14 @@ const UserService = {
             console.error("Error fetching user data:", error);
             throw error; // Ném lỗi ra để xử lý sau
         }
+    },async getAllUser() {
+        try {
+            const response = await axios.get(`${constants.API_BASE_URL}/api/users`);
+            return response.data; // Dữ liệu người dùng
+        } catch (error) {
+            console.error("Error fetching user data:", error);
+            throw error; // Ném lỗi ra để xử lý sau
+        }
     },
 };
 

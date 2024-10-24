@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import RoleService from "../../services/roleService";
+import UserService from "../../services/UserService";
 import axios from "axios";
 
 function Role() {
@@ -39,8 +40,10 @@ function Role() {
 
   const loadUsers = async () => {
     try {
-      const response = await axios.get("/api/users");
+      const response = UserService.getAllUser();
+      console.log(response.data);
       setUsers(response.data);
+      console.log("Users loaded:", users);
     } catch (error) {
       console.error("Error loading users:", error);
     }
@@ -128,14 +131,18 @@ function Role() {
             </thead>
             <tbody>
               {roles.map((role) => (
-                <tr key={role.roleId}>
-                  <td>{role.roleName}</td>
-                  <td>{role.userCount}</td>
+                <tr key={role?.roleId}>
+                  <td>{role?.roleName ? role.roleName : "Unknown Role"}</td>
+                  <td>
+                    {role?.userCount !== null && role?.userCount !== undefined
+                      ? role.userCount
+                      : "0"}
+                  </td>
                   <td>
                     <button
                       className="btn btn-sm btn-warning"
                       onClick={() => {
-                        setNewRoleName(role.roleName);
+                        setNewRoleName(role?.roleName);
                         setActiveTab("createRole");
                       }}
                     >
@@ -147,7 +154,7 @@ function Role() {
                     <button
                       className="btn btn-sm btn-success ml-2"
                       onClick={() => {
-                        setCurrentRoleId(role.roleId);
+                        setCurrentRoleId(role?.roleId);
                         setShowModal(true);
                       }}
                     >
@@ -220,13 +227,13 @@ function Role() {
             </thead>
             <tbody>
               {roles.map((role) => (
-                <tr key={role.roleId}>
-                  <td>{role.roleName}</td>
+                <tr key={role?.roleId}>
+                  <td>{role?.roleName}</td>
                   <td>
                     <button
                       className="btn btn-sm btn-success"
                       onClick={() => {
-                        setCurrentRoleId(role.roleId); // Lưu roleId vào state
+                        setCurrentRoleId(role?.roleId); // Lưu roleId vào state
                         setShowModal(true);
                       }}
                     >
@@ -254,24 +261,24 @@ function Role() {
             />
             <div className="max-h-40 overflow-y-auto mb-4">
               {users
-                .filter((user) =>
-                  user.name.toLowerCase().includes(searchTerm.toLowerCase())
+                ?.filter((user) =>
+                  user?.name?.toLowerCase()?.includes(searchTerm?.toLowerCase())
                 )
                 .map((user) => (
-                  <label key={user.id} className="cursor-pointer block">
+                  <label key={user?.id} className="cursor-pointer block">
                     <input
                       type="checkbox"
                       className="checkbox"
-                      checked={selectedUsers.includes(user.id)}
+                      checked={selectedUsers?.includes(user?.id)}
                       onChange={() => {
                         setSelectedUsers((prev) =>
-                          prev.includes(user.id)
-                            ? prev.filter((id) => id !== user.id)
-                            : [...prev, user.id]
+                          prev.includes(user?.id)
+                            ? prev.filter((id) => id !== user?.id)
+                            : [...prev, user?.id]
                         );
                       }}
                     />
-                    {user.name}
+                    {user?.name}
                   </label>
                 ))}
             </div>
