@@ -1,19 +1,36 @@
-import { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import UserService from '../../../services/UserService';
 
-function UserSelectionModal({ showModal, closeModal }) {
-  const [searchTerm, setSearchTerm] = useState('');
+function UserSelectionModal({ showModal, closeModal, onUserSelect }) {
+  const [users, setUsers] = useState([]); // Danh sách người dùng
+  const [selectedUserIds, setSelectedUserIds] = useState([]); // ID người dùng đã chọn
 
-  const users = [
-    // Danh sách người dùng mẫu, bạn có thể thay bằng dữ liệu từ API
-    { username: 'user1', fullName: 'Nguyễn Văn A', avatar: 'avatar1.png' },
-    { username: 'user2', fullName: 'Trần Thị B', avatar: 'avatar2.png' },
-    // Thêm người dùng khác...
-  ];
+  useEffect(() => {
+    const fetchUsers = async () => {
+      // Giả sử có một hàm fetchUsers để lấy danh sách người dùng từ API
+      const userList = await UserService.getUsers(); // Thay thế với logic lấy người dùng từ API
+      setUsers(userList);
+    };
 
-  const filteredUsers = users.filter(user => 
-    user.username.includes(searchTerm) || 
-    user.fullName.includes(searchTerm)
-  );
+    if (showModal) {
+      fetchUsers();
+    }
+  }, [showModal]);
+
+  const handleCheckboxChange = (userId) => {
+    setSelectedUserIds((prev) => {
+      if (prev.includes(userId)) {
+        return prev.filter(id => id !== userId); // Bỏ chọn người dùng
+      } else {
+        return [...prev, userId]; // Chọn người dùng
+      }
+    });
+  };
+
+  const handleConfirmSelection = () => {
+    onUserSelect(selectedUserIds); // Truyền danh sách ID người dùng đã chọn
+    closeModal(); // Đóng modal
+  };
 
   return (
     <>
@@ -21,39 +38,26 @@ function UserSelectionModal({ showModal, closeModal }) {
         <div className="modal modal-open">
           <div className="modal-box">
             <h3 className="font-bold text-lg">Chọn người dùng</h3>
-            <input 
-              type="text" 
-              className="input input-bordered w-full mb-4" 
-              placeholder="Tìm kiếm người dùng..." 
-              value={searchTerm} 
-              onChange={(e) => setSearchTerm(e.target.value)} 
-            />
-            <table className="table w-full">
-              <thead>
-                <tr>
-                  <th>Avatar</th>
-                  <th>Username</th>
-                  <th>Họ tên</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredUsers.map((user, index) => (
-                  <tr key={index}>
-                    <td>
-                      <div className="avatar">
-                        <div className="mask mask-squircle w-10 h-10">
-                          <img src={user?.avatar} alt="Avatar" />
-                        </div>
-                      </div>
-                    </td>
-                    <td>{user?.username}</td>
-                    <td>{user?.fullName}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="max-h-60 overflow-y-auto">
+              {users.map(user => (
+                <div key={user.id} className="flex items-center">
+                  <input 
+                    type="checkbox" 
+                    checked={selectedUserIds.includes(user?.id)} 
+                    onChange={() => handleCheckboxChange(user?.id)} 
+                    className="mr-2" 
+                  />
+                  <span>{user?.fullName} ({user?.username})</span>
+                </div>
+              ))}
+            </div>
             <div className="modal-action">
-              <button className="btn" onClick={closeModal}>Đóng</button>
+              <button type="button" className="btn btn-primary" onClick={handleConfirmSelection}>
+                Xác nhận
+              </button>
+              <button type="button" className="btn" onClick={closeModal}>
+                Hủy
+              </button>
             </div>
           </div>
         </div>
