@@ -3,7 +3,6 @@ import { MODAL_BODY_TYPES } from '../utils/globalConstantUtil'
 import { useSelector, useDispatch } from 'react-redux'
 import { closeModal } from '../features/common/modalSlice'
 import AddLeadModalBody from '../features/leads/components/AddLeadModalBody'
-import VoucherModalBody from '../features/voucher/components/VoucherModalBody.js'
 import ConfirmationModalBody from '../features/common/components/ConfirmationModalBody'
 
 
@@ -35,8 +34,6 @@ function ModalLayout() {
                     {
                         {
                             [MODAL_BODY_TYPES.LEAD_ADD_NEW]: <AddLeadModalBody closeModal={close} extraObject={extraObject} />,
-                            [MODAL_BODY_TYPES.VOUCHER_ADD_NEW]: <VoucherModalBody closeModal={close} extraObject={extraObject} />,
-                            [MODAL_BODY_TYPES.UPDATE_VOUCHER]: <VoucherModalBody closeModal={close} extraObject={extraObject} />,
                             [MODAL_BODY_TYPES.CONFIRMATION]: <ConfirmationModalBody extraObject={extraObject} closeModal={close} />,
                             [MODAL_BODY_TYPES.DEFAULT]: <div></div>
                         }[bodyType]
