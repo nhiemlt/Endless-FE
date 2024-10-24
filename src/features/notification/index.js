@@ -1,12 +1,23 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import TitleCard from "../../components/Cards/TitleCard";
 import NotificationModal from './components/AddNotificationModal'; // Nhập component modal mới
 import DetailModal from './components/DetailModal'; // Nhập component modal chi tiết
+import NotificationService from '../../services/notificationService'; // Nhập NotificationService
 
 function Notification() {
+  // Quản lý state
   const [showModal, setShowModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [notificationDetails, setNotificationDetails] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [totalPages, setTotalPages] = useState(0); // Quản lý tổng số trang
+  const [currentPage, setCurrentPage] = useState(0); // Quản lý trang hiện tại
+  const [size, setSize] = useState(10); // Kích thước trang (số thông báo trên mỗi trang)
+  const [sortBy, setSortBy] = useState('notificationDate'); // Sắp xếp theo cột nào
+  const [sortDir, setSortDir] = useState('desc'); // Hướng sắp xếp
+  const [searchTerm, setSearchTerm] = useState(''); // Quản lý từ khóa tìm kiếm
+  const [filterStatus, setFilterStatus] = useState(''); // Lọc theo trạng thái
 
   // Hàm mở modal
   const openModal = () => {
@@ -30,74 +41,126 @@ function Notification() {
     setNotificationDetails(null);
   };
 
-  const notifications = [
-    {
-      title: 'Thông báo 1',
-      type: 'Loại 1',
-      content: 'Nội dung thông báo 1',
-      date: '2024-10-23',
-      recipients: ['Nguyễn Văn A', 'Trần Thị B'],
-    },
-    {
-      title: 'Thông báo 2',
-      type: 'Loại 2',
-      content: 'Nội dung thông báo 2',
-      date: '2024-10-22',
-      recipients: ['Lý Tính Nhiệm'],
-    },
-    // Thêm thông báo khác nếu cần...
-  ];
+  // Lấy danh sách thông báo từ API
+  const fetchNotifications = async () => {
+    setLoading(true);
+    try {
+      const data = await NotificationService.getAllNotifications(filterStatus, searchTerm, currentPage, size, sortBy, sortDir);
+      console.log(data); // Thêm dòng này để kiểm tra dữ liệu trả về
+      setNotifications(data.content); // Giả sử response trả về theo định dạng `content`
+      setTotalPages(data.totalPages); // Lưu tổng số trang
+    } catch (error) {
+      console.error("Lỗi khi lấy thông báo:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications(); // Gọi hàm để lấy dữ liệu khi component được render hoặc các thông số thay đổi
+  }, [currentPage, size, sortBy, sortDir, searchTerm, filterStatus]);
+
+  // Hàm xử lý tìm kiếm
+  const handleSearch = (event) => {
+    setSearchTerm(event.target.value);
+    setCurrentPage(0); // Reset lại trang về 0 sau khi tìm kiếm
+  };
+
+  // Hàm xử lý thay đổi trang
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+  };
+
+  // Hàm xử lý thay đổi sắp xếp
+  const handleSortChange = (newSortBy) => {
+    const newSortDir = sortBy === newSortBy && sortDir === 'asc' ? 'desc' : 'asc';
+    setSortBy(newSortBy);
+    setSortDir(newSortDir);
+  };
+
+  // Hàm xử lý lọc trạng thái
+  const handleStatusFilter = (event) => {
+    setFilterStatus(event.target.value);
+    setCurrentPage(0); // Reset lại trang về 0 sau khi lọc
+  };
 
   return (
     <TitleCard title="Thông báo" topMargin="mt-2">
       {/* Nút mở modal tạo thông báo */}
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-between mb-4">
+        <input
+          type="text"
+          placeholder="Tìm kiếm theo tiêu đề..."
+          className="input input-bordered w-full max-w-xs"
+          value={searchTerm}
+          onChange={handleSearch}
+        />
+        <select
+          className="select select-bordered w-full max-w-xs"
+          value={filterStatus}
+          onChange={handleStatusFilter}
+        >
+          <option value="">Tất cả trạng thái</option>
+          <option value="READ">Đã đọc</option>
+          <option value="UNREAD">Chưa đọc</option>
+        </select>
         <button className="btn btn-primary" onClick={openModal}>
           Tạo thông báo
         </button>
       </div>
 
-      {/* Thanh lọc - tìm kiếm - sắp xếp */}
-      <div className="mb-4 p-4 bg-gray-100 rounded-lg flex gap-4">
-        <input type="text" className="input input-bordered w-full" placeholder="Tìm kiếm thông báo..." />
-        <select className="select select-bordered">
-          <option value="latest">Mới nhất</option>
-          <option value="oldest">Cũ nhất</option>
-          <option value="unread">Chưa đọc</option>
-        </select>
-        <button className="btn btn-outline">Lọc</button>
-      </div>
+      {/* Hiển thị thông báo nếu đang tải */}
+      {loading ? (
+        <p>Đang tải thông báo...</p>
+      ) : (
+        <>
+          {/* Bảng hiển thị danh sách thông báo */}
+          <table className="table w-full">
+            <thead>
+              <tr>
+                <th onClick={() => handleSortChange('title')}>Tiêu đề</th>
+                <th onClick={() => handleSortChange('type')}>Loại</th>
+                <th>Nội dung</th>
+                <th onClick={() => handleSortChange('notificationDate')}>Ngày tạo</th>
+                <th>Hành động</th>
+              </tr>
+            </thead>
+            <tbody>
+              {notifications.map((notification, index) => (
+                <tr key={index}>
+                  <td>{notification?.title}</td>
+                  <td>{notification?.type}</td>
+                  <td>{notification?.content}</td>
+                  <td>{notification?.notificationDate}</td>
+                  <td>
+                    <button 
+                      className="btn btn-sm btn-outline" 
+                      onClick={() => openDetailModal(notification)}
+                    >
+                      Chi tiết
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
 
-      {/* Bảng hiển thị danh sách thông báo */}
-      <table className="table w-full">
-        <thead>
-          <tr>
-            <th>Tiêu đề</th>
-            <th>Loại</th>
-            <th>Nội dung</th>
-            <th>Ngày tạo</th>
-            <th>Hành động</th>
-          </tr>
-        </thead>
-        <tbody>
-          {notifications.map((notification, index) => (
-            <tr key={index}>
-              <td>{notification.title}</td>
-              <td>{notification.type}</td>
-              <td>{notification.content}</td>
-              <td>{notification.date}</td>
-              <td>
-                <button 
-                  className="btn btn-sm btn-outline" 
-                  onClick={() => openDetailModal(notification)}
-                >
-                  Chi tiết
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+          {/* Phân trang */}
+          <div className="join flex justify-center mt-4">
+            {[...Array(totalPages)].map((_, index) => (
+              <input
+                key={index}
+                className="join-item btn btn-square"
+                type="radio"
+                name="options"
+                aria-label={`Trang ${index + 1}`}
+                checked={currentPage === index}
+                onChange={() => handlePageChange(index)} // Chuyển sang trang được chọn
+              />
+            ))}
+          </div>
+        </>
+      )}
 
       {/* Sử dụng component modal tạo thông báo */}
       <NotificationModal showModal={showModal} closeModal={closeModal} />

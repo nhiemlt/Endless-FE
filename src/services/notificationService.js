@@ -4,10 +4,28 @@ import constants from '../utils/globalConstantUtil';
 const NotificationService = {
     // Lấy danh sách thông báo cho người dùng đăng nhập hiện tại
     getNotifications: async (page = 0, size = 10, sortBy = 'NotificationDate', sortDir = 'desc') => {
-        const response = await axios.get(`${constants.API_BASE_URL}/notifications/user`, {
-            params: { page, size, sortBy, sortDir }
-        });
-        return response.data;
+        try {
+            const response = await axios.get(`${constants.API_BASE_URL}/notifications/user`, {
+                params: { page, size, sortBy, sortDir }
+            });
+            return response.data;
+        } catch (error) {
+            console.error("Error fetching notifications:", error);
+            throw error;
+        }
+    },
+
+    // Lấy tất cả thông báo với lọc và phân trang
+    getAllNotifications: async (status, title, page = 0, size = 10, sortBy = 'NotificationDate', sortDir = 'desc') => {
+        try {
+            const response = await axios.get(`${constants.API_BASE_URL}/notifications`, {
+                params: {status, title, page, size, sortBy, sortDir }
+            });
+            return response.data;
+        } catch (error) {
+            console.error("Error fetching all notifications:", error);
+            throw error;
+        }
     },
 
     // Lấy danh sách thông báo cho một người dùng cụ thể theo userId

@@ -42,12 +42,12 @@ function UserSelectionModal({ showModal, closeModal }) {
                     <td>
                       <div className="avatar">
                         <div className="mask mask-squircle w-10 h-10">
-                          <img src={user.avatar} alt="Avatar" />
+                          <img src={user?.avatar} alt="Avatar" />
                         </div>
                       </div>
                     </td>
-                    <td>{user.username}</td>
-                    <td>{user.fullName}</td>
+                    <td>{user?.username}</td>
+                    <td>{user?.fullName}</td>
                   </tr>
                 ))}
               </tbody>
