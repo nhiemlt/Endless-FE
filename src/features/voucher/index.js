@@ -3,12 +3,12 @@ import moment from "moment";
 import { useDispatch, useSelector } from "react-redux";
 import TitleCard from "../../components/Cards/TitleCard";
 import { openModal } from "../common/modalSlice";
-import { getVouchersContent, deleteVoucher } from "./voucherSlice";
+import { getVouchersContent, deleteVoucher } from "../../services/voucherSlice.js";
 import { MODAL_BODY_TYPES } from '../../utils/globalConstantUtil';
 import TrashIcon from '@heroicons/react/24/outline/TrashIcon';
 import PencilIcon from '@heroicons/react/24/outline/PencilIcon';
 import { showNotification } from '../common/headerSlice.js';
-import { fetchVoucherById } from './voucherSlice.js';
+import { fetchVoucherById } from '../../services/voucherSlice.js';
 import UpdateVoucherModalBody from "./components/UpdateVoucherModalBody.js";
 
 // Component để thêm nút "Add New" voucher

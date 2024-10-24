@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { closeModal } from "../../common/modalSlice"; // Đảm bảo rằng bạn có action này để đóng modal
-import { updateVoucher, fetchVoucherById } from "../voucherSlice"; // Phương thức fetchVoucherById cần được thêm vào voucherSlice
+import { updateVoucher, fetchVoucherById } from "../../../services/voucherSlice"; // Phương thức fetchVoucherById cần được thêm vào voucherSlice
 
 const UpdateVoucherModalBody = ({ voucherID }) => {
     const dispatch = useDispatch();
