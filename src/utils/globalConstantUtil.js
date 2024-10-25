@@ -1,5 +1,7 @@
 module.exports = Object.freeze({
     API_BASE_URL: "http://localhost:8080",
+    GHN_API_BASE_URL: "https://online-gateway.ghn.vn",
+    GHN_API_TOKEN: "7bb9af15-8fb6-11ef-a205-de063ca823db",
     MODAL_BODY_TYPES : {
         USER_DETAIL : "USER_DETAIL",
         LEAD_ADD_NEW : "LEAD_ADD_NEW",
@@ -7,6 +9,7 @@ module.exports = Object.freeze({
         UPDATE_VOUCHER : "UPDATE_VOUCHER",
         CONFIRMATION : "CONFIRMATION",
         DEFAULT : "",
+
     },
 
     RIGHT_DRAWER_TYPES : {
