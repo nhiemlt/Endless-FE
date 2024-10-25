@@ -6,7 +6,6 @@ import { showNotification } from "../common/headerSlice";
 import VoucherService from "../../services/voucherService";
 import PencilIcon from '@heroicons/react/24/outline/PencilIcon';
 
-
 function Vouchers() {
     const dispatch = useDispatch();
 
@@ -25,7 +24,7 @@ function Vouchers() {
 
     const [isEditing, setIsEditing] = useState(false);
     const [editingVoucherId, setEditingVoucherId] = useState(null);
-    const [page, setPage] = useState(0); // Trang hiện tại
+    const [currentPage, setCurrentPage] = useState(0); // Trang hiện tại
     const [size, setSize] = useState(10); // Số lượng bản ghi trên mỗi trang
     const [totalPages, setTotalPages] = useState(1); // Tổng số trang
     const [searchVoucherCode, setSearchVoucherCode] = useState(''); // Để lưu voucherCode tìm kiếm
@@ -35,7 +34,7 @@ function Vouchers() {
         setIsLoading(true);
         try {
             const response = await VoucherService.fetchVouchers({
-                page: page, // Số trang hiện tại
+                page: currentPage, // Số trang hiện tại
                 size: size, // Số lượng bản ghi trên mỗi trang
                 sortBy: 'voucherID',
                 sortDir: 'asc',
@@ -62,11 +61,10 @@ function Vouchers() {
         }
     };
 
-    // Gọi loadVouchers mỗi khi page, size hoặc searchVoucherCode thay đổi
+    // Gọi loadVouchers mỗi khi currentPage, size hoặc searchVoucherCode thay đổi
     useEffect(() => {
         loadVouchers();
-    }, [page, size, searchVoucherCode, dispatch]);
-
+    }, [currentPage, size, searchVoucherCode, dispatch]);
 
     // Xử lý thay đổi giá trị form
     const handleChange = (e) => {
@@ -97,9 +95,9 @@ function Vouchers() {
 
     const closeAddModel = function () {
         document.getElementById('my_modal_4').close();
-        setEditingVoucherId(null)
+        setEditingVoucherId(null);
         setIsEditing(false);
-    }
+    };
 
     // Hàm để mở modal trong chế độ cập nhật
     const handleEdit = (voucher) => {
@@ -135,6 +133,18 @@ function Vouchers() {
         document.getElementById('my_modal_4').showModal();
     };
 
+    const handlePrevPage = () => {
+        if (currentPage > 0) {
+            setCurrentPage(currentPage - 1);
+        }
+    };
+
+    const handleNextPage = () => {
+        if (currentPage < totalPages - 1) {
+            setCurrentPage(currentPage + 1);
+        }
+    };
+
     return (
         <>
             <TitleCard title="Voucher" topMargin="mt-2">
@@ -145,11 +155,13 @@ function Vouchers() {
                             type="text"
                             placeholder="Tìm kiếm mã voucher..."
                             value={searchVoucherCode}
-                            onChange={(e) => setSearchVoucherCode(e.target.value)}
+                            onChange={(e) => {
+                                setSearchVoucherCode(e.target.value);
+                                setCurrentPage(0); // Đặt lại currentPage về 0 khi tìm kiếm
+                            }}
                             className="input input-bordered w-full md:w-50 h-8"
                             onClick={loadVouchers}
                         />
-                        
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                         <button className="btn btn-outline btn-sm btn-primary" onClick={handleAdd}>
@@ -267,75 +279,87 @@ function Vouchers() {
                                         />
                                     </div>
                                 </div>
-                                <div className="modal-action" style={{ display: 'flex', justifyContent: 'flex-end', gap: '5px' }}>
-                                    <button type="submit" className="btn btn-primary btn-sm">
+
+                                <div className="modal-action">
+                                    <button type="submit" className="btn btn-outline btn-sm btn-primary">
                                         {isEditing ? "Cập nhật" : "Thêm"}
                                     </button>
-                                    <a onClick={closeAddModel} className="btn btn-sm">Hủy</a>
+                                    <button type="button" className="btn btn-outline btn-sm" onClick={closeAddModel}>Đóng</button>
                                 </div>
                             </div>
                         </form>
                     </div>
                 </dialog>
 
-                {/* Bảng hiển thị danh sách vouchers */}
-                {
-                    loading ? (
-                        <div>Loading...</div>
-                    ) : (
-                        <table className="table table-xs mt-3">
-                            <thead>
+                {/* Bảng danh sách voucher */}
+                <div className="overflow-x-auto">
+                    <table className="table w-full">
+                        <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th>Mã Voucher</th>
+                                <th>Giảm giá</th>
+                                <th>Giá giảm tối thiểu</th>
+                                <th>Giá giảm tối đa</th>
+                                <th>Hóa đơn tối thiểu</th>
+                                <th>Hình thức</th>
+                                <th>Ngày bắt đầu</th>
+                                <th>Ngày kết thúc</th>
+                                <th>Hàng động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {loading ? (
                                 <tr>
-                                    <th>STT</th>
-                                    <th>Mã Voucher</th>
-                                    <th>Mức giảm giá</th>
-                                    <th>Giảm giá tối thiểu</th>
-                                    <th>Giảm giá tối đa</th>
-                                    <th>Hóa đơn tối thiểu</th>
-                                    <th>Hình thức giảm giá</th>
-                                    <th>Ngày bắt đầu</th>
-                                    <th>Ngày kết thúc</th>
-                                    <th>Hành động</th>
+                                    <td colSpan={10} className="text-center">Đang tải...</td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                {vouchers.map((voucher, index) => (
-                                    <tr key={voucher.id}>
-                                        <td>{index + 1}</td>
+                            ) : vouchers.length > 0 ? (
+                                vouchers.map((voucher, index) => (
+                                    <tr key={voucher.voucherID}>
+                                        <td>{currentPage * size + index + 1}</td>
                                         <td>{voucher.voucherCode}</td>
-                                        <td>{voucher.discountLevel}</td>
-                                        <td>{voucher.leastDiscount}</td>
-                                        <td>{voucher.biggestDiscount}</td>
-                                        <td>{voucher.leastBill}</td>
+                                        <td>{voucher.discountLevel} %</td>
+                                        <td>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(voucher.leastDiscount)}</td>
+                                        <td>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(voucher.biggestDiscount)}</td>
+                                        <td>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(voucher.leastBill)}</td>
+
                                         <td>{voucher.discountForm}</td>
-                                        <td>{new Date(voucher.startDate).toLocaleDateString()}</td>
-                                        <td>{new Date(voucher.endDate).toLocaleDateString()}</td>
+                                        <td>{voucher.startDate}</td>
+                                        <td>{voucher.endDate}</td>
                                         <td>
-                                            <PencilIcon className="h-10 w-5 text-warning" onClick={() => handleEdit(voucher)} />
+                                            <button onClick={() => handleEdit(voucher)} className="btn btn-sm btn-outline btn-warning">
+                                                <PencilIcon className="h-5 w-5" />
+                                            </button>
                                         </td>
                                     </tr>
-                                ))}
-                            </tbody>
-                            <tfoot>
+                                ))
+                            ) : (
                                 <tr>
-                                    <td colSpan="10">
-                                        <div className="flex justify-center mt-4">
-                                            {[...Array(totalPages)].map((_, index) => (
-                                                <button
-                                                    key={index}
-                                                    className={`btn btn-xs btn-outline btn-circle me-1 ${page === index ? 'btn-active' : ''}`}
-                                                    onClick={() => setPage(index)} // Chuyển trang
-                                                >
-                                                    {index + 1}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </td>
+                                    <td colSpan={10} className="text-center">Không có voucher nào</td>
                                 </tr>
-                            </tfoot>
-                        </table>
-                    )
-                }
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+                {/* Điều hướng trang */}
+                <div className="join mt-4 flex justify-center w-full">
+                    <button onClick={handlePrevPage} className="join-item btn" disabled={currentPage === 0}>
+                        Trước
+                    </button>
+                    {Array.from({ length: totalPages }, (_, index) => (
+                        <button
+                            key={index}
+                            onClick={() => setCurrentPage(index)}
+                            className={`join-item btn ${currentPage === index ? "btn-active" : ""}`}
+                        >
+                            {index + 1}
+                        </button>
+                    ))}
+                    <button onClick={handleNextPage} className="join-item btn" disabled={currentPage >= totalPages - 1}>
+                        Tiếp
+                    </button>
+                </div>
+
             </TitleCard >
         </>
     );
