@@ -2,6 +2,7 @@ import axios from 'axios';
 import constants from '../utils/globalConstantUtil';
 
 const RoleService = {
+
   getAllRoles: async () => {
     const response = await axios.get(`${constants.API_BASE_URL}/api/roles`);
     return response.data;
