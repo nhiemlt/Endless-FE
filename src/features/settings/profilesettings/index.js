@@ -90,6 +90,7 @@ function ProfileSettings() {
         try {
             await ProfileService.updateCurrentUser(updatedData);
             dispatch(showNotification({ message: "Cập nhật thông tin thành công", status: 1 }));
+            window.location.reload();
         } catch (error) {
             dispatch(showNotification({ message: `Cập nhật thông tin thất bại: ${error.message}`, status: 0 }));
             console.error("Error updating user:", error);

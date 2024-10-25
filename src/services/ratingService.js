@@ -2,13 +2,15 @@ import axios from 'axios';
 import constants from '../utils/globalConstantUtil';
 
 const RatingService = {
-    // Lấy danh sách ratings với các tham số phân trang, sắp xếp, và tìm kiếm theo voucherCode
     fetchRatings: async (params) => {
         try {
+            // Gọi API với các tham số được truyền vào
             const response = await axios.get(`${constants.API_BASE_URL}/api/ratings`, { params });
-            return response.data; // Trả về dữ liệu vouchers
+            return response.data; // Trả về dữ liệu đánh giá
         } catch (error) {
-            RatingService.handleError(error); // Gọi handleError để xử lý lỗi
+            // Xử lý lỗi và ném ra thông báo lỗi
+            console.error("Error occurred while fetching ratings:", error);
+            throw new Error(error.response ? error.response.data.error : "An unexpected error occurred");
         }
     },
 

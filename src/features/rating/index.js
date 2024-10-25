@@ -15,7 +15,6 @@ function Rating() {
   const [totalPages, setTotalPages] = useState(1);
   const [ratingDetails, setRatingDetails] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [searchProductName, setSearchProductName] = useState('');
 
   const loadRatings = async () => {
     setIsLoading(true);
@@ -24,7 +23,6 @@ function Rating() {
         page,
         size,
         sortDir: 'asc',
-        productName: searchProductName, // Sử dụng searchProductName để tìm kiếm
       };
       const response = await RatingService.fetchRatings(params);
       setTotalPages(response.data.totalPages);
@@ -45,7 +43,7 @@ function Rating() {
 
   useEffect(() => {
     loadRatings();
-  }, [page, size, searchProductName, dispatch]); // Thêm searchProductName vào mảng phụ thuộc
+  }, [page, size, dispatch]); 
 
   const fetchRatingDetails = async (ratingID) => {
     try {
@@ -82,19 +80,7 @@ function Rating() {
   if (error) return <div>Error: {error}</div>;
 
   return (
-    <TitleCard title="Danh sách đánh giá"
-      TopSideButtons={
-        <div className="flex items-center">
-          <input
-            type="text"
-            value={searchProductName}
-            placeholder="Tìm kiếm theo tên sản phẩm..."
-            className="input input-bordered w-full md:w-50 h-8"
-            onChange={(e) => setSearchProductName(e.target.value)} // Cập nhật searchProductName
-          />
-        </div>
-      }
-    >
+    <TitleCard title="Danh sách đánh giá">
       <table className="table table-xs">
         <thead>
           <tr>
@@ -136,10 +122,10 @@ function Rating() {
                 </td>
                 <td>
                   <button
-                    className="btn btn-sm btn-outline btn-success mx-1 border-0"
+                    className="btn btn-sm btn-outline btn-warning mx-1 border-0"
                     onClick={() => openModal(rating.ratingID)}
                   >
-                    xem
+                    Chi tiết
                   </button>
                 </td>
               </tr>
