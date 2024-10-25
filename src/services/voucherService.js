@@ -2,7 +2,7 @@ import axios from 'axios';
 import constants from '../utils/globalConstantUtil';
 
 const VoucherService = {
-    // Lấy danh sách vouchers với các tham số phân trang, sắp xếp
+    // Lấy danh sách vouchers với các tham số phân trang, sắp xếp, và tìm kiếm theo voucherCode
     fetchVouchers: async (params) => {
         try {
             const response = await axios.get(`${constants.API_BASE_URL}/api/vouchers`, { params });
@@ -11,6 +11,7 @@ const VoucherService = {
             VoucherService.handleError(error); // Gọi handleError để xử lý lỗi
         }
     },
+
 
     // Lấy voucher theo ID
     fetchVoucherById: async (voucherID) => {
@@ -25,7 +26,7 @@ const VoucherService = {
     // Cập nhật voucher
     updateVoucher: async (voucherID, updatedData) => {
         try {
-            
+
             console.log(updatedData)
             const response = await axios.put(`${constants.API_BASE_URL}/api/vouchers/update/${voucherID}`, updatedData);
             console.log(response.data)

@@ -4,8 +4,12 @@ import moment from "moment";
 import TitleCard from "../../components/Cards/TitleCard";
 import { showNotification } from "../common/headerSlice";
 import VoucherService from "../../services/voucherService";
+import PencilIcon from '@heroicons/react/24/outline/PencilIcon';
+
 
 function Vouchers() {
+    const dispatch = useDispatch();
+
     const [vouchers, setVouchers] = useState([]);
     const [loading, setIsLoading] = useState(true);
     const [formState, setFormState] = useState({
@@ -18,21 +22,28 @@ function Vouchers() {
         startDate: "",
         endDate: "",
     });
+
     const [isEditing, setIsEditing] = useState(false);
     const [editingVoucherId, setEditingVoucherId] = useState(null);
-    const dispatch = useDispatch();
+    const [page, setPage] = useState(0); // Trang hiện tại
+    const [size, setSize] = useState(10); // Số lượng bản ghi trên mỗi trang
+    const [totalPages, setTotalPages] = useState(1); // Tổng số trang
+    const [searchVoucherCode, setSearchVoucherCode] = useState(''); // Để lưu voucherCode tìm kiếm
 
     // Hàm để lấy danh sách vouchers
     const loadVouchers = async () => {
         setIsLoading(true);
         try {
             const response = await VoucherService.fetchVouchers({
-                page: 0,
-                size: 10,
+                page: page, // Số trang hiện tại
+                size: size, // Số lượng bản ghi trên mỗi trang
                 sortBy: 'voucherID',
-                sortDir: 'asc'
+                sortDir: 'asc',
+                voucherCode: searchVoucherCode, // VoucherCode tìm kiếm
             });
+
             const fetchedVouchers = response.content;
+            setTotalPages(response.totalPages); // Cập nhật tổng số trang
 
             if (Array.isArray(fetchedVouchers)) {
                 const formattedVouchers = fetchedVouchers.map(voucher => ({
@@ -51,9 +62,11 @@ function Vouchers() {
         }
     };
 
+    // Gọi loadVouchers mỗi khi page, size hoặc searchVoucherCode thay đổi
     useEffect(() => {
         loadVouchers();
-    }, [dispatch]);
+    }, [page, size, searchVoucherCode, dispatch]);
+
 
     // Xử lý thay đổi giá trị form
     const handleChange = (e) => {
@@ -81,6 +94,12 @@ function Vouchers() {
             dispatch(showNotification({ message: "Lỗi trong quá trình thêm/cập nhật voucher", status: 0 }));
         }
     };
+
+    const closeAddModel = function () {
+        document.getElementById('my_modal_4').close();
+        setEditingVoucherId(null)
+        setIsEditing(false);
+    }
 
     // Hàm để mở modal trong chế độ cập nhật
     const handleEdit = (voucher) => {
@@ -119,122 +138,140 @@ function Vouchers() {
     return (
         <>
             <TitleCard title="Voucher" topMargin="mt-2">
-                <button className="btn btn-sm btn-primary" onClick={handleAdd}>
-                    {isEditing ? "Cập nhật voucher" : "Thêm voucher"}
-                </button>
+                <div className="flex flex-col md:flex-row justify-between items-center w-full mb-4">
+                    {/* Thanh tìm kiếm voucherCode */}
+                    <div className="flex justify-start items-center space-x-2 mb-2 mr-2 md:mb-0">
+                        <input
+                            type="text"
+                            placeholder="Tìm kiếm mã voucher..."
+                            value={searchVoucherCode}
+                            onChange={(e) => setSearchVoucherCode(e.target.value)}
+                            className="input input-bordered w-full md:w-50 h-8"
+                            onClick={loadVouchers}
+                        />
+                        
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                        <button className="btn btn-outline btn-sm btn-primary" onClick={handleAdd}>
+                            {isEditing ? "Cập nhật voucher" : "Thêm voucher"}
+                        </button>
+                    </div>
+                </div>
                 <dialog id="my_modal_4" className="modal">
                     <div className="modal-box w-11/12 max-w-5xl">
                         <h3 className="font-bold text-lg">{isEditing ? "Cập nhật Voucher" : "Thêm Voucher"}</h3>
                         <form className="mt-3" onSubmit={handleSubmit}>
-                            <div className="flex flex-wrap">
-                                {/* Mã Voucher */}
-                                <div className="w-full md:w-1/2 pr-2 mb-4">
-                                    <label className="block text-sm font-medium text-gray-700">Mã Voucher</label>
-                                    <input
-                                        type="text"
-                                        name="voucherCode"
-                                        value={formState.voucherCode}
-                                        onChange={handleChange}
-                                        className="input input-bordered w-full"
-                                        required
-                                    />
-                                </div>
+                            <div className="mb-4">
+                                <div className="flex flex-wrap">
+                                    {/* Mã Voucher */}
+                                    <div className="w-full md:w-1/2 pr-2 mb-4">
+                                        <label className="block text-sm font-medium text-gray-700 mb-3">Mã Voucher</label>
+                                        <input
+                                            type="text"
+                                            name="voucherCode"
+                                            value={formState.voucherCode}
+                                            onChange={handleChange}
+                                            className="input input-bordered w-full"
+                                            required
+                                        />
+                                    </div>
 
-                                {/* Mức giảm giá */}
-                                <div className="w-full md:w-1/2 pl-2 mb-4">
-                                    <label className="block text-sm font-medium text-gray-700">Mức giảm giá</label>
-                                    <input
-                                        type="number"
-                                        name="discountLevel"
-                                        value={formState.discountLevel}
-                                        onChange={handleChange}
-                                        className="input input-bordered w-full"
-                                        required
-                                    />
-                                </div>
+                                    {/* Mức giảm giá */}
+                                    <div className="w-full md:w-1/2 pl-2 mb-4">
+                                        <label className="block text-sm font-medium text-gray-700 mb-3">Mức giảm giá</label>
+                                        <input
+                                            type="number"
+                                            name="discountLevel"
+                                            value={formState.discountLevel}
+                                            onChange={handleChange}
+                                            className="input input-bordered w-full"
+                                            required
+                                        />
+                                    </div>
 
-                                {/* Giá giảm tối thiểu */}
-                                <div className="w-full md:w-1/2 pr-2 mb-4">
-                                    <label className="block text-sm font-medium text-gray-700">Giá giảm tối thiểu</label>
-                                    <input
-                                        type="number"
-                                        name="leastDiscount"
-                                        value={formState.leastDiscount}
-                                        onChange={handleChange}
-                                        className="input input-bordered w-full"
-                                        required
-                                    />
-                                </div>
+                                    {/* Giá giảm tối thiểu */}
+                                    <div className="w-full md:w-1/2 pr-2 mb-4">
+                                        <label className="block text-sm font-medium text-gray-700 mb-3">Giá giảm tối thiểu</label>
+                                        <input
+                                            type="number"
+                                            name="leastDiscount"
+                                            value={formState.leastDiscount}
+                                            onChange={handleChange}
+                                            className="input input-bordered w-full"
+                                            required
+                                        />
+                                    </div>
 
-                                {/* Giá giảm tối đa */}
-                                <div className="w-full md:w-1/2 pl-2 mb-4">
-                                    <label className="block text-sm font-medium text-gray-700">Giá giảm tối đa</label>
-                                    <input
-                                        type="number"
-                                        name="biggestDiscount"
-                                        value={formState.biggestDiscount}
-                                        onChange={handleChange}
-                                        className="input input-bordered w-full"
-                                        required
-                                    />
-                                </div>
+                                    {/* Giá giảm tối đa */}
+                                    <div className="w-full md:w-1/2 pl-2 mb-4">
+                                        <label className="block text-sm font-medium text-gray-700 mb-3">Giá giảm tối đa</label>
+                                        <input
+                                            type="number"
+                                            name="biggestDiscount"
+                                            value={formState.biggestDiscount}
+                                            onChange={handleChange}
+                                            className="input input-bordered w-full"
+                                            required
+                                        />
+                                    </div>
 
-                                {/* Hóa đơn tối thiểu */}
-                                <div className="w-full md:w-1/2 pr-2 mb-4">
-                                    <label className="block text-sm font-medium text-gray-700">Hóa đơn tối thiểu</label>
-                                    <input
-                                        type="number"
-                                        name="leastBill"
-                                        value={formState.leastBill}
-                                        onChange={handleChange}
-                                        className="input input-bordered w-full"
-                                        required
-                                    />
-                                </div>
+                                    {/* Hóa đơn tối thiểu */}
+                                    <div className="w-full md:w-1/2 pr-2 mb-4">
+                                        <label className="block text-sm font-medium text-gray-700 mb-3">Hóa đơn tối thiểu</label>
+                                        <input
+                                            type="number"
+                                            name="leastBill"
+                                            value={formState.leastBill}
+                                            onChange={handleChange}
+                                            className="input input-bordered w-full"
+                                            required
+                                        />
+                                    </div>
 
-                                {/* Hình thức giảm giá */}
-                                <div className="w-full md:w-1/2 pl-2 mb-4">
-                                    <label className="block text-sm font-medium text-gray-700">Hình thức giảm giá</label>
-                                    <input
-                                        type="text"
-                                        name="discountForm"
-                                        value={formState.discountForm}
-                                        onChange={handleChange}
-                                        className="input input-bordered w-full"
-                                        required
-                                    />
-                                </div>
+                                    {/* Hình thức giảm giá */}
+                                    <div className="w-full md:w-1/2 pl-2 mb-4">
+                                        <label className="block text-sm font-medium text-gray-700 mb-3">Hình thức giảm giá</label>
+                                        <input
+                                            type="text"
+                                            name="discountForm"
+                                            value={formState.discountForm}
+                                            onChange={handleChange}
+                                            className="input input-bordered w-full"
+                                            required
+                                        />
+                                    </div>
 
-                                {/* Ngày bắt đầu */}
-                                <div className="w-full md:w-1/2 pr-2 mb-4">
-                                    <label className="block text-sm font-medium text-gray-700">Ngày bắt đầu</label>
-                                    <input
-                                        type="date"
-                                        name="startDate"
-                                        value={formState.startDate}
-                                        onChange={handleChange}
-                                        className="input input-bordered w-full"
-                                        required
-                                    />
-                                </div>
+                                    {/* Ngày bắt đầu */}
+                                    <div className="w-full md:w-1/2 pr-2 mb-4">
+                                        <label className="block text-sm font-medium text-gray-700 mb-3">Ngày bắt đầu</label>
+                                        <input
+                                            type="date"
+                                            name="startDate"
+                                            value={formState.startDate}
+                                            onChange={handleChange}
+                                            className="input input-bordered w-full"
+                                            required
+                                        />
+                                    </div>
 
-                                {/* Ngày kết thúc */}
-                                <div className="w-full md:w-1/2 pl-2 mb-4">
-                                    <label className="block text-sm font-medium text-gray-700">Ngày kết thúc</label>
-                                    <input
-                                        type="date"
-                                        name="endDate"
-                                        value={formState.endDate}
-                                        onChange={handleChange}
-                                        className="input input-bordered w-full"
-                                        required
-                                    />
+                                    {/* Ngày kết thúc */}
+                                    <div className="w-full md:w-1/2 pl-2 mb-4">
+                                        <label className="block text-sm font-medium text-gray-700 mb-3">Ngày kết thúc</label>
+                                        <input
+                                            type="date"
+                                            name="endDate"
+                                            value={formState.endDate}
+                                            onChange={handleChange}
+                                            className="input input-bordered w-full"
+                                            required
+                                        />
+                                    </div>
                                 </div>
-                                <div className="modal-action">
+                                <div className="modal-action" style={{ display: 'flex', justifyContent: 'flex-end', gap: '5px' }}>
                                     <button type="submit" className="btn btn-primary btn-sm">
                                         {isEditing ? "Cập nhật" : "Thêm"}
                                     </button>
-                                    <button className="btn btn-sm" onClick={() => document.getElementById('my_modal_4').close()}>Hủy</button>
+                                    <a onClick={closeAddModel} className="btn btn-sm">Hủy</a>
                                 </div>
                             </div>
                         </form>
@@ -274,11 +311,28 @@ function Vouchers() {
                                         <td>{new Date(voucher.startDate).toLocaleDateString()}</td>
                                         <td>{new Date(voucher.endDate).toLocaleDateString()}</td>
                                         <td>
-                                            <button className="btn btn-sm" onClick={() => handleEdit(voucher)}>Cập nhật</button>
+                                            <PencilIcon className="h-10 w-5 text-warning" onClick={() => handleEdit(voucher)} />
                                         </td>
                                     </tr>
                                 ))}
                             </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colSpan="10">
+                                        <div className="flex justify-center mt-4">
+                                            {[...Array(totalPages)].map((_, index) => (
+                                                <button
+                                                    key={index}
+                                                    className={`btn btn-xs btn-outline btn-circle me-1 ${page === index ? 'btn-active' : ''}`}
+                                                    onClick={() => setPage(index)} // Chuyển trang
+                                                >
+                                                    {index + 1}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tfoot>
                         </table>
                     )
                 }
