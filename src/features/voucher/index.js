@@ -40,6 +40,7 @@ function Vouchers() {
                     ...voucher,
                     startDate: moment(voucher.startDate).format("DD-MM-YYYY"),
                     endDate: moment(voucher.endDate).format("DD-MM-YYYY"),
+
                 }));
                 setVouchers(formattedVouchers);
             } else {
