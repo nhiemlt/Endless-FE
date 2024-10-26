@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import TitleCard from '../../components/Cards/TitleCard';
 import EntryService from '../../services/EntryService';
+import CreateEntryModal from './components/CreateEntryModal';
+import DetailModal from './components/DetailModal'; // Import DetailModal
 
 function Entry() {
   const [entries, setEntries] = useState([]);
@@ -9,6 +11,9 @@ function Entry() {
   const entriesPerPage = 10;
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [showCreateModal, setShowCreateModal] = useState(false); // State cho modal tạo
+  const [showDetailModal, setShowDetailModal] = useState(false); // State cho modal chi tiết
+  const [currentEntry, setCurrentEntry] = useState(null); // State cho thông tin đơn nhập hàng hiện tại
 
   const fetchEntries = async (page = 0) => {
     try {
@@ -31,6 +36,22 @@ function Entry() {
 
   const handlePrevPage = () => handlePageChange(currentPage - 1);
   const handleNextPage = () => handlePageChange(currentPage + 1);
+
+  // Hàm mở modal tạo
+  const openCreateModal = () => setShowCreateModal(true);
+  // Hàm đóng modal tạo
+  const closeCreateModal = () => setShowCreateModal(false);
+
+  // Hàm mở modal chi tiết
+  const openDetailModal = (entry) => {
+    setCurrentEntry(entry);
+    setShowDetailModal(true);
+  };
+  // Hàm đóng modal chi tiết
+  const closeDetailModal = () => {
+    setShowDetailModal(false);
+    setCurrentEntry(null);
+  };
 
   return (
     <>
@@ -64,7 +85,9 @@ function Entry() {
               />
             </div>
           </div>
-          <button className="btn btn-primary btn-sm btn-outline">Tạo nhập hàng</button>
+          <button className="btn btn-primary btn-sm btn-outline" onClick={openCreateModal}>
+            Tạo nhập hàng
+          </button>
         </div>
 
         <table className="table w-full table-xs">
@@ -81,10 +104,10 @@ function Entry() {
               entries.map((entry) => (
                 <tr key={entry.entryID}>
                   <td>{entry.entryID}</td>
-                  <td>{entry.entryDate}</td>
+                  <td>{new Date(entry.entryDate).toLocaleDateString('vi-VN')}</td>
                   <td>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(entry.totalMoney)}</td>
                   <td>
-                    <button className="btn btn-sm">Xem chi tiết</button>
+                    <button className="btn btn-sm" onClick={() => openDetailModal(entry)}>Xem chi tiết</button>
                   </td>
                 </tr>
               ))
@@ -114,6 +137,24 @@ function Entry() {
           </button>
         </div>
       </TitleCard>
+
+      {/* Hiển thị modal tạo khi showCreateModal là true */}
+      {showCreateModal && (
+        <CreateEntryModal
+          showModal={showCreateModal}
+          closeModal={closeCreateModal}
+          onEntryCreated={fetchEntries} // Để làm mới danh sách khi tạo đơn nhập thành công
+        />
+      )}
+
+      {/* Hiển thị modal chi tiết khi showDetailModal là true */}
+      {showDetailModal && currentEntry && (
+        <DetailModal
+          showModal={showDetailModal}
+          closeModal={closeDetailModal}
+          entry={currentEntry}
+        />
+      )}
     </>
   );
 }
