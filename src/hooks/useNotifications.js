@@ -10,7 +10,7 @@ const useNotifications = () => {
         try {
             setLoading(true);
             const data = await NotificationService.getNotifications();
-            setNotifications(data.content); // Lấy mảng notifications từ `content`
+            setNotifications(data); // Lấy mảng notifications từ `content`
         } catch (err) {
             setError(err);
         } finally {

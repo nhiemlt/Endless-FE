@@ -17,8 +17,8 @@ function NotificationBodyRightDrawer({ closeRightDrawer }) {
     const handleMarkAsRead = async (notificationRecipientId, isRead) => {
         if (!isRead) {
             try {
-                const unreadCount = await NotificationService.markAsRead(notificationRecipientId);
-                dispatch(markNotificationAsRead(unreadCount));
+                const message = await NotificationService.markAsRead(notificationRecipientId);
+                console.log(message); // Hiển thị thông báo thành công nếu cần
                 setLocalNotifications((prevNotifications) =>
                     prevNotifications.map((notification) =>
                         notification.notificationRecipientID === notificationRecipientId
@@ -34,9 +34,13 @@ function NotificationBodyRightDrawer({ closeRightDrawer }) {
 
     const handleMarkAllAsRead = async () => {
         try {
-            const updatedNotifications = await NotificationService.markAllAsRead();
-            setLocalNotifications(updatedNotifications.content);
-            dispatch(markNotificationAsRead(updatedNotifications.unreadCount));
+            const message = await NotificationService.markAllAsRead();
+            setLocalNotifications((prevNotifications) =>
+                prevNotifications.map((notification) => ({
+                    ...notification,
+                    status: 'READ',
+                }))
+            );
         } catch (error) {
             console.error("Lỗi khi đánh dấu tất cả là đã đọc:", error);
         }
