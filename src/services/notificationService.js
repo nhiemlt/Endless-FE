@@ -3,17 +3,16 @@ import constants from '../utils/globalConstantUtil';
 
 const NotificationService = {
     // Lấy danh sách thông báo cho người dùng đăng nhập hiện tại
-    getNotifications: async (page = 0, size = 10, sortBy = 'notificationDate', sortDir = 'desc') => {
+    getNotifications: async () => {
         try {
-            const response = await axios.get(`${constants.API_BASE_URL}/notifications/user`, {
-                params: { page, size, sortBy, sortDir }
-            });
+            const response = await axios.get(`${constants.API_BASE_URL}/notifications/user`);
             return response.data;
         } catch (error) {
-            console.error("Lỗi khi lấy thông báo:", error);
+            console.error("Lỗi khi lấy tất cả thông báo:", error);
             throw error;
         }
     },
+
 
     // Lấy tất cả thông báo với lọc và phân trang
     getAllNotifications: async (text = '', type = '', page = 0, size = 10, sortBy = 'notificationDate', sortDir = 'desc') => {
@@ -21,8 +20,7 @@ const NotificationService = {
             const params = {
                 page,
                 size,
-                sortBy,
-                sortDir,
+                sort: `${sortBy},${sortDir}`, // cập nhật tham số sort
                 ...(text && { text }),
                 ...(type && { type }),
             };
@@ -38,7 +36,7 @@ const NotificationService = {
     getNotificationsByUserId: async (userId, page = 0, size = 10, sortBy = 'notificationDate', sortDir = 'desc') => {
         try {
             const response = await axios.get(`${constants.API_BASE_URL}/notifications/user/${userId}`, {
-                params: { page, size, sortBy, sortDir }
+                params: { page, size, sort: `${sortBy},${sortDir}` } // cập nhật tham số sort
             });
             return response.data;
         } catch (error) {
@@ -50,8 +48,8 @@ const NotificationService = {
     // Đánh dấu một thông báo là đã đọc
     markAsRead: async (notificationRecipientId) => {
         try {
-            await axios.post(`${constants.API_BASE_URL}/notifications/markAsRead`, { notificationRecipientId });
-            return await this.getUnreadCount(); // Trả về số lượng thông báo chưa đọc
+            const response = await axios.post(`${constants.API_BASE_URL}/notifications/markAsRead`, { notificationRecipientId });
+            return response.data.message; // Trả về thông báo thành công
         } catch (error) {
             console.error("Lỗi khi đánh dấu thông báo là đã đọc:", error);
             throw error;
@@ -61,7 +59,8 @@ const NotificationService = {
     // Đánh dấu tất cả thông báo là đã đọc
     markAllAsRead: async () => {
         try {
-            await axios.post(`${constants.API_BASE_URL}/notifications/markAllAsRead`);
+            const response = await axios.post(`${constants.API_BASE_URL}/notifications/markAllAsRead`);
+            return response.data.message; // Trả về thông báo thành công
         } catch (error) {
             console.error("Lỗi khi đánh dấu tất cả thông báo là đã đọc:", error);
             throw error;
@@ -93,6 +92,7 @@ const NotificationService = {
     sendNotification: async (notificationModel) => {
         try {
             const response = await axios.post(`${constants.API_BASE_URL}/notifications/send`, notificationModel);
+            console.log('Gửi riêng')
             return response.data;
         } catch (error) {
             console.error("Lỗi khi gửi thông báo:", error);
@@ -104,6 +104,7 @@ const NotificationService = {
     sendNotificationForAll: async (notificationModelForAll) => {
         try {
             const response = await axios.post(`${constants.API_BASE_URL}/notifications/send-all`, notificationModelForAll);
+            console.log('Gửi tất cả')
             return response.data;
         } catch (error) {
             console.error("Lỗi khi gửi thông báo tới tất cả người dùng:", error);

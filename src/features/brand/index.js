@@ -1,94 +1,183 @@
 import { useState, useEffect } from 'react';
-import { useDispatch } from 'react-redux';
 import TitleCard from '../../components/Cards/TitleCard';
 import InputText from '../../components/Input/InputText';
 import SearchBar from '../../components/Input/SearchBar';
 import { showNotification } from '../common/headerSlice';
+import TrashIcon from '@heroicons/react/24/outline/TrashIcon';
+import PencilIcon from '@heroicons/react/24/outline/PencilIcon';
+import BrandService from '../../services/BrandService';
+import { useDispatch } from 'react-redux'; // Import useDispatch để gọi showNotification
+
 
 function BrandPage() {
-  const dispatch = useDispatch();
-
+  const [brandName, setBrandName] = useState('');
+  const [brandLogo, setBrandLogo] = useState(null);
   const [brands, setBrands] = useState([]);
-  const [brand, setBrand] = useState({ name: '', logo: '' });
+  const [editBrand, setEditBrand] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
   const [searchText, setSearchText] = useState('');
+  const applySearch = (value) => setSearchText(value);
+
 
   useEffect(() => {
-    const mockData = [
-      { BrandID: '1', name: 'Apple', logo: 'apple-logo.png' },
-      { BrandID: '2', name: 'Nike', logo: 'nike-logo.png' },
-      { BrandID: '3', name: 'Samsung', logo: 'samsung-logo.png' },
-    ];
-    setBrands(mockData);
+    const fetchBrands = async () => {
+      try {
+        const fetchedBrands = await BrandService.getBrands();
+        setBrands(fetchedBrands);
+      } catch (error) {
+        console.error("Error fetching brands:", error);
+      }
+    };
+    fetchBrands();
   }, []);
 
-  const updateFormValue = (e) => {
-    const { name, value } = e.target;
-    setBrand((prev) => ({ ...prev, [name]: value }));
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setBrandLogo(file);
+      const previewUrl = URL.createObjectURL(file);
+      setPreviewImage(previewUrl); // Lưu URL của ảnh đã chọn vào state
+    }
   };
 
-  const handleLogoUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  const dispatch = useDispatch(); // Khởi tạo dispatch để gọi showNotification
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setBrand((prev) => ({ ...prev, logo: reader.result }));
-    };
-    reader.readAsDataURL(file);
-  };
-
-
-  const saveBrand = () => {
-    if (!brand.name || !brand.logo) {
-      dispatch(showNotification({ message: 'Please provide both name and logo.', status: 0 }));
-      return;
+  const createBrand = async () => {
+    const brandData = new FormData();
+    brandData.append('name', brandName);
+    if (brandLogo) {
+      brandData.append('logo', brandLogo);
     }
 
-
-
-    const newBrand = {
-      BrandID: (brands.length + 1).toString(),
-      name: brand.name,
-      logo: brand.logo,
-    };
-
-    setBrands([...brands, newBrand]);
-    dispatch(showNotification({ message: 'Brand Added Successfully!', status: 1 }));
-    setBrand({ name: '', logo: '' });
+    try {
+      await BrandService.createBrand(brandData);
+      const fetchedBrands = await BrandService.getBrands();
+      setBrands(fetchedBrands);
+      resetForm();
+      dispatch(
+        showNotification({
+          message: 'Brand Created Successfully!',
+          status: 1,
+        })
+      );
+    } catch (error) {
+      console.error('Error creating brand:', error);
+      dispatch(
+        showNotification({
+          message: 'Failed to Create Brand!',
+          status: 0,
+        })
+      );
+    }
   };
 
-  const filteredBrands = brands.filter((b) =>
-    b.name.toLowerCase().includes(searchText.toLowerCase())
-  );
+
+  const handleEdit = (brand) => {
+    setBrandName(brand.brandName);
+    setEditBrand(brand);
+    setBrandLogo(null);
+  };
+  // Cập nhật thương hiệu
+  const handleUpdate = async () => {
+    const brandData = new FormData();
+    brandData.append('name', brandName);
+    if (brandLogo) brandData.append('logo', brandLogo);
+
+    try {
+      await BrandService.updateBrand(editBrand.brandID, brandData);
+      const fetchedBrands = await BrandService.getBrands();
+      setBrands(fetchedBrands);
+      resetForm();
+      dispatch(
+        showNotification({
+          message: 'Brand Updated Successfully!',
+          status: 1,
+        })
+      );
+    } catch (error) {
+      console.error('Error updating brand:', error);
+      dispatch(
+        showNotification({
+          message: 'Failed to Update Brand!',
+          status: 0,
+        })
+      );
+    }
+  };
+
+  // Xóa thương hiệu
+  const handleDelete = async (id) => {
+    try {
+      await BrandService.deleteBrand(id);
+      setBrands(brands.filter((brand) => brand.brandID !== id));
+      dispatch(
+        showNotification({
+          message: 'Brand Deleted Successfully!',
+          status: 1,
+        })
+      );
+    } catch (error) {
+      console.error('Error deleting brand:', error);
+      dispatch(
+        showNotification({
+          message: 'Failed to Delete Brand!',
+          status: 0,
+        })
+      );
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (editBrand) {
+      await handleUpdate();
+    } else {
+      await createBrand();
+    }
+  };
+
+  const resetForm = () => {
+    setBrandName('');
+    setBrandLogo(null);
+    setEditBrand(null);
+  };
 
   return (
     <TitleCard title="Manage Brands" topMargin="mt-6">
-      <div className="mb-12 flex">
-        <div className="flex-grow mr-2">
-          <div className="p-8 items-center bg-white">
-            <div className="flex flex-wrap">
-              <InputText
-                labelTitle="Brand Name"
-                name="name"
-                value={brand.name}
-                updateFormValue={updateFormValue}
-              />
-            </div>
+      <form onSubmit={handleSubmit}>
+        <div className="mb-12 flex">
+          <div className="flex-grow mr-2">
+            <div className="p-8 items-center">
+              <div className="relative">
+                <input
+                  type="text"
+                  value={brandName}
+                  onChange={(e) => setBrandName(e.target.value)}
+                  id="name"
+                  placeholder=" "
+                  name="name"
+                  className="w-full peer bg-transparent h-10 rounded-lg text-black placeholder-transparent ring-2 px-2 ring-gray-200 focus:ring-sky-600 focus:outline-none"
+                />
+                <label
+                  htmlFor="name"
+                  className="absolute left-0 -top-3 text-sm text-gray-500 bg-white px-1 transition-all peer-placeholder-shown:top-2 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-500 peer-focus:-top-3 peer-focus:text-sky-600"
+                >
+                  Brand Name
+                </label>
+              </div>
 
-            <div className="mt-5 flex flex-wrap">
-              <div className="w-full relative border border-gray-300 bg-gray-100 rounded-lg">
+              <div className="mt-5">
                 <input
                   id="logoInput"
                   type="file"
                   className="hidden"
-                  onChange={handleLogoUpload}
+                  onChange={handleFileChange}
                 />
-                <div
-                  className="h-40 flex justify-center items-center border border-dashed border-gray-400 rounded-lg bg-no-repeat bg-center bg-cover cursor-pointer"
-                  style={{ backgroundImage: `url(${brand.logo})` }}
+                <div className="h-40 flex justify-center items-center border border-dashed border-gray-400 rounded-lg bg-no-repeat bg-center bg-cover cursor-pointer"
+                  style={{ backgroundImage: previewImage ? `url(${previewImage})` : 'none' }}
                   onClick={() => document.getElementById('logoInput').click()}
                 >
-                  {!brand.logo && (
+                  {!previewImage && (
                     <span className="text-gray-400 opacity-75">
                       <svg
                         className="w-14 h-14"
@@ -107,31 +196,27 @@ function BrandPage() {
                     </span>
                   )}
                 </div>
-              </div>
 
-              <div className="w-full flex justify-end items-center mt-2">
-                <button className="btn btn-primary" onClick={saveBrand}>
-                  Save Brand
-                </button>
+                <div className="flex justify-end mt-2">
+                  <button type="submit" className="btn btn-primary">
+                    {editBrand ? 'Update Brand' : 'Save Brand'}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </form>
 
       <hr />
 
-      <SearchBar
-        searchText={searchText}
-        setSearchText={setSearchText}
-        styleClass="mb-4 mt-4"
-      />
+      <SearchBar searchText={searchText} setSearchText={applySearch} styleClass="mb-4" />
 
       <div className="overflow-x-auto">
         <table className="table w-full">
           <thead>
             <tr>
-              <th>ID</th>
+              <th>No.</th>
               <th className="text-center">Brand Name</th>
               <th>Logo</th>
               <th className="text-center" colSpan={2}>
@@ -140,45 +225,29 @@ function BrandPage() {
             </tr>
           </thead>
           <tbody>
-            {filteredBrands.map((b) => (
-              <tr key={b.BrandID}>
-                <td>{b.BrandID}</td>
-                <td className="text-center">{b.name}</td>
+            {brands.map((brand, index) => (
+              <tr key={brand.brandID}>
+                <td>{index + 1}</td>
+                <td className="text-center">{brand.brandName}</td>
                 <td className="text-center">
-                  <img src={b.logo} alt={b.name} className="w-10 h-10" />
+                  <img
+                    src={brand.logo}
+                    alt={brand.brandName}
+                    className="w-10 h-10"
+                  />
                 </td>
                 <td className="text-center">
-                  <button className="btn btn-sm btn-outline btn-info">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth={1.5}
-                      stroke="currentColor"
-                      className="w-6 h-6"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125"
-                      />
-                    </svg>
+                  <button
+                    className="btn btn-sm btn-outline btn-info"
+                    onClick={() => handleEdit(brand)}
+                  >
+                    <PencilIcon className="h-4 w-4" />
                   </button>
-                  <button className="btn btn-sm btn-outline btn-error">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth={1.5}
-                      stroke="currentColor"
-                      className="w-6 h-6"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
-                      />
-                    </svg>
+                  <button
+                    className="btn btn-sm btn-outline btn-error"
+                    onClick={() => handleDelete(brand.brandID)}
+                  >
+                    <TrashIcon className="h-4 w-4" />
                   </button>
                 </td>
               </tr>

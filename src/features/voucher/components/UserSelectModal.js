@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import UserService from '../../../services/UserService';
-import NotificationService from '../../../services/notificationService'; // Nhập NotificationService
+import VoucherService from '../../../services/voucherService';
 import { showNotification } from "../../common/headerSlice";
 import { useDispatch } from "react-redux";
 
-function UserSelectionModal({ showModal, closeModal, title, content, close }) {
+function UserSelectModal({ showModal, closeModal,
+    biggestDiscount, discountForm,startDate, voucherCode,
+    discountLevel, endDate , leastBill, leastDiscount,
+    close }) {
   const dispatch = useDispatch();
   const [users, setUsers] = useState([]);
   const [selectedUserIds, setSelectedUserIds] = useState([]);
@@ -43,24 +46,19 @@ function UserSelectionModal({ showModal, closeModal, title, content, close }) {
     });
   };
 
-  const handleSendNotification = async () => {
-    if (!title || !content) {
-      alert('Vui lòng nhập tiêu đề và nội dung thông báo.');
-      return;
-    }
-
+  const handleSendVoucher = async () => {
     try {
-      await NotificationService.sendNotification({
-        title,
-        content,
+      await VoucherService.addVoucherVoucherUsers({
+        biggestDiscount, discountForm,startDate, voucherCode,
+        discountLevel, endDate , leastBill, leastDiscount,
         userIds: selectedUserIds,
       });
-      dispatch(showNotification({ message: 'Thông báo đã được gửi thành công!', status: 1 }));
+      dispatch(showNotification({ message: 'Voucher đã được gửi thành công!', status: 1 }));
       closeModal();
       close();
     } catch (error) {
-      console.error("Lỗi khi gửi thông báo:", error);
-      dispatch(showNotification({ message: 'Đã xảy ra lỗi khi gửi thông báo.', type: 'error' }));
+      console.error("Lỗi khi gửi voucher:", error);
+      dispatch(showNotification({ message: 'Đã xảy ra lỗi khi gửi voucher.', type: 'error' }));
     }
   };
 
@@ -173,8 +171,8 @@ function UserSelectionModal({ showModal, closeModal, title, content, close }) {
             )}
             
             <div className="modal-action">
-              <button className="btn btn-primary" onClick={handleSendNotification}>
-                Gửi
+              <button className="btn btn-primary" onClick={handleSendVoucher}>
+                Gửi Voucher
               </button>
               <button className="btn" onClick={closeModal}>
                 Đóng
@@ -187,4 +185,4 @@ function UserSelectionModal({ showModal, closeModal, title, content, close }) {
   );
 }
 
-export default UserSelectionModal;
+export default UserSelectModal;
