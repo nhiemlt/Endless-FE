@@ -96,12 +96,6 @@ function ProfileSettings() {
         }
     };
 
-
-
-
-
-
-
     // State cho danh sách tỉnh, quận/huyện, phường/xã
     const [provinceIDs, setProvinces] = useState([]);
     const [districtIDs, setDistricts] = useState([]);
@@ -446,9 +440,9 @@ function ProfileSettings() {
                                                         {address.detailAddress}, {address.wardName}, {address.districtName}, {address.provinceName}
                                                     </p>
                                                     <label
-                                                        htmlFor="delete_modal" 
+                                                        htmlFor="delete_modal"
                                                         onClick={() => setSelectedAddressId(address.addressID)}
-                                                    ><TrashIcon className="h-10 w-5 text-error"/>
+                                                    ><TrashIcon className="h-10 w-5 text-error" />
                                                     </label>
                                                 </div>
 

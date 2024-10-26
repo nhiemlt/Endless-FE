@@ -9,7 +9,7 @@ import TrashIcon from '@heroicons/react/24/outline/TrashIcon';
 import PencilIcon from '@heroicons/react/24/outline/PencilIcon';
 import { showNotification } from '../common/headerSlice.js';
 import { fetchVoucherById } from '../../services/voucherSlice.js';
-import UpdateVoucherModalBody from "./components/UpdateVoucherModalBody.js";
+// import UpdateVoucherModalBody from "./components/UpdateVoucherModalBody.js";
 
 // Component để thêm nút "Add New" voucher
 const TopSideButtons = () => {

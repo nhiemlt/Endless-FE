@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react';
 import SearchBar from '../../components/Input/SearchBar';
 import XMarkIcon from '@heroicons/react/24/outline/XMarkIcon';
 import FunnelIcon from '@heroicons/react/24/outline/FunnelIcon';
@@ -7,7 +7,7 @@ import TitleCard from '../../components/Cards/TitleCard';
 const TopSideButtons = ({ removeFilter, applyFilter, applySearch }) => {
   const [filterParam, setFilterParam] = useState("");
   const [searchText, setSearchText] = useState("");
-  const locationFilters = ["Color", "Size", "Material"]; // Ví dụ cho các bộ lọc
+  const locationFilters = ["Color", "Size", "Material"];
 
   const showFiltersAndApply = (params) => {
     applyFilter(params);
@@ -55,19 +55,26 @@ function AttributeTable() {
 
   // Giả lập dữ liệu cho attributes
   useEffect(() => {
-    setAttributes([
-      { id: 1, attributeName: "Color", values: ["Red", "Green", "Blue"] },
-      { id: 2, attributeName: "Size", values: ["Small", "Medium", "Large"] },
-      { id: 3, attributeName: "Material", values: ["Cotton", "Polyester", "Leather"] },
-    ]);
+    // Thay thế bằng API gọi đến backend
+    const fetchAttributes = async () => {
+      // Thực hiện gọi API để lấy danh sách attributes
+      const response = await fetch('/api/attributes'); // Cập nhật với URL API chính xác
+      const data = await response.json();
+      setAttributes(data);
+    };
+
+    fetchAttributes();
   }, []);
 
   const removeFilter = () => {
-    setAttributes([
-      { id: 1, attributeName: "Color", values: ["Red", "Green", "Blue"] },
-      { id: 2, attributeName: "Size", values: ["Small", "Medium", "Large"] },
-      { id: 3, attributeName: "Material", values: ["Cotton", "Polyester", "Leather"] },
-    ]);
+    // Gọi lại dữ liệu gốc nếu có API
+    const fetchAttributes = async () => {
+      const response = await fetch('/api/attributes'); // Cập nhật với URL API chính xác
+      const data = await response.json();
+      setAttributes(data);
+    };
+
+    fetchAttributes();
   };
 
   const applyFilter = (params) => {
@@ -86,31 +93,35 @@ function AttributeTable() {
     <>
       <TitleCard title="Manage Attributes" topMargin="mt-2" TopSideButtons={<TopSideButtons applySearch={applySearch} applyFilter={applyFilter} removeFilter={removeFilter} />}>
         <div className="flex justify-center">
-          <div className="overflow-x-auto w-full max-w-6xl"> {/* Căn giữa và giới hạn chiều rộng */}
+          <div className="overflow-x-auto w-full max-w-6xl">
             <table className="table w-full">
               <thead>
                 <tr>
                   <th>Attribute Name</th>
-                  <th>Values</th>
-                  <th>Action</th>
+                  <th>Attribute Values</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {attributes.map((attr, k) => (
+                {attributes.map(attr => (
                   <tr key={attr.id}>
                     <td>{attr.attributeName}</td>
-                    <td>{attr.values.join(", ")}</td>
-                    <td><button className='btn btn-sm btn-outline btn-info'>Edit</button></td>
+                    <td>
+                      <ul>
+                        {attr.values.map((value, index) => (
+                          <li key={index}>{value}</li>
+                        ))}
+                      </ul>
+                    </td>
+                    <td>
+                      <button className="btn btn-xs btn-outline">Edit</button>
+                      <button className="btn btn-xs btn-outline btn-error">Delete</button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        </div>
-        <div className="join">
-          <button className="join-item btn">«</button>
-          <button className="join-item btn">Page 1</button>
-          <button className="join-item btn">»</button>
         </div>
       </TitleCard>
     </>
