@@ -46,6 +46,18 @@ const VoucherService = {
         }
     },
 
+    // Thêm voucher cho user
+    addVoucherVoucherUsers: async (voucherData) => {
+        
+        console.log(voucherData)
+        try {
+            const response = await axios.post(`${constants.API_BASE_URL}/api/vouchers/add-voucher-users`, voucherData);
+            return response.data; // Trả về kết quả thêm voucher cho tất cả user
+        } catch (error) {
+            VoucherService.handleError(error); // Gọi handleError để xử lý lỗi
+        }
+    },
+
     // Xử lý lỗi từ các yêu cầu API
     handleError: (error) => {
         if (error.response) {
