@@ -136,15 +136,15 @@ function Rating() {
           <tr>
             <td colSpan="6">
               <div className="join mt-4 flex justify-center w-full">
-                <button onClick={handlePrevPage} className="join-item btn" disabled={page === 0}>
+                <button onClick={handlePrevPage} className="join-item btn btn-sm btn-primary" disabled={page === 0}>
                   Previous
                 </button>
                 {Array.from({ length: totalPages }, (_, index) => (
-                  <button key={index} onClick={() => setPage(index)} className={`join-item btn ${page === index ? "btn-active" : ""}`}>
+                  <button key={index} onClick={() => setPage(index)} className={`join-item btn btn-sm btn-primary${page === index ? "btn-active" : ""}`}>
                     {index + 1}
                   </button>
                 ))}
-                <button onClick={handleNextPage} className="join-item btn" disabled={page >= totalPages - 1}>
+                <button onClick={handleNextPage} className="join-item btn btn-sm btn-primary" disabled={page >= totalPages - 1}>
                   Next
                 </button>
               </div>

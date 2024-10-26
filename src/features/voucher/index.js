@@ -343,19 +343,19 @@ function Vouchers() {
                 </div>
                 {/* Điều hướng trang */}
                 <div className="join mt-4 flex justify-center w-full">
-                    <button onClick={handlePrevPage} className="join-item btn" disabled={currentPage === 0}>
+                    <button onClick={handlePrevPage} className="join-item btn btn-sm btn-primary" disabled={currentPage === 0}>
                         Trước
                     </button>
                     {Array.from({ length: totalPages }, (_, index) => (
                         <button
                             key={index}
                             onClick={() => setCurrentPage(index)}
-                            className={`join-item btn ${currentPage === index ? "btn-active" : ""}`}
+                            className={`join-item btn btn-sm btn-primary ${currentPage === index ? "btn-active" : ""}`}
                         >
                             {index + 1}
                         </button>
                     ))}
-                    <button onClick={handleNextPage} className="join-item btn" disabled={currentPage >= totalPages - 1}>
+                    <button onClick={handleNextPage} className="join-item btn btn-sm btn-primary" disabled={currentPage >= totalPages - 1}>
                         Tiếp
                     </button>
                 </div>

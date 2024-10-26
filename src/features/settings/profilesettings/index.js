@@ -113,7 +113,8 @@ function ProfileSettings() {
         const fetchProvinces = async () => {
             try {
                 const data = await GHNService.getProvinces();
-                setProvinces(data.data); // Giả định API trả về { data: [...] }
+                const sortedProvinces = data.data.sort((a, b) => a.ProvinceName.localeCompare(b.ProvinceName));
+                setProvinces(sortedProvinces);
             } catch (error) {
                 console.error("Error fetching provinceIDs: ", error);
             }
@@ -131,13 +132,13 @@ function ProfileSettings() {
         }));
         try {
             const districtIDData = await GHNService.getDistrictsByProvince(provinceID);
-            setDistricts(districtIDData.data);
+            const sortedDistricts = districtIDData.data.sort((a, b) => a.DistrictName.localeCompare(b.DistrictName));
+            setDistricts(sortedDistricts);
             resetDistrictAndWard();
         } catch (error) {
             console.error("Error fetching districtIDs:", error);
         }
     };
-
 
     // Thay đổi quận/huyện và lấy danh sách phường/xã
     const handleDistrictChange = async (districtID, districtName) => {
@@ -148,7 +149,8 @@ function ProfileSettings() {
         }));
         try {
             const wardCodeData = await GHNService.getWardsByDistrict(districtID);
-            setWards(wardCodeData.data);
+            const sortedWards = wardCodeData.data.sort((a, b) => a.WardName.localeCompare(b.WardName));
+            setWards(sortedWards);
             resetWard();
         } catch (error) {
             console.error("Error fetching wardCodes:", error);
@@ -426,8 +428,9 @@ function ProfileSettings() {
                                     value={newAddress.detailAddress}
                                     onChange={handleNewAddressChange}
                                     required
-                                ></input>
+                                />
                             </div>
+
                             <div className="flex justify-center mt-5 mb-5">
                                 <button className="btn btn-primary" type="submit">Thêm địa chỉ mới</button>
                             </div>
@@ -447,9 +450,9 @@ function ProfileSettings() {
                                                         {address.detailAddress}, {address.wardName}, {address.districtName}, {address.provinceName}
                                                     </p>
                                                     <label
-                                                        htmlFor="delete_modal" 
+                                                        htmlFor="delete_modal"
                                                         onClick={() => setSelectedAddressId(address.addressID)}
-                                                    ><TrashIcon className="h-10 w-5 text-error"/>
+                                                    ><TrashIcon className="h-10 w-5 text-error" />
                                                     </label>
                                                 </div>
 
