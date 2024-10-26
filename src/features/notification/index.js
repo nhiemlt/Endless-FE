@@ -21,22 +21,22 @@ function Notification() {
   const fetchNotifications = async () => {
     setLoading(true);
     try {
-      const data = await NotificationService.getAllNotifications(
-        searchTerm,
-        filterStatus,
-        currentPage,
-        size,
-        sortBy,
-        sortDir
-      );
-      setNotifications(data.content);
-      setTotalPages(data.totalPages);
+        const data = await NotificationService.getAllNotifications(
+            searchTerm,
+            filterStatus,
+            currentPage,
+            size,
+            sortBy,
+            sortDir
+        );
+        setNotifications(data.content);
+        setTotalPages(data.totalPages);
     } catch (error) {
-      console.error("Lỗi khi lấy thông báo:", error);
+        console.error("Lỗi khi lấy thông báo:", error);
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
-  };
+};
 
   useEffect(() => {
     fetchNotifications();
@@ -166,8 +166,6 @@ function Notification() {
           >
             <option value="notificationDate">Mới nhất</option>
             <option value="notificationDate">Cũ nhất</option>
-            <option value="notificationTitle">A-Z</option>
-            <option value="notificationTitle">Z-A</option>
           </select>
         </div>
 
@@ -183,7 +181,7 @@ function Notification() {
           <table className="table w-full table-xs">
             <thead>
               <tr>
-                <th onClick={() => handleSortChange('notificationTitle')}>Tiêu đề</th>
+                <th onClick={() => handleSortChange('title')}>Tiêu đề</th>
                 <th onClick={() => handleSortChange('type')}>Loại</th>
                 <th>Nội dung</th>
                 <th onClick={() => handleSortChange('notificationDate')}>Thời gian</th>

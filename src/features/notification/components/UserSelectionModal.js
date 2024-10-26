@@ -1,20 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import UserService from '../../../services/UserService';
+import NotificationService from '../../../services/notificationService'; // Nhập NotificationService
+import { showNotification } from "../../common/headerSlice";
+import { useDispatch } from "react-redux";
 
-function UserSelectionModal({ showModal, closeModal, onUserSelect }) {
-  const [users, setUsers] = useState([]); // Danh sách người dùng
-  const [selectedUserIds, setSelectedUserIds] = useState([]); // ID người dùng đã chọn
+function UserSelectionModal({ showModal, closeModal, title, content, close }) {
+  const dispatch = useDispatch();
+  const [users, setUsers] = useState([]);
+  const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [loading, setLoading] = useState(false);
   const [totalPages, setTotalPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(0);
   const [size, setSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Lấy danh sách người dùng từ API có phân trang và tìm kiếm
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const data = await UserService.getUsers(searchTerm, currentPage, size);
+      const data = await UserService.getInfor(currentPage, size, searchTerm);
       setUsers(data.content);
       setTotalPages(data.totalPages);
     } catch (error) {
@@ -40,30 +43,34 @@ function UserSelectionModal({ showModal, closeModal, onUserSelect }) {
     });
   };
 
-  const handleConfirmSelection = () => {
-    onUserSelect(selectedUserIds); // Gửi danh sách ID người dùng đã chọn
-    closeModal(); // Đóng modal
+  const handleSendNotification = async () => {
+    if (!title || !content) {
+      alert('Vui lòng nhập tiêu đề và nội dung thông báo.');
+      return;
+    }
+
+    try {
+      await NotificationService.sendNotification({
+        title,
+        content,
+        userIds: selectedUserIds,
+      });
+      dispatch(showNotification({ message: 'Thông báo đã được gửi thành công!', status: 1 }));
+      closeModal();
+      close();
+    } catch (error) {
+      console.error("Lỗi khi gửi thông báo:", error);
+      dispatch(showNotification({ message: 'Đã xảy ra lỗi khi gửi thông báo.', type: 'error' }));
+    }
   };
 
   const handleSearch = (event) => {
     setSearchTerm(event.target.value);
-    setCurrentPage(0); // Reset lại trang về 0 khi tìm kiếm
+    setCurrentPage(0);
   };
 
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
-  };
-
-  const handlePrevPage = () => {
-    if (currentPage > 0) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages - 1) {
-      setCurrentPage(currentPage + 1);
-    }
   };
 
   const renderPagination = () => {
@@ -82,7 +89,7 @@ function UserSelectionModal({ showModal, closeModal, onUserSelect }) {
 
     return (
       <div className="join mt-4 flex justify-center w-full">
-        <button onClick={handlePrevPage} className="join-item btn" disabled={currentPage === 0}>
+        <button onClick={() => handlePageChange(currentPage - 1)} className="join-item btn" disabled={currentPage === 0}>
           Previous
         </button>
         {Array.from({ length: endPage - startPage + 1 }, (_, index) => {
@@ -97,7 +104,7 @@ function UserSelectionModal({ showModal, closeModal, onUserSelect }) {
             </button>
           );
         })}
-        <button onClick={handleNextPage} className="join-item btn" disabled={currentPage === totalPages - 1}>
+        <button onClick={() => handlePageChange(currentPage + 1)} className="join-item btn" disabled={currentPage === totalPages - 1}>
           Next
         </button>
       </div>
@@ -128,7 +135,7 @@ function UserSelectionModal({ showModal, closeModal, onUserSelect }) {
                 <table className="table table-xs">
                   <thead>
                     <tr>
-                      <th></th> {/* Cột checkbox */}
+                      <th></th>
                       <th>Thông tin người dùng</th>
                       <th>Email</th>
                     </tr>
@@ -139,47 +146,38 @@ function UserSelectionModal({ showModal, closeModal, onUserSelect }) {
                         <td>
                           <input 
                             type="checkbox" 
-                            checked={selectedUserIds.includes(user?.userID)} 
-                            onChange={() => handleCheckboxChange(user?.userID)} 
+                            checked={selectedUserIds.includes(user.userID)} 
+                            onChange={() => handleCheckboxChange(user.userID)} 
                           />
                         </td>
                         <td>
                           <div className="flex items-center space-x-3">
                             <div className="avatar">
                               <div className="mask mask-squircle w-12 h-12">
-                                <img src={user?.avatar} alt="Avatar" />
+                                <img src={user.avatar} alt="Avatar" />
                               </div>
                             </div>
                             <div>
-                              <div className="font-bold">{user?.username}</div>
-                              <div className="text-sm opacity-50">{user?.fullname}</div>
+                              <div className="font-bold">{user.fullName}</div>
+                              <div className="text-sm opacity-50">{user.username}</div>
                             </div>
                           </div>
                         </td>
-                        <td>{user?.email}</td>
+                        <td>{user.email}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
-
                 {renderPagination()}
               </div>
             )}
-
+            
             <div className="modal-action">
-              <button 
-                type="button" 
-                className="btn btn-primary" 
-                onClick={handleConfirmSelection}
-              >
-                Xác nhận
+              <button className="btn btn-primary" onClick={handleSendNotification}>
+                Gửi
               </button>
-              <button 
-                type="button" 
-                className="btn" 
-                onClick={closeModal}
-              >
-                Hủy
+              <button className="btn" onClick={closeModal}>
+                Đóng
               </button>
             </div>
           </div>
