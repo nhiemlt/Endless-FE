@@ -62,6 +62,19 @@ function Vouchers() {
         setEditingVoucher(voucher);
         setIsEditing(true);
     };
+
+    const handlePrevPage = () => {
+        if (currentPage > 0) {
+            setCurrentPage(currentPage - 1);
+        }
+    };
+
+    const handleNextPage = () => {
+        if (currentPage < totalPages - 1) {
+            setCurrentPage(currentPage + 1);
+        }
+    };
+
     const closeAddModal = () => setIsAdding(false);
     const closeEditModal = () => setIsEditing(false);
 
@@ -114,9 +127,9 @@ function Vouchers() {
                                         <td>{currentPage * size + index + 1}</td>
                                         <td>{voucher.voucherCode}</td>
                                         <td>{voucher.discountLevel} %</td>
-                                        <td>{voucher.leastDiscount}</td>
-                                        <td>{voucher.biggestDiscount}</td>
-                                        <td>{voucher.leastBill}</td>
+                                        <td>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(voucher.leastDiscount)}</td>
+                                        <td>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(voucher.biggestDiscount)}</td>
+                                        <td>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(voucher.leastBill)}</td>
                                         <td>{voucher.discountForm}</td>
                                         <td>{voucher.startDate}</td>
                                         <td>{voucher.endDate}</td>
@@ -134,6 +147,24 @@ function Vouchers() {
                             )}
                         </tbody>
                     </table>
+                </div>
+                {/* Điều hướng trang */}
+                <div className="join mt-4 flex justify-center w-full">
+                    <button onClick={handlePrevPage} className="join-item btn btn-sm btn-primary" disabled={currentPage === 0}>
+                        Trước
+                    </button>
+                    {Array.from({ length: totalPages }, (_, index) => (
+                        <button
+                            key={index}
+                            onClick={() => setCurrentPage(index)}
+                            className={`join-item btn btn-sm btn-primary ${currentPage === index ? "btn-active" : ""}`}
+                        >
+                            {index + 1}
+                        </button>
+                    ))}
+                    <button onClick={handleNextPage} className="join-item btn btn-sm btn-primary" disabled={currentPage >= totalPages - 1}>
+                        Tiếp
+                    </button>
                 </div>
             </TitleCard>
 
