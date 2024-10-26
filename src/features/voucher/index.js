@@ -47,8 +47,8 @@ function Vouchers() {
             if (Array.isArray(fetchedVouchers)) {
                 const formattedVouchers = fetchedVouchers.map(voucher => ({
                     ...voucher,
-                    startDate: moment(voucher.startDate).format('YYYY-MM-DD'),
-                    endDate: moment(voucher.endDate).format('YYYY-MM-DD'),
+                    startDate: moment(voucher.startDate).format('DD-MM-YYYY'),
+                    endDate: moment(voucher.endDate).format('DD-MM-YYYY'),
                 }));
                 setVouchers(formattedVouchers);
             } else {
