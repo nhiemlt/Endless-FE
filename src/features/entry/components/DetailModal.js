@@ -8,6 +8,7 @@ function DetailModal({ showModal, closeModal, entry }) {
 
   if (!entry) return null;
 
+  console.log(entry)
   // Lọc sản phẩm dựa trên tìm kiếm
   const filteredDetails = entry.details.filter((detail) =>
     detail.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
