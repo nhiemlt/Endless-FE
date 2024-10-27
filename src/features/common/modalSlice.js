@@ -4,15 +4,15 @@ export const modalSlice = createSlice({
     name: 'modal',
     initialState: {
         title: "",  // current  title state management
-        isOpen : false,   // modal state management for opening closing
-        bodyType : "",   // modal content management
-        size : "",   // modal content management
-        extraObject : {},   
+        isOpen: false,   // modal state management for opening closing
+        bodyType: "",   // modal content management
+        size: "",   // modal content management
+        extraObject: {},
     },
     reducers: {
 
         openModal: (state, action) => {
-            const {title, bodyType, extraObject, size} = action.payload
+            const { title, bodyType, extraObject, size } = action.payload
             state.isOpen = true
             state.bodyType = bodyType
             state.title = title
@@ -29,6 +29,7 @@ export const modalSlice = createSlice({
 
     }
 })
+
 
 export const { openModal, closeModal } = modalSlice.actions
 
