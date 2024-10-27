@@ -5,6 +5,7 @@ import TitleCard from "../../../components/Cards/TitleCard";
 import ProfileService from '../../../services/profileService';
 import GHNService from '../../../services/GHNService';
 import UserAddressService from "../../../services/userAddressService";
+import UploadFileService from "../../../services/UploadFileService";
 import TrashIcon from '@heroicons/react/24/outline/TrashIcon';
 
 function ProfileSettings() {
@@ -52,19 +53,11 @@ function ProfileSettings() {
     // Hàm xử lý khi có thay đổi dữ liệu trong form
     const handleInputChange = (e) => {
         const { name, value, files } = e.target;
-
+    
         if (name === "profileImage" && files && files.length > 0) {
             const file = files[0];
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setProfileData((prevData) => ({
-                    ...prevData,
-                    avatar: reader.result // Cập nhật avatar dưới dạng base64
-                }));
-                setAvatarFile(file); // Lưu trữ file avatar đã chọn
-                console.log(profileData.avatar)
-            };
-            reader.readAsDataURL(file);
+            setAvatarFile(file); // Lưu trữ file avatar đã chọn
+            // Không cần dùng FileReader nữa
         } else {
             setProfileData((prevData) => ({
                 ...prevData,
@@ -88,16 +81,24 @@ function ProfileSettings() {
         }
 
         try {
+            // Nếu có ảnh mới, tải ảnh lên Firebase và lấy URL
+            if (avatarFile) {
+                const avatarUrl = await UploadFileService.uploadUserImage(avatarFile, updatedData.avatar);
+                updatedData.avatar = avatarUrl; // Gán URL ảnh mới vào updatedData
+            }
+
+            // Gửi dữ liệu cập nhật lên API backend
             await ProfileService.updateCurrentUser(updatedData);
+
+            // Hiển thị thông báo thành công và cập nhật lại giao diện
             dispatch(showNotification({ message: "Cập nhật thông tin thành công", status: 1 }));
+            // Tải lại dữ liệu người dùng (nếu cần) thay vì reload trang
             window.location.reload();
         } catch (error) {
             dispatch(showNotification({ message: `Cập nhật thông tin thất bại: ${error.message}`, status: 0 }));
             console.error("Error updating user:", error);
         }
     };
-
-
 
 
 
