@@ -52,6 +52,13 @@ const UserService = {
             throw error;
         }
     },
+    searchUsersByName: async (name) => {
+    const response = await axios.get(
+      `${constants.API_BASE_URL}/api/users/search`,
+      { params: { name } }
+    );
+    return response.data;
+  },
 };
 
 export default UserService;
