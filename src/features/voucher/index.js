@@ -110,7 +110,6 @@ function Vouchers() {
                                 <th>Giá giảm tối thiểu</th>
                                 <th>Giá giảm tối đa</th>
                                 <th>Hóa đơn tối thiểu</th>
-                                <th>Hình thức</th>
                                 <th>Ngày bắt đầu</th>
                                 <th>Ngày kết thúc</th>
                                 <th>Hành động</th>
@@ -130,13 +129,13 @@ function Vouchers() {
                                         <td>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(voucher.leastDiscount)}</td>
                                         <td>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(voucher.biggestDiscount)}</td>
                                         <td>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(voucher.leastBill)}</td>
-                                        <td>{voucher.discountForm}</td>
                                         <td>{voucher.startDate}</td>
                                         <td>{voucher.endDate}</td>
                                         <td>
-                                            <button onClick={() => handleEdit(voucher)} className="btn btn-sm btn-outline btn-warning">
-                                                <PencilIcon className="h-5 w-5" />
-                                            </button>
+                                            <PencilIcon
+                                                className="w-5 cursor-pointer text-green-600"
+                                                onClick={() => handleEdit(voucher)}
+                                            />
                                         </td>
                                     </tr>
                                 ))
