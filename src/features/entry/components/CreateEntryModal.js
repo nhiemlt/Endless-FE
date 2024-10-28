@@ -1,42 +1,51 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import EntryService from '../../../services/EntryService';
-import InputDropdown from '../../../components/Input/InputDropdown'; 
+import ProductVersionService from '../../../services/productVersionService';
+import InputDropdown from '../../../components/Input/InputDropdown';
 import { useDispatch } from 'react-redux';
 import { showNotification } from "../../common/headerSlice";
 
 function CreateEntryModal({ showModal, closeModal, onEntryCreated }) {
   const dispatch = useDispatch();
   const [cart, setCart] = useState([]);
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [quantity, setQuantity] = useState('');
+  const [productVersions, setProductVersions] = useState([]);
+
+  useEffect(() => {
+    // Gọi API lấy danh sách sản phẩm khi modal mở
+    const fetchProductVersions = async () => {
+      try {
+        const data = await ProductVersionService.getAllProductVersions();
+        console.log(data.content)
+        setProductVersions(data.content);
+      } catch (error) {
+        dispatch(showNotification({ message: 'Lỗi khi tải danh sách sản phẩm.', status: 0 }));
+      }
+    };
+    if (showModal) fetchProductVersions();
+  }, [showModal, dispatch]);
 
   const resetData = () => {
     setCart([]);
-    setSelectedProduct(null);
-    setQuantity('');
   };
 
-  const handleAddToCart = () => {
-    if (!selectedProduct || quantity <= 0) {
-      dispatch(showNotification({ message: 'Vui lòng chọn sản phẩm và nhập số lượng hợp lệ.', status: 0 }));
-      return;
-    }
-    const existingItem = cart?.find(item => item?.productVersionID === selectedProduct?.id);
+  const handleSelectProduct = (selectedProduct) => {
+    if (!selectedProduct) return;
+    const existingItem = cart.find(item => item.productVersionID === selectedProduct.productVersionID);
     if (existingItem) {
-      setCart(cart?.map(item => 
-        item?.productVersionID === selectedProduct?.id 
-          ? { ...item, quantity: item?.quantity + parseInt(quantity) }
+      // Nếu sản phẩm đã có trong giỏ hàng, tăng số lượng
+      setCart(cart.map(item =>
+        item.productVersionID === selectedProduct.productVersionID
+          ? { ...item, quantity: item.quantity + 1 }
           : item
       ));
     } else {
-      setCart([...cart, { ...selectedProduct, quantity: parseInt(quantity) }]);
+      // Nếu sản phẩm chưa có trong giỏ hàng, thêm mới với số lượng 1
+      setCart([...cart, { ...selectedProduct, quantity: 1 }]);
     }
-    setSelectedProduct(null);
-    setQuantity('');
   };
 
   const handleRemoveFromCart = (productId) => {
-    setCart(cart?.filter(item => item?.productVersionID !== productId));
+    setCart(cart.filter(item => item.productVersionID !== productId));
   };
 
   const handleQuantityChange = (index, newQuantity) => {
@@ -46,18 +55,18 @@ function CreateEntryModal({ showModal, closeModal, onEntryCreated }) {
   };
 
   const handleCreateEntry = async () => {
-    if (cart?.length === 0) {
+    if (cart.length === 0) {
       dispatch(showNotification({ message: 'Vui lòng thêm ít nhất một sản phẩm vào giỏ hàng.', status: 0 }));
       return;
     }
     try {
       const entryData = {
-        details: cart?.map(item => ({
-          productVersionID: item?.productVersionID,
-          quantity: item?.quantity
+        details: cart.map(item => ({
+          productVersionID: item.productVersionID,
+          quantity: item.quantity
         }))
       };
-      await EntryService?.createEntryOrder(entryData);
+      await EntryService.createEntryOrder(entryData);
       dispatch(showNotification({ message: 'Đơn nhập đã được tạo thành công!', status: 1 }));
       onEntryCreated();
       handleCloseModal();
@@ -82,29 +91,15 @@ function CreateEntryModal({ showModal, closeModal, onEntryCreated }) {
               <label className="label">
                 <span className="label-text">Chọn sản phẩm</span>
               </label>
-              <InputDropdown 
-                onSelect={setSelectedProduct} 
-                placeholder="Tìm sản phẩm..." 
+              <InputDropdown
+                options={productVersions || []} // truyền danh sách sản phẩm vào InputDropdown
+                onSelect={handleSelectProduct}
+                placeholder="Tìm sản phẩm..."
               />
             </div>
-            <div className="form-control mt-2">
-              <label className="label">
-                <span className="label-text">Số lượng</span>
-              </label>
-              <input
-                type="number"
-                className="input input-bordered"
-                value={quantity}
-                onChange={(e) => setQuantity(e?.target?.value)}
-                placeholder="Nhập số lượng..."
-              />
-            </div>
-            <button className="btn btn-primary mt-4" onClick={handleAddToCart}>
-              Thêm vào giỏ hàng
-            </button>
             <div className="mt-4">
               <h4 className="font-semibold">Giỏ hàng</h4>
-              <table className="table table-auto w-full mt-2">
+              <table className="table table-auto table-xs w-full mt-2">
                 <thead>
                   <tr>
                     <th>Sản phẩm</th>
@@ -113,21 +108,31 @@ function CreateEntryModal({ showModal, closeModal, onEntryCreated }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {cart?.map((item, index) => (
-                    <tr key={item?.productVersionID}>
-                      <td>{item?.productVersionName}</td>
+                  {cart.map((item, index) => (
+                    <tr key={item.productVersionID}>
+                      <td className="flex items-center space-x-3">
+                        <div className="avatar">
+                          <div className="mask mask-squircle w-8 h-8">
+                            <img src={item.image} />
+                          </div>
+                        </div>
+                        <div>
+                          <div className="font-bold">{item.product.name}</div>
+                          <div className="text-sm opacity-50">{item.versionName}</div>
+                        </div>
+                      </td>
                       <td>
                         <input
                           type="number"
                           className="input input-bordered w-16"
-                          value={item?.quantity}
+                          value={item.quantity}
                           onChange={(e) => handleQuantityChange(index, parseInt(e.target.value))}
                         />
                       </td>
                       <td>
-                        <button 
+                        <button
                           className="btn btn-error btn-sm"
-                          onClick={() => handleRemoveFromCart(item?.productVersionID)}
+                          onClick={() => handleRemoveFromCart(item.productVersionID)}
                         >
                           Xóa
                         </button>

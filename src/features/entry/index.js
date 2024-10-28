@@ -104,7 +104,14 @@ function Entry() {
               entries.map((entry) => (
                 <tr key={entry.entryID}>
                   <td>{entry.entryID}</td>
-                  <td>{new Date(entry.entryDate).toLocaleDateString('vi-VN')}</td>
+                  <td>{new Date(entry.entryDate).toLocaleString('vi-VN', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      second: '2-digit',
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                    })}</td>
                   <td>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(entry.totalMoney)}</td>
                   <td>
                     <button className="btn btn-sm" onClick={() => openDetailModal(entry)}>Xem chi tiết</button>

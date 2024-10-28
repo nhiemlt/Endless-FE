@@ -22,7 +22,7 @@ function NotificationBodyRightDrawer({ closeRightDrawer }) {
                 setLocalNotifications((prevNotifications) =>
                     prevNotifications.map((notification) =>
                         notification.notificationRecipientID === notificationRecipientId
-                            ? { ...notification, status: 'READ' }
+                            ? { ...notification, status: 'Chưa đọc' }
                             : notification
                     )
                 );
@@ -38,7 +38,7 @@ function NotificationBodyRightDrawer({ closeRightDrawer }) {
             setLocalNotifications((prevNotifications) =>
                 prevNotifications.map((notification) => ({
                     ...notification,
-                    status: 'READ',
+                    status: 'Đã đọc',
                 }))
             );
         } catch (error) {
@@ -74,7 +74,7 @@ function NotificationBodyRightDrawer({ closeRightDrawer }) {
             </button>
             {localNotifications.length > 0 ? (
                 localNotifications
-                    .sort((a, b) => (a.status === 'UNREAD' ? -1 : 1))
+                    .sort((a, b) => (a.status === 'Chưa đọc' ? -1 : 1))
                     .map((notification) => (
                         <div
                             key={notification.notificationRecipientID}
@@ -82,7 +82,7 @@ function NotificationBodyRightDrawer({ closeRightDrawer }) {
                             onClick={() => handleMarkAsRead(notification.notificationRecipientID, notification.status === 'READ')}
                         >
                             <div className="flex-1">
-                                <div className={`font-semibold ${notification.status === 'UNREAD' ? 'text-blue-600' : ''}`}>{notification.notificationTitle}</div>
+                                <div className={`font-semibold ${notification.status === 'Chưa đọc' ? 'text-blue-600' : ''}`}>{notification.notificationTitle}</div>
                                 <div className="text-sm mt-1">{notification.content}</div>
                             </div>
                             <button 

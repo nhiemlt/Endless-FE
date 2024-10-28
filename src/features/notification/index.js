@@ -155,9 +155,9 @@ function Notification() {
             onChange={handleStatusFilter}
           >
             <option value="">Tất cả trạng thái</option>
-            <option value="All">Gửi tất cả</option>
-            <option value="Manual creation">Gửi thủ công</option>
-            <option value="Auto">Gửi tự động</option>
+            <option value="Gửi tất cả">Gửi tất cả</option>
+            <option value="Gửi thủ công">Gửi thủ công</option>
+            <option value="Gửi tự động">Gửi tự động</option>
           </select>
 
           <select
