@@ -4,17 +4,21 @@ import TitleCard from "../../components/Cards/TitleCard";
 import RatingService from '../../services/ratingService';
 import { showNotification } from '.././common/headerSlice';
 import RatingModal from './components/ratingModel';
+import EyeIcon from '@heroicons/react/24/solid/EyeIcon';
+import TrashIcon from "@heroicons/react/24/outline/TrashIcon";
+import DeleteRatingModal from './components/DeleteRatingModal';
 
 function Rating() {
   const dispatch = useDispatch();
   const [ratings, setRatings] = useState([]);
   const [loading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [ratingDetails, setRatingDetails] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false); // Modal xóa
+  const [selectedRatingID, setSelectedRatingID] = useState(null); // Lưu ratingID cần xóa
 
   const loadRatings = async () => {
     setIsLoading(true);
@@ -43,7 +47,7 @@ function Rating() {
 
   useEffect(() => {
     loadRatings();
-  }, [page, size, dispatch]); 
+  }, [page, size, dispatch]);
 
   const fetchRatingDetails = async (ratingID) => {
     try {
@@ -64,6 +68,30 @@ function Rating() {
     setRatingDetails(null);
   };
 
+  const openDeleteModal = (ratingID) => {
+    setSelectedRatingID(ratingID);
+    setIsDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setSelectedRatingID(null);
+  };
+
+  const handleDelete = async () => {
+    if (selectedRatingID) {
+      try {
+        await RatingService.deleteRating(selectedRatingID);
+        dispatch(showNotification({ message: "Xóa đánh giá thành công.", status: 1 }));
+        loadRatings();
+      } catch (error) {
+        dispatch(showNotification({ message: "Không thể xóa đánh giá.", status: 0 }));
+      } finally {
+        closeDeleteModal();
+      }
+    }
+  };
+
   const handlePrevPage = () => {
     if (page > 0) {
       setPage(page - 1);
@@ -77,7 +105,6 @@ function Rating() {
   };
 
   if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error}</div>;
 
   return (
     <TitleCard title="Danh sách đánh giá">
@@ -120,13 +147,15 @@ function Rating() {
                     ))}
                   </div>
                 </td>
-                <td>
-                  <button
-                    className="btn btn-sm btn-outline btn-warning mx-1 border-0"
+                <td className="flex items-center space-x-2">
+                  <EyeIcon
+                    className="w-5 cursor-pointer text-yellow-500"
                     onClick={() => openModal(rating.ratingID)}
-                  >
-                    Chi tiết
-                  </button>
+                  />
+                  <TrashIcon
+                    className="w-5 cursor-pointer text-red-500"
+                    onClick={() => openDeleteModal(rating.ratingID)}
+                  />
                 </td>
               </tr>
             ))
@@ -137,25 +166,24 @@ function Rating() {
             <td colSpan="6">
               <div className="join mt-4 flex justify-center w-full">
                 <button onClick={handlePrevPage} className="join-item btn btn-sm btn-primary" disabled={page === 0}>
-                  Previous
+                  Trước
                 </button>
                 {Array.from({ length: totalPages }, (_, index) => (
-                  <button key={index} onClick={() => setPage(index)} className={`join-item btn btn-sm btn-primary${page === index ? "btn-active" : ""}`}>
+                  <button key={index} onClick={() => setPage(index)} className={`join-item btn btn-sm btn-primary${page === index ? " btn-active" : ""}`}>
                     {index + 1}
                   </button>
                 ))}
                 <button onClick={handleNextPage} className="join-item btn btn-sm btn-primary" disabled={page >= totalPages - 1}>
-                  Next
+                  Tiếp
                 </button>
               </div>
             </td>
           </tr>
         </tfoot>
       </table>
-      <RatingModal
-        ratingDetails={ratingDetails}
-        onClose={closeModal}
-      />
+
+      <RatingModal ratingDetails={ratingDetails} onClose={closeModal} />
+      <DeleteRatingModal isModalOpen={isDeleteModalOpen} onConfirm={handleDelete} onCancel={closeDeleteModal} />
     </TitleCard>
   );
 }

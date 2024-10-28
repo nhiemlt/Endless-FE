@@ -11,7 +11,6 @@ const UpdateVoucherModal = ({ voucher, onClose, onReload }) => {
         leastDiscount: voucher.leastDiscount,
         biggestDiscount: voucher.biggestDiscount,
         leastBill: voucher.leastBill,
-        discountForm: voucher.discountForm,
         startDate: voucher.startDate,
         endDate: voucher.endDate,
     });
@@ -36,27 +35,28 @@ const UpdateVoucherModal = ({ voucher, onClose, onReload }) => {
     };
 
     return (
-        <dialog id="edit_voucher_modal" className="modal" open>
-            <div className="modal-box w-11/12 max-w-5xl">
-                <h3 className="font-bold text-lg">Cập nhật Voucher</h3>
-                <form className="mt-3" onSubmit={handleSubmit}>
-                    <div className="mb-4">
-                        <div className="flex flex-wrap">
-                            {/* Mã Voucher */}
-                            <div className="w-full md:w-1/2 pr-2 mb-4">
-                                <label className="block text-sm font-medium text-gray-700 mb-3">Mã Voucher</label>
-                                <input
-                                    type="text"
-                                    name="voucherCode"
-                                    value={formState.voucherCode}
-                                    onChange={handleChange}
-                                    className="input input-bordered w-full"
-                                    required
-                                />
-                            </div>
+        <>
+            <div className="fixed inset-0 bg-black bg-opacity-50 z-40"></div>
+            <dialog id="edit_voucher_modal" className="modal" role="dialog" open>
+                <div className="modal-box w-11/12 max-w-5xl" >
+                    <h3 className="font-bold text-lg">Cập nhật Voucher</h3>
+                    <form className="mt-3" onSubmit={handleSubmit}>
+                        {/* Mã Voucher */}
+                        <div className="w-full md:w-1/2 pr-2 mb-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-3">Mã Voucher</label>
+                            <input
+                                type="text"
+                                name="voucherCode"
+                                value={formState.voucherCode}
+                                onChange={handleChange}
+                                className="input input-bordered w-full"
+                                readOnly
+                            />
+                        </div>
 
+                        <div className="flex flex-wrap">
                             {/* Mức giảm giá */}
-                            <div className="w-full md:w-1/2 pl-2 mb-4">
+                            <div className="w-full md:w-1/2 pr-2 mb-4">
                                 <label className="block text-sm font-medium text-gray-700 mb-3">Mức giảm giá</label>
                                 <input
                                     type="number"
@@ -69,7 +69,7 @@ const UpdateVoucherModal = ({ voucher, onClose, onReload }) => {
                             </div>
 
                             {/* Giá giảm tối thiểu */}
-                            <div className="w-full md:w-1/2 pr-2 mb-4">
+                            <div className="w-full md:w-1/2 pl-2 mb-4">
                                 <label className="block text-sm font-medium text-gray-700 mb-3">Giá giảm tối thiểu</label>
                                 <input
                                     type="number"
@@ -82,7 +82,7 @@ const UpdateVoucherModal = ({ voucher, onClose, onReload }) => {
                             </div>
 
                             {/* Giá giảm tối đa */}
-                            <div className="w-full md:w-1/2 pl-2 mb-4">
+                            <div className="w-full md:w-1/2 pr-2 mb-4">
                                 <label className="block text-sm font-medium text-gray-700 mb-3">Giá giảm tối đa</label>
                                 <input
                                     type="number"
@@ -95,25 +95,12 @@ const UpdateVoucherModal = ({ voucher, onClose, onReload }) => {
                             </div>
 
                             {/* Hóa đơn tối thiểu */}
-                            <div className="w-full md:w-1/2 pr-2 mb-4">
+                            <div className="w-full md:w-1/2 pl-2 mb-4">
                                 <label className="block text-sm font-medium text-gray-700 mb-3">Hóa đơn tối thiểu</label>
                                 <input
                                     type="number"
                                     name="leastBill"
                                     value={formState.leastBill}
-                                    onChange={handleChange}
-                                    className="input input-bordered w-full"
-                                    required
-                                />
-                            </div>
-
-                            {/* Hình thức giảm giá */}
-                            <div className="w-full md:w-1/2 pl-2 mb-4">
-                                <label className="block text-sm font-medium text-gray-700 mb-3">Hình thức giảm giá</label>
-                                <input
-                                    type="text"
-                                    name="discountForm"
-                                    value={formState.discountForm}
                                     onChange={handleChange}
                                     className="input input-bordered w-full"
                                     required
@@ -146,14 +133,16 @@ const UpdateVoucherModal = ({ voucher, onClose, onReload }) => {
                                 />
                             </div>
                         </div>
-                    </div>
-                    <div className="modal-action">
-                        <button type="submit" className="btn btn-outline btn-sm btn-primary">Cập nhật</button>
-                        <button type="button" className="btn btn-outline btn-sm" onClick={onClose}>Đóng</button>
-                    </div>
-                </form>
-            </div>
-        </dialog>
+
+                        <div className="modal-action">
+                            <button type="submit" className="btn btn-outline btn-sm btn-primary">Cập nhật</button>
+                            <button type="button" className="btn btn-outline btn-sm" onClick={onClose}>Đóng</button>
+                        </div>
+                    </form>
+
+                </div>
+            </dialog>
+        </>
     );
 };
 
