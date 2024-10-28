@@ -5,18 +5,19 @@ import { showNotification } from "../../features/common/headerSlice";
 import TrashIcon from "@heroicons/react/24/outline/TrashIcon";
 import PencilIcon from "@heroicons/react/24/outline/PencilIcon";
 import PlusIcon from "@heroicons/react/24/outline/PlusIcon";
-import UserRoleModal from "./modal";
+import UserSelectionModal from "./UserSelectionModal";
 
 function Role() {
   const [roles, setRoles] = useState([]);
   const [permissions, setPermissions] = useState([]);
   const [newRoleName, setNewRoleName] = useState("");
   const [activeTab, setActiveTab] = useState("manageRole");
-  const [showModal, setShowModal] = useState(false);
+  const [showRoleModal, setShowRoleModal] = useState(false); // State để kiểm soát modal
   const [currentRoleId, setCurrentRoleId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [userSearchTerm, setUserSearchTerm] = useState("");
   const [usersInRole, setUsersInRole] = useState([]);
+  const [permissionSearchTerm, setPermissionSearchTerm] = useState("");
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -131,7 +132,7 @@ function Role() {
           status: 1,
         })
       );
-      setShowModal(false);
+      setShowRoleModal(false);
       loadUsersInRole(currentRoleId);
     } catch (error) {
       console.error("Error assigning users:", error);
@@ -144,6 +145,16 @@ function Role() {
   const filteredRoles = roles.filter((role) =>
     role.roleName.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const filteredPermissions = (module) => {
+    return module.permissions.filter(
+      (permission) =>
+        permission.permissionName &&
+        permission.permissionName
+          .toLowerCase()
+          .includes(permissionSearchTerm.toLowerCase())
+    );
+  };
 
   const loadUsersInRole = async (roleId) => {
     try {
@@ -188,6 +199,7 @@ function Role() {
 
       {activeTab === "manageRole" && (
         <div className="mt-6">
+          {/* Tìm kiếm role */}
           <input
             type="text"
             placeholder="Search roles..."
@@ -265,32 +277,76 @@ function Role() {
               </label>
             </div>
             <div className="mb-4">
+              <label className="label">
+                <span className="label-text">Search Permissions</span>
+                <input
+                  type="text"
+                  className="input"
+                  placeholder="Search permissions..."
+                  value={permissionSearchTerm}
+                  onChange={(e) => setPermissionSearchTerm(e.target.value)}
+                />
+              </label>
+            </div>
+            <div className="mb-4">
               <span className="label-text">Permissions</span>
-              <div className="grid grid-cols-2 gap-4">
-                {permissions.map((permission) => (
-                  <label
-                    className="cursor-pointer flex items-center"
-                    key={permission.permissionId}
-                  >
-                    <input
-                      type="checkbox"
-                      className="checkbox mr-2"
-                      checked={permission.selected || false}
-                      onChange={() => {
-                        const updatedPermissions = permissions.map((p) =>
-                          p.permissionId === permission.permissionId
-                            ? { ...p, selected: !p.selected }
-                            : p
-                        );
-                        setPermissions(updatedPermissions);
-                      }}
-                    />
-                    {permission.permissionName}
-                  </label>
-                ))}
+              <div className="grid grid-cols-1 gap-4">
+                {permissions
+                  .filter((module) =>
+                    module.permissions.some(
+                      (permission) =>
+                        permission.permissionName &&
+                        permission.permissionName
+                          .toLowerCase()
+                          .includes(permissionSearchTerm.toLowerCase())
+                    )
+                  )
+                  .map((module) => (
+                    <div
+                      key={module.moduleId}
+                      className="border p-4 rounded-md"
+                    >
+                      <h6 className="font-bold">{module.moduleName}</h6>
+                      <div className="grid grid-cols-1 gap-2 mt-2">
+                        {filteredPermissions(module).map((permission) => (
+                          <label
+                            className="cursor-pointer flex items-center"
+                            key={permission.permissionId}
+                          >
+                            <input
+                              type="checkbox"
+                              className="checkbox mr-2"
+                              checked={permission.selected}
+                              onChange={() => {
+                                const updatedPermissions = permissions.map(
+                                  (mod) => {
+                                    if (mod.moduleId === module.moduleId) {
+                                      return {
+                                        ...mod,
+                                        permissions: mod.permissions.map((p) =>
+                                          p.permissionId ===
+                                          permission.permissionId
+                                            ? { ...p, selected: !p.selected }
+                                            : p
+                                        ),
+                                      };
+                                    }
+                                    return mod;
+                                  }
+                                );
+                                setPermissions(updatedPermissions);
+                              }}
+                            />
+                            {permission.permissionName}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
               </div>
             </div>
-            <button className="btn btn-primary" type="submit">
+
+            <button type="submit" className="btn btn-primary">
               {currentRoleId ? "Update Role" : "Create Role"}
             </button>
           </form>
@@ -302,7 +358,7 @@ function Role() {
           <h5 className="text-lg font-bold">Users in Role</h5>
           <button
             className="btn btn-primary mb-4"
-            onClick={() => setShowModal(true)}
+            onClick={() => setShowRoleModal(true)}
           >
             Add User
           </button>
@@ -327,14 +383,14 @@ function Role() {
         </div>
       )}
 
-      {showModal && (
-        <UserRoleModal
-          onClose={() => setShowModal(false)}
-          onAssignUsers={handleAssignUsers}
-          userSearchTerm={userSearchTerm}
-          setUserSearchTerm={setUserSearchTerm}
-        />
-      )}
+      {/* Hiển thị modal */}
+      <UserSelectionModal
+        showModal={showRoleModal}
+        closeModal={() => setShowRoleModal(false)}
+        roleId={currentRoleId}
+        onAssignUsers={handleAssignUsers}
+        userSearchTerm={userSearchTerm}
+      />
     </div>
   );
 }
