@@ -12,6 +12,11 @@ function RatingModal({ ratingDetails, onClose }) {
       }
     }
   }, [ratingDetails]); // Chạy lại khi ratingDetails thay đổi
+  
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return `${String(date.getDate()).padStart(2, '0')}-${String(date.getMonth() + 1).padStart(2, '0')}-${date.getFullYear()}`;
+  };
 
   return (
     <dialog id="ratingModal" className="modal">
@@ -22,15 +27,20 @@ function RatingModal({ ratingDetails, onClose }) {
           <div className="flex items-center mb-4">
             <div className="avatar">
               <div className="ring-primary ring-offset-base-100 w-16 h-16 rounded-full mr-4 ring ring-offset-2">
-                <img src={ratingDetails.avatar} alt={ratingDetails.fullname} />
+                {ratingDetails.avatar ? (
+                  <img src={ratingDetails.avatar} alt="Avatar" />
+                ) : (
+                  <div className="w-16 h-16 bg-gray-300 rounded-full" />
+                )}
               </div>
             </div>
             <div className="text-center">
-              <p className="text-sm">{new Date(ratingDetails.ratingDate).toLocaleDateString()}</p>
+              <p className="text-sm"><b>{ratingDetails.fullname}</b></p>
+              <p className="text-sm">{ratingDetails.ratingDate ? formatDate(ratingDetails.ratingDate) : ''}</p>
             </div>
           </div>
         )}
-        <div className="flex flex-wrap justify-start">
+        <div className="flex flex-wrap justify-start mt-3">
           {ratingDetails && ratingDetails.pictures.map((picture, index) => (
             <img key={index} src={picture} alt={`Rating picture ${index}`} className="w-16 h-16 rounded mr-2" />
           ))}

@@ -19,7 +19,6 @@ function ProfileSettings() {
         phone: "",
         email: "",
         avatar: "",
-        language: "vie"  // Thêm trường language với giá trị mặc định
     });
 
     const [formData, setFormData] = useState({ ...profileData });
@@ -39,11 +38,10 @@ function ProfileSettings() {
                     phone: userData.phone || "",
                     email: userData.email,
                     avatar: userData.avatar || "",
-                    language: userData.language || "vie"  // Cập nhật ngôn ngữ từ server nếu có
                 });
             } catch (error) {
                 // Thông báo lỗi nếu không lấy được dữ liệu
-                dispatch(showNotification({ message: "Failed to load user data", status: 0 }));
+                dispatch(showNotification({ message: "Không lấy được dữ liệu", status: 0 }));
             }
         };
 
@@ -53,11 +51,17 @@ function ProfileSettings() {
     // Hàm xử lý khi có thay đổi dữ liệu trong form
     const handleInputChange = (e) => {
         const { name, value, files } = e.target;
-    
+
         if (name === "profileImage" && files && files.length > 0) {
             const file = files[0];
             setAvatarFile(file); // Lưu trữ file avatar đã chọn
-            // Không cần dùng FileReader nữa
+
+            // Tạo URL cho ảnh và cập nhật vào profileData
+            const imageUrl = URL.createObjectURL(file);
+            setProfileData((prevData) => ({
+                ...prevData,
+                avatar: imageUrl // Cập nhật avatar với URL của ảnh
+            }));
         } else {
             setProfileData((prevData) => ({
                 ...prevData,
@@ -66,6 +70,7 @@ function ProfileSettings() {
         }
     };
 
+
     // Hàm xử lý cập nhật thông tin người dùng
     const handleUpdateProfile = async (e) => {
         e.preventDefault();
@@ -73,10 +78,18 @@ function ProfileSettings() {
         const updatedData = { ...profileData }; // Sao chép dữ liệu hiện tại để chuẩn bị cập nhật
 
         // Kiểm tra xem các trường dữ liệu đã được nhập đầy đủ chưa
-        if (!updatedData.username.trim() || !updatedData.fullname.trim() ||
-            !updatedData.phone.trim() || !updatedData.email.trim() ||
-            !updatedData.language.trim()) {
+        if (!updatedData.username.trim() ||
+            !updatedData.fullname.trim() ||
+            !updatedData.phone.trim() ||
+            !updatedData.email.trim()) {
             dispatch(showNotification({ message: "Vui lòng điền đầy đủ thông tin", status: 0 }));
+            return;
+        }
+
+        // Kiểm tra định dạng email
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailPattern.test(updatedData.email)) {
+            dispatch(showNotification({ message: "Vui lòng nhập địa chỉ email hợp lệ", status: 0 }));
             return;
         }
 
@@ -92,13 +105,18 @@ function ProfileSettings() {
 
             // Hiển thị thông báo thành công và cập nhật lại giao diện
             dispatch(showNotification({ message: "Cập nhật thông tin thành công", status: 1 }));
+
             // Tải lại dữ liệu người dùng (nếu cần) thay vì reload trang
-            window.location.reload();
+            setProfileData(updatedData);
         } catch (error) {
             dispatch(showNotification({ message: `Cập nhật thông tin thất bại: ${error.message}`, status: 0 }));
-            console.error("Error updating user:", error);
+            console.error("Lỗi khi cập nhật thông tin người dùng:", error);
         }
-    };
+        
+        window.location.reload(); // Reload trang để hiển thị thông tin mới
+        
+        
+    };  
 
 
 
@@ -117,7 +135,7 @@ function ProfileSettings() {
                 const sortedProvinces = data.data.sort((a, b) => a.ProvinceName.localeCompare(b.ProvinceName));
                 setProvinces(sortedProvinces);
             } catch (error) {
-                console.error("Error fetching provinceIDs: ", error);
+                console.error("Lỗi khi tìm Id tỉnh: ", error);
             }
         };
 
@@ -137,7 +155,7 @@ function ProfileSettings() {
             setDistricts(sortedDistricts);
             resetDistrictAndWard();
         } catch (error) {
-            console.error("Error fetching districtIDs:", error);
+            console.error("Lỗi khi tìm Id quận/huyện:", error);
         }
     };
 
@@ -154,7 +172,7 @@ function ProfileSettings() {
             setWards(sortedWards);
             resetWard();
         } catch (error) {
-            console.error("Error fetching wardCodes:", error);
+            console.error("Lỗi khi tìm Id phường/xã:", error);
         }
     };
 
@@ -218,7 +236,7 @@ function ProfileSettings() {
             setNewAddress({ detailAddress: '', wardCode: '', wardName: '', districtID: '', districtName: '', provinceID: '', provinceName: '' });
             fetchAddresses();
         } catch (error) {
-            console.error('Failed to add new address:', error.response ? error.response.data : error.message);
+            console.error('Không thể thêm địa chỉ mới:', error.response ? error.response.data : error.message);
             if (error.response && error.response.data) {
                 dispatch(showNotification({ message: `Thêm địa chỉ thất bại: ${error.response.data.message}`, status: 0 }));
             } else {
@@ -235,7 +253,7 @@ function ProfileSettings() {
             const userAddresses = await UserAddressService.fetchUserAddresses(); // Gọi service để lấy địa chỉ
             setAddresses(userAddresses); // Cập nhật state với danh sách địa chỉ
         } catch (err) {
-            console.error('Error fetching addresses:', err);
+            console.error('Lỗi tìm địa chỉ:', err);
             setError('Không thể lấy danh sách địa chỉ.'); // Cập nhật state khi gặp lỗi
         } finally {
             setLoading(false); // Kết thúc tải dữ liệu

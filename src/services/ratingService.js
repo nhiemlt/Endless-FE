@@ -47,6 +47,17 @@ const RatingService = {
             });
     },
 
+    // Xóa đánh giá theo ID
+    deleteRating: (id) => {
+        return axios.delete(`${constants.API_BASE_URL}/api/ratings/${id}`)
+            .then(() => {
+                return; // Không trả về dữ liệu nào
+            })
+            .catch(error => {
+                throw error.response.data.error || 'Error deleting rating'; // Xử lý lỗi
+            });
+    },
+
     // Thêm đánh giá
     addRating: (orderDetailId, ratingValue, comment, pictures) => {
         const formData = new FormData();
