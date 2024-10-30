@@ -5,15 +5,29 @@ import VoucherService from "../../../services/voucherService";
 
 const UpdateVoucherModal = ({ voucher, onClose, onReload }) => {
     const dispatch = useDispatch();
+
+    const formatDate = (dateString) => {
+        if (dateString) {
+            const [day, month, year] = dateString.split("-"); // Tách chuỗi ngày
+            const date = new Date(year, month, day); // Tạo đối tượng ngày, tháng bắt đầu từ 0
+            return isNaN(date.getTime()) ? "" : date.toISOString().split("T")[0]; // Chuyển đổi sang định dạng ISO
+        }
+        return ""; // Nếu không có giá trị, trả về chuỗi rỗng
+    };
+
+    const today = new Date().toISOString().split("T")[0];
+
     const [formState, setFormState] = useState({
         voucherCode: voucher.voucherCode,
         discountLevel: voucher.discountLevel,
         leastDiscount: voucher.leastDiscount,
         biggestDiscount: voucher.biggestDiscount,
         leastBill: voucher.leastBill,
-        startDate: voucher.startDate,
-        endDate: voucher.endDate,
+        startDate: formatDate(voucher.startDate), // Sử dụng formatDate ở đây
+        endDate: formatDate(voucher.endDate),     // Sử dụng formatDate ở đây
     });
+
+    console.log(formState)
 
     const handleChange = (e) => {
         setFormState({
@@ -113,7 +127,8 @@ const UpdateVoucherModal = ({ voucher, onClose, onReload }) => {
                                 <input
                                     type="date"
                                     name="startDate"
-                                    value={formState.startDate}
+                                    min={today}
+                                    value={formState.startDate} // Giá trị lấy từ formState
                                     onChange={handleChange}
                                     className="input input-bordered w-full"
                                     required
@@ -126,7 +141,8 @@ const UpdateVoucherModal = ({ voucher, onClose, onReload }) => {
                                 <input
                                     type="date"
                                     name="endDate"
-                                    value={formState.endDate}
+                                    min={today}
+                                    value={formState.endDate} // Giá trị lấy từ formState
                                     onChange={handleChange}
                                     className="input input-bordered w-full"
                                     required
