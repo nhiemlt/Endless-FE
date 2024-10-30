@@ -96,7 +96,12 @@ function Login() {
                 if (token) {
                     document.cookie = `token=${token}; path=/;`;
                     setAlert({ type: "success", message: "Đăng nhập thành công!" });
-                    navigate("/app/welcome");
+                    if(data.role === "admin"){
+                        navigate("/app/welcome");
+                    }
+                    else{
+                        navigate("/home");
+                    }
                     window.location.reload(); 
                 } else {
                     setAlert({ type: "error", message: "Token không hợp lệ!" });
@@ -136,7 +141,12 @@ function Login() {
             } else {
                 document.cookie = `token=${data.token}; path=/;`;
                 setAlert({ type: "success", message: "Đăng nhập thành công!" });
-                navigate("/app/welcome");
+                if(data.role === "admin"){
+                    navigate("/app/welcome");
+                }
+                else{
+                    navigate("/app/home");
+                }
                 window.location.reload(); 
             }
         } catch (error) {

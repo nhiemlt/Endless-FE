@@ -10,7 +10,7 @@ const getCookie = (name) => {
 const checkAuth = async (navigate) => {
   const TOKEN = getCookie("token"); // Lấy token từ cookie
   const PUBLIC_ROUTES = ["/login", "/forgot-password", "/register", "/logout"];
-  
+  let ROLE = "";
   // Kiểm tra xem đường dẫn hiện tại có phải là trang công khai không
   const isPublicPage = PUBLIC_ROUTES.some(route => window.location.pathname.includes(route));
 
@@ -37,8 +37,9 @@ const checkAuth = async (navigate) => {
 
       // Nếu token hợp lệ, cấu hình axios và trả về token
       axios.defaults.headers.common['Authorization'] = `Bearer ${TOKEN}`;
-      navigate && navigate("/app/welcome"); // Điều hướng đến trang welcome nếu cần
-      
+      const data = await response.json();
+      ROLE = data.role;
+        navigate && navigate("/app/welcome");
     } catch (error) {
       console.error("Error verifying token:", error);
       document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
@@ -46,7 +47,7 @@ const checkAuth = async (navigate) => {
     }
   }
 
-  return TOKEN;
+  return { token: TOKEN, role: ROLE};
 };
 
 export default checkAuth;

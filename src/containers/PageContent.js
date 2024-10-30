@@ -1,6 +1,6 @@
 import Header from "./Header"
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
-import routes from '../routes'
+import routes from '../routes/index'
 import { Suspense, lazy } from 'react'
 import SuspenseContent from "./SuspenseContent"
 import { useSelector } from 'react-redux'
