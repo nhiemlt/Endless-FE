@@ -1,12 +1,11 @@
-import Header from "./Header";
 import CustomerPageContent from "./CustomerPageContent";
-import RightSidebar from './RightSidebar';
 import ModalLayout from "./ModalLayout";
 import { useEffect } from "react";
 import { useSelector, useDispatch } from 'react-redux';
 import { removeNotificationMessage } from "../features/common/headerSlice";
 import { NotificationContainer, NotificationManager } from 'react-notifications';
 import 'react-notifications/lib/notifications.css';
+import RightSidebar from './RightSidebar'
 
 function CustomerLayout() {
     const dispatch = useDispatch();
@@ -30,9 +29,9 @@ function CustomerLayout() {
                 <input id="left-sidebar-drawer" type="checkbox" className="drawer-toggle" />
                 <CustomerPageContent />
             </div>
-
-            {/* Right drawer - containing secondary content like notifications list etc.. */}
-            <RightSidebar />
+            
+        { /* Right drawer - containing secondary content like notifications list etc.. */ }
+        <RightSidebar />
 
             {/* Notification layout container */}
             <NotificationContainer />

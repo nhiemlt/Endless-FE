@@ -12,11 +12,6 @@ const ProfileSettings = lazy(() => import('../pages/protected/ProfileSettings'))
 const Home = lazy(() => import('../pages/public/Home'));
 const ProductList = lazy(() => import('../pages/public/Product'));
 const ProductDetail = lazy(() => import('../pages/public/ProductDetail'));
-const GettingStarted = lazy(() => import('../pages/GettingStarted'));
-const DocFeatures = lazy(() => import('../pages/DocFeatures'));
-const DocComponents = lazy(() => import('../pages/DocComponents'));
-const Integration = lazy(() => import('../pages/protected/Integration'));
-const Charts = lazy(() => import('../pages/protected/Charts'));
 const Page404 = lazy(() => import('../pages/protected/404'));
 const Blank = lazy(() => import('../pages/protected/Blank'));
 const ChangePassword = lazy(() => import('../pages/protected/ChangePassword'));
