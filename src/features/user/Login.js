@@ -34,27 +34,27 @@ function Login() {
     // Sử dụng auth sau khi Firebase đã được khởi tạo
     const auth = getAuth(app);
 
-    // Kiểm tra token khi component mount
-    useEffect(() => {
-        const token = getCookie("token");
-        if (token) {
-            fetch(`${constants.API_BASE_URL}/verify-auth-token?token=${token}`, {
-                method: "GET",
-                headers: { "Content-Type": "application/json" },
-            })
-                .then(response => {
-                    if (response.ok) {
-                        navigate("/app/welcome");
-                        window.location.reload(); 
-                    } else {
-                        document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-                    }
-                })
-                .catch(error => {
-                    console.error("Error verifying token:", error);
-                });
-        }
-    }, [navigate]);
+    // // Kiểm tra token khi component mount
+    // useEffect(() => {
+    //     const token = getCookie("token");
+    //     if (token) {
+    //         fetch(`${constants.API_BASE_URL}/verify-auth-token?token=${token}`, {
+    //             method: "GET",
+    //             headers: { "Content-Type": "application/json" },
+    //         })
+    //             .then(response => {
+    //                 if (response.ok) {
+    //                     navigate("/app/welcome");
+    //                     window.location.reload(); 
+    //                 } else {
+    //                     document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    //                 }
+    //             })
+    //             .catch(error => {
+    //                 console.error("Error verifying token:", error);
+    //             });
+    //     }
+    // }, [navigate]);
 
     // Hàm lấy cookie
     const getCookie = (name) => {
@@ -96,11 +96,13 @@ function Login() {
                 if (token) {
                     document.cookie = `token=${token}; path=/;`;
                     setAlert({ type: "success", message: "Đăng nhập thành công!" });
-                    if(data.role === "admin"){
+                    if(data.role){
                         navigate("/app/welcome");
+                        console.log(data.role);
                     }
                     else{
                         navigate("/home");
+                        console.log(data.role);
                     }
                     window.location.reload(); 
                 } else {
@@ -141,7 +143,7 @@ function Login() {
             } else {
                 document.cookie = `token=${data.token}; path=/;`;
                 setAlert({ type: "success", message: "Đăng nhập thành công!" });
-                if(data.role === "admin"){
+                if(data.role){
                     navigate("/app/welcome");
                 }
                 else{
