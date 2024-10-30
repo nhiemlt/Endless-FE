@@ -5,9 +5,6 @@ import TitleCard from "../../../components/Cards/TitleCard";
 import { showNotification } from '../../common/headerSlice';
 import UserService from '../../../services/UserService';
 import { useSelector } from 'react-redux';
-import EyeIcon from "@heroicons/react/24/outline/EyeIcon";
-import EyeSlashIcon from "@heroicons/react/24/outline/EyeSlashIcon";
-
 
 function PasswordChange() {
   const [oldPassword, setOldPassword] = useState('');
@@ -47,11 +44,10 @@ function PasswordChange() {
 
   return (
     <>
-      <TitleCard title="Đổi mật khẩu">
-        <div className="flex justify-center items-center min-h-screen">
-          <div className="bg-white shadow-xl rounded-lg p-8 w-full max-w-md">
-            <h2 className="text-2xl font-bold text-center text-blue-600 mb-6">Đổi Mật Khẩu</h2>
-
+      <TitleCard title="Thay đổi mật khẩu">
+        <div className="flex justify-center items-center min-h-0">
+          <div className="bg-white shadow-[10px_15px_30px_rgba(0,0,0,0.4)] rounded-lg p-4 w-full max-w-md ">
+            <h2 className="text-2xl font-bold text-center mb-6">Đổi mật khẩu</h2>
             <form onSubmit={handleChangePassword}>
               <div className="mb-4">
                 <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="oldPassword">
@@ -97,12 +93,13 @@ function PasswordChange() {
 
               <button
                 type="submit"
-                className="btn btn-sm btn-outline btn-primary w-full"
+                className="btn btn-sm btn-primary w-full"
               >
-                Cập nhật mật khẩu
+                Lưu
               </button>
             </form>
           </div>
+
         </div>
       </TitleCard>
     </>
