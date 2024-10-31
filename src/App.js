@@ -61,9 +61,13 @@ function App() {
         {/* Chỉ admin mới vào được Layout */}
         <Route path="/app/*" element={role === 'admin' ? <Layout /> : <Navigate to={getRedirectPath()} replace />} />
 
-        {/* Customer và Guest dùng CustomerLayout */}
-        <Route path="/*" element={<CustomerLayout />} />
+        {/* Customer và Guest dùng CustomerLayout, ngăn admin truy cập */}
+        <Route 
+          path="/*" 
+          element={role === 'admin' ? <Navigate to={getRedirectPath()} replace /> : <CustomerLayout />} 
+        />
 
+        {/* Redirect tất cả các route không hợp lệ */}
         <Route path="*" element={<Navigate to={getRedirectPath()} replace />} />
       </Routes>
     </Router>
