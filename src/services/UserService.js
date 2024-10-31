@@ -1,4 +1,3 @@
-// UserService.js
 import axios from "axios";
 import constants from '../utils/globalConstantUtil';
 
@@ -12,7 +11,7 @@ const UserService = {
             throw error;
         }
     },
-    
+
     async getUsers(page = 0, size = 10, keyword = '') {
         try {
             const response = await axios.get(`${constants.API_BASE_URL}/api/users`, {
@@ -27,16 +26,58 @@ const UserService = {
             console.error("Error fetching users:", error);
             throw error;
         }
-    },async getAllUser() {
+    },
+
+    async getAllUsers() {
         try {
             const response = await axios.get(`${constants.API_BASE_URL}/api/users`);
-            return response.data; // Dữ liệu người dùng
+            return response.data;
         } catch (error) {
             console.error("Error fetching user data:", error);
-            throw error; // Ném lỗi ra để xử lý sau
+            throw error;
         }
     },
 
+    async getUserById(userId) {
+        try {
+            const response = await axios.get(`${constants.API_BASE_URL}/api/users/${userId}`);
+            return response.data;
+        } catch (error) {
+            console.error("Error fetching user by ID:", error);
+            throw error;
+        }
+    },
+
+    async createUser(userData) {
+        try {
+            const response = await axios.post(`${constants.API_BASE_URL}/api/users`, userData);
+            return response.data;
+        } catch (error) {
+            console.error("Error creating user:", error);
+            throw error;
+        }
+    },
+
+    async updateUser(userId, userData) {
+        try {
+            const response = await axios.put(`${constants.API_BASE_URL}/api/users/${userId}`, userData);
+            return response.data;
+        } catch (error) {
+            console.error("Error updating user:", error);
+            throw error;
+        }
+    },
+
+    async deleteUser(userId) {
+        try {
+            const response = await axios.delete(`${constants.API_BASE_URL}/api/users/${userId}`);
+            return response.data;
+        } catch (error) {
+            console.error("Error deleting user:", error);
+            throw error;
+        }
+    },
+    
     async getInfor(page = 0, size = 10, keyword = '') {
         try {
             const response = await axios.get(`${constants.API_BASE_URL}/api/users/get-infor`, {
@@ -52,13 +93,19 @@ const UserService = {
             throw error;
         }
     },
-    searchUsersByName: async (name) => {
-    const response = await axios.get(
-      `${constants.API_BASE_URL}/api/users/search`,
-      { params: { name } }
-    );
-    return response.data;
-  },
+    
+    async searchUsersByName(name) {
+        try {
+            const response = await axios.get(
+                `${constants.API_BASE_URL}/api/users/search`,
+                { params: { name } }
+            );
+            return response.data;
+        } catch (error) {
+            console.error("Error searching users:", error);
+            throw error;
+        }
+    },
 };
 
 export default UserService;

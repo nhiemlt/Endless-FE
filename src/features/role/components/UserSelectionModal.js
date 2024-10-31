@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import UserService from '../../services/UserService';
-import { showNotification } from "../../features/common/headerSlice";
+import UserService from '../../../services/UserService';
+import { showNotification } from "../../common/headerSlice";
 import { useDispatch } from "react-redux";
 
 function UserSelectionModal({ showModal, closeModal, roleId, onUserAssigned }) {
@@ -41,7 +41,7 @@ function UserSelectionModal({ showModal, closeModal, roleId, onUserAssigned }) {
       }
     });
   };
-
+  
   const handleAssignRole = async () => {
     if (selectedUserIds.length === 0) {
       dispatch(showNotification({ message: 'Vui lòng chọn ít nhất một người dùng.', status: 0 }));
