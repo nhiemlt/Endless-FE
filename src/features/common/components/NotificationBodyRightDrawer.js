@@ -22,7 +22,7 @@ function NotificationBodyRightDrawer({ closeRightDrawer }) {
                 setLocalNotifications((prevNotifications) =>
                     prevNotifications.map((notification) =>
                         notification.notificationRecipientID === notificationRecipientId
-                            ? { ...notification, status: 'Chưa đọc' }
+                            ? { ...notification, status: 'Đã đọc' }
                             : notification
                     )
                 );
