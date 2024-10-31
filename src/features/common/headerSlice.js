@@ -6,6 +6,7 @@ export const fetchUnreadCount = createAsyncThunk(
     'header/fetchUnreadCount',
     async () => {
         const count = await NotificationService.getUnreadCount();
+        console.log(count);
         return count;
     }
 );
