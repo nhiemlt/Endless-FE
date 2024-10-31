@@ -18,7 +18,23 @@ const CartService = {
             const response = await axios.post(`${constants.API_BASE_URL}/api/carts/add-to-cart`, cartModel);
             return response.data;
         } catch (error) {
-            throw error.response?.data || error.message;
+            if (error.response) {
+                // Xử lý các lỗi dựa trên mã trạng thái HTTP
+                const status = error.response.status;
+                const errorMessage = error.response.data.message || error.message;
+
+                if (status === 404) {
+                    throw new Error("Người dùng không tìm thấy");
+                } else if (status === 400) {
+                    // Có thể có hai loại lỗi 400: phiên bản sản phẩm không tìm thấy hoặc số lượng vượt quá tồn kho
+                    if (errorMessage.includes("Phiên bản sản phẩm không tìm thấy")) {
+                        throw new Error("Phiên bản sản phẩm không tìm thấy");
+                    } else if (errorMessage.includes("Số lượng vượt quá sản phẩm tồn kho")) {
+                        throw new Error("Số lượng vượt quá sản phẩm tồn kho");
+                    }
+                }
+            }
+            throw new Error("Đã xảy ra lỗi không mong muốn: " + (error.message || "Không xác định"));
         }
     },
 
@@ -28,7 +44,23 @@ const CartService = {
             const response = await axios.put(`${constants.API_BASE_URL}/api/carts/update`, cartModel);
             return response.data;
         } catch (error) {
-            throw error.response?.data || error.message;
+            if (error.response) {
+                const status = error.response.status;
+                const errorMessage = error.response.data.message || error.message;
+
+                if (status === 404) {
+                    // Sản phẩm trong giỏ hàng không tìm thấy
+                    throw new Error("Sản phẩm trong giỏ hàng không tìm thấy");
+                } else if (status === 400) {
+                    // Lỗi số lượng vượt quá tồn kho
+                    if (errorMessage.includes("Số lượng vượt quá sản phẩm tồn kho")) {
+                        throw new Error("Số lượng vượt quá sản phẩm tồn kho");
+                    } else if (errorMessage.includes("Phiên bản sản phẩm không tìm thấy")) {
+                        throw new Error("Phiên bản sản phẩm không tìm thấy");
+                    }
+                }
+            }
+            throw new Error("Đã xảy ra lỗi không mong muốn: " + (error.message || "Không xác định"));
         }
     },
 

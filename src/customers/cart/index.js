@@ -32,6 +32,7 @@ function Cart() {
         i === index ? { ...product, quantity: newQuantity } : product
       )
     );
+    console.log(index, newQuantity)
   };
 
   const handleRemoveItem = async (productVersionID) => {
@@ -121,7 +122,7 @@ function Cart() {
                         min="1"
                         value={product.quantity}
                         id={`qty_${index}`}
-                        onChange={(e) => handleQuantityChange(index, parseInt(e.target.value, 10))}
+                        onChange={(e) => handleQuantityChange(product.productVersionID, parseInt(e.target.value, 10))}
                         className="h-8 w-12 rounded border-gray-200 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 p-0 text-center text-xs text-gray-600 dark:text-gray-300"
                       />
                       <button
