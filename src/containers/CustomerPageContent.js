@@ -1,15 +1,14 @@
-import Header from "./Header"
+import Navbar from "./Navbar"
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
-import routes from '../routes/adminRoutes'
+import routes from '../routes/customerRoutes'
 import { Suspense, lazy } from 'react'
 import SuspenseContent from "./SuspenseContent"
 import { useSelector } from 'react-redux'
 import { useEffect, useRef } from "react"
 
-const Page404 = lazy(() => import('../pages/protected/404'))
+const Page404 = lazy(() => import('../pages/protected/404'));
 
-
-function PageContent(){
+function CustomerPageContent() {
     const mainContentRef = useRef(null);
     const {pageTitle} = useSelector(state => state.header)
 
@@ -24,7 +23,7 @@ function PageContent(){
 
     return(
         <div className="drawer-content flex flex-col ">
-            <Header/>
+            <Navbar/>
             <main className="flex-1 overflow-y-auto md:pt-4 pt-4 px-6  bg-base-200" ref={mainContentRef}>
                 <Suspense fallback={<SuspenseContent />}>
                         <Routes>
@@ -51,5 +50,4 @@ function PageContent(){
     )
 }
 
-
-export default PageContent
+export default CustomerPageContent;

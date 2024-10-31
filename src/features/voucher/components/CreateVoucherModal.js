@@ -7,6 +7,9 @@ import ArrowPathIcon from "@heroicons/react/24/outline/ArrowPathIcon";
 
 const CreateVoucherModal = ({ onClose, onReload }) => {
     const dispatch = useDispatch();
+
+    const today = new Date().toISOString().split("T")[0];
+    
     const [formState, setFormState] = useState({
         voucherCode: "",
         discountLevel: 0,
@@ -154,6 +157,7 @@ const CreateVoucherModal = ({ onClose, onReload }) => {
                                     <input
                                         type="date"
                                         name="startDate"
+                                        min={today}
                                         value={formState.startDate}
                                         onChange={handleChange}
                                         className="input input-bordered w-full"
@@ -167,6 +171,7 @@ const CreateVoucherModal = ({ onClose, onReload }) => {
                                     <input
                                         type="date"
                                         name="endDate"
+                                        min={today}
                                         value={formState.endDate}
                                         onChange={handleChange}
                                         className="input input-bordered w-full"

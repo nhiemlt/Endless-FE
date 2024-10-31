@@ -14,25 +14,37 @@ function Header() {
     const dispatch = useDispatch();
     const { noOfNotifications, pageTitle } = useSelector(state => state.header);
     const { userInfo } = useSelector(state => state.user);
-    const [currentTheme, setCurrentTheme] = useState(localStorage.getItem("theme"));
+    const [currentTheme, setCurrentTheme] = useState(localStorage.getItem("theme") || "light"); // Giá trị mặc định là "light"
 
     useCurrentUser();
 
     // Hàm long polling
     const longPolling = async () => {
         while (true) {
-            await dispatch(fetchUnreadCount()); // Gọi thunk để lấy số lượng thông báo chưa đọc
-            await new Promise(resolve => setTimeout(resolve, 5000)); // Chờ 5 giây trước khi gọi lại
+            await dispatch(fetchUnreadCount());
+            await new Promise(resolve => setTimeout(resolve, 5000));
         }
     };
 
     useEffect(() => {
-        const polling = longPolling(); // Bắt đầu long polling
+        const polling = longPolling();
 
         return () => {
-            polling.cancel(); // Dọn dẹp khi component unmount
+            polling.cancel();
         };
     }, [dispatch]);
+
+    // Hàm để thay đổi theme
+    const toggleTheme = () => {
+        const newTheme = currentTheme === "light" ? "dark" : "light";
+        setCurrentTheme(newTheme);
+        localStorage.setItem("theme", newTheme); // Lưu theme vào localStorage
+        document.documentElement.setAttribute('data-theme', newTheme); // Cập nhật thuộc tính theme cho document
+    };
+
+    useEffect(() => {
+        document.documentElement.setAttribute('data-theme', currentTheme); // Thiết lập theme khi component được mount
+    }, []);
 
     const openNotification = () => {
         dispatch(openRightDrawer({ header: "Danh sách thông báo", bodyType: RIGHT_DRAWER_TYPES.NOTIFICATION }));
@@ -57,7 +69,7 @@ function Header() {
 
             <div className="flex-none">
                 <label className="swap">
-                    <input type="checkbox" />
+                    <input type="checkbox" checked={currentTheme === "dark"} onChange={toggleTheme} />
                     <SunIcon data-set-theme="light" data-act-class="ACTIVECLASS" className={"fill-current w-6 h-6 " + (currentTheme === "dark" ? "swap-on" : "swap-off")} />
                     <MoonIcon data-set-theme="dark" data-act-class="ACTIVECLASS" className={"fill-current w-6 h-6 " + (currentTheme === "light" ? "swap-on" : "swap-off")} />
                 </label>
@@ -85,7 +97,7 @@ function Header() {
                                 Thông tin cá nhân
                             </Link>
                         </li>
-                        <li><Link to={'/app/settings-billing'}>Thay đổi mật khẩu</Link></li>
+                        <li><Link to={'/app/change-password'}>Thay đổi mật khẩu</Link></li>
                         <div className="divider mt-0 mb-0"></div>
                         <li><a onClick={logoutUser}>Đăng xuất</a></li>
                     </ul>

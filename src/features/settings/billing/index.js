@@ -1,82 +1,112 @@
-import moment from "moment"
-import { useEffect, useState } from "react"
-import { useDispatch, useSelector } from "react-redux"
-import TitleCard from "../../../components/Cards/TitleCard"
-import { showNotification } from '../../common/headerSlice'
+// PasswordChange.js
+import React, { useState } from 'react';
+import { useDispatch } from 'react-redux';
+import TitleCard from "../../../components/Cards/TitleCard";
+import { showNotification } from '../../common/headerSlice';
+import UserService from '../../../services/UserService';
+import { useSelector } from 'react-redux';
+import EyeIcon from "@heroicons/react/24/outline/EyeIcon";
+import EyeSlashIcon from "@heroicons/react/24/outline/EyeSlashIcon";
 
 
+function PasswordChange() {
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const dispatch = useDispatch();
 
-const BILLS = [
-    {invoiceNo : "#4567", amount : "23,989", description : "Product usages", status : "Pending", generatedOn : moment(new Date()).add(-30*1, 'days').format("DD MMM YYYY"),  paidOn : "-"},
+  // Lấy username từ Redux store
+  const username = useSelector((state) => state.user.username);
 
-    {invoiceNo : "#4523", amount : "34,989", description : "Product usages", status : "Pending", generatedOn : moment(new Date()).add(-30*2, 'days').format("DD MMM YYYY"), paidOn : "-"},
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
 
-    {invoiceNo : "#4453", amount : "39,989", description : "Product usages", status : "Paid", generatedOn : moment(new Date()).add(-30*3, 'days').format("DD MMM YYYY"), paidOn : moment(new Date()).add(-24*2, 'days').format("DD MMM YYYY")},
-
-    {invoiceNo : "#4359", amount : "28,927", description : "Product usages", status : "Paid", generatedOn : moment(new Date()).add(-30*4, 'days').format("DD MMM YYYY"), paidOn : moment(new Date()).add(-24*3, 'days').format("DD MMM YYYY")},
-
-    {invoiceNo : "#3359", amount : "28,927", description : "Product usages", status : "Paid", generatedOn : moment(new Date()).add(-30*5, 'days').format("DD MMM YYYY"), paidOn : moment(new Date()).add(-24*4, 'days').format("DD MMM YYYY")},
-
-    {invoiceNo : "#3367", amount : "28,927", description : "Product usages", status : "Paid", generatedOn : moment(new Date()).add(-30*6, 'days').format("DD MMM YYYY"), paidOn : moment(new Date()).add(-24*5, 'days').format("DD MMM YYYY")},
-
-    {invoiceNo : "#3359", amount : "28,927", description : "Product usages", status : "Paid", generatedOn : moment(new Date()).add(-30*7, 'days').format("DD MMM YYYY"), paidOn : moment(new Date()).add(-24*6, 'days').format("DD MMM YYYY")},
-
-    {invoiceNo : "#2359", amount : "28,927", description : "Product usages", status : "Paid", generatedOn : moment(new Date()).add(-30*8, 'days').format("DD MMM YYYY"), paidOn : moment(new Date()).add(-24*7, 'days').format("DD MMM YYYY")},
-
-
-]
-
-function Billing(){
-
-
-    const [bills, setBills] = useState(BILLS)
-
-    const getPaymentStatus = (status) => {
-        if(status  === "Paid")return <div className="badge badge-success">{status}</div>
-        if(status  === "Pending")return <div className="badge badge-primary">{status}</div>
-        else return <div className="badge badge-ghost">{status}</div>
+    // Kiểm tra xem mật khẩu mới có khớp với xác nhận mật khẩu không
+    if (newPassword !== confirmPassword) {
+      dispatch(showNotification({ message: "Mật khẩu mới và xác nhận mật khẩu không khớp.", status: 0 }));
+      return;
     }
 
-    return(
-        <>
-            
-            <TitleCard title="Billing History" topMargin="mt-2">
+    // Gọi service để thay đổi mật khẩu
+    const response = await UserService.changePassword({
+      oldPassword,
+      newPassword,
+    });
 
-                {/* Invoice list in table format loaded constant */}
-            <div className="overflow-x-auto w-full">
-                <table className="table w-full">
-                    <thead>
-                    <tr>
-                        <th>Invoice No</th>
-                        <th>Invoice Generated On</th>
-                        <th>Description</th>
-                        <th>Amount</th>
-                        <th>Status</th>
-                        <th>Invoice Paid On</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                        {
-                            bills.map((l, k) => {
-                                return(
-                                    <tr key={k}>
-                                    <td>{l.invoiceNo}</td>
-                                    <td>{l.generatedOn}</td>
-                                    <td>{l.description}</td>
-                                    <td>${l.amount}</td>
-                                    <td>{getPaymentStatus(l.status)}</td>
-                                    <td>{l.paidOn}</td>
-                                    </tr>
-                                )
-                            })
-                        }
-                    </tbody>
-                </table>
-            </div>
-            </TitleCard>
-        </>
-    )
+    // Xử lý phản hồi từ service
+    if (response.success) {
+      dispatch(showNotification({ message: "Đổi mật khẩu thành công.", status: 1 }));
+      // Reset lại các trường input sau khi đổi mật khẩu thành công
+      setOldPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } else {
+      dispatch(showNotification({ message: response.message || "Đổi mật khẩu thất bại.", status: 0 }));
+    }
+  };
+
+  return (
+    <>
+      <TitleCard title="Đổi mật khẩu">
+        <div className="flex justify-center items-center min-h-screen">
+          <div className="bg-white shadow-xl rounded-lg p-8 w-full max-w-md">
+            <h2 className="text-2xl font-bold text-center text-blue-600 mb-6">Đổi Mật Khẩu</h2>
+
+            <form onSubmit={handleChangePassword}>
+              <div className="mb-4">
+                <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="oldPassword">
+                  Mật khẩu hiện tại
+                </label>
+                <input
+                  type="password"
+                  id="oldPassword"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+                  value={oldPassword}
+                  onChange={(e) => setOldPassword(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="newPassword">
+                  Mật khẩu mới
+                </label>
+                <input
+                  type="password"
+                  id="newPassword"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="mb-6">
+                <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="confirmPassword">
+                  Xác nhận mật khẩu mới
+                </label>
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="btn btn-sm btn-outline btn-primary w-full"
+              >
+                Cập nhật mật khẩu
+              </button>
+            </form>
+          </div>
+        </div>
+      </TitleCard>
+    </>
+  );
 }
 
-
-export default Billing
+export default PasswordChange;

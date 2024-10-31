@@ -26,9 +26,7 @@ const UserService = {
             console.error("Error fetching users:", error);
             throw error;
         }
-    },
-
-    async getAllUsers() {
+    },async getAllUser() {
         try {
             const response = await axios.get(`${constants.API_BASE_URL}/api/users`);
             return response.data;
@@ -93,19 +91,13 @@ const UserService = {
             throw error;
         }
     },
-    
-    async searchUsersByName(name) {
-        try {
-            const response = await axios.get(
-                `${constants.API_BASE_URL}/api/users/search`,
-                { params: { name } }
-            );
-            return response.data;
-        } catch (error) {
-            console.error("Error searching users:", error);
-            throw error;
-        }
-    },
+    searchUsersByName: async (name) => {
+    const response = await axios.get(
+      `${constants.API_BASE_URL}/api/users/search`,
+      { params: { name } }
+    );
+    return response.data;
+  },
 };
 
 export default UserService;
