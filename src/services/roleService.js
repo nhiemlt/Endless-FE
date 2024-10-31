@@ -43,7 +43,7 @@ const RoleService = {
 
   assignUsersToRole: async (roleId, userIds) => {
     const response = await axios.post(
-      `${constants.API_BASE_URL}/api/roles/${roleId}/users`,
+      `${constants.API_BASE_URL}/api/roles/manage/${roleId}/users`,
       { userIds }
     );
     return response.data;
@@ -56,10 +56,9 @@ const RoleService = {
     return response.data;
   },
 
-  // Thêm phương thức tìm kiếm người dùng theo tên
   searchUsersByName: async (name) => {
     const response = await axios.get(
-      `${constants.API_BASE_URL}/api/users/search`, // Điều chỉnh URL này theo API của bạn
+      `${constants.API_BASE_URL}/api/users/search`,
       { params: { name } }
     );
     return response.data;
@@ -67,10 +66,27 @@ const RoleService = {
 
   getUsersByRole: async (roleId) => {
     const response = await axios.get(
-      `${constants.API_BASE_URL}/api/roles/${roleId}/users`
+      `${constants.API_BASE_URL}/api/roles/manage/roles/${roleId}/users`
     );
     return response.data;
-  }
+  },
+
+  deleteUserFromRole: async (roleId, userId) => {
+    try {
+      await axios.delete(`${constants.API_BASE_URL}/api/roles/manage/${roleId}/users/${userId}`);
+    } catch (error) {
+      console.error("Error deleting user from role:", error);
+      throw error;
+    }
+  },
+
+  getRoleWithPermissions: async (roleId) => {
+    const response = await axios.get(
+      `${constants.API_BASE_URL}/api/roles/${roleId}/permissions`
+    );
+    return response.data;
+  },
+  
 };
 
 export default RoleService;

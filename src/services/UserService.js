@@ -1,4 +1,3 @@
-// UserService.js
 import axios from "axios";
 import constants from '../utils/globalConstantUtil';
 
@@ -27,16 +26,56 @@ const UserService = {
             console.error("Error fetching users:", error);
             throw error;
         }
-    }, async getAllUser() {
+    },async getAllUser() {
         try {
             const response = await axios.get(`${constants.API_BASE_URL}/api/users`);
-            return response.data; // Dữ liệu người dùng
+            return response.data;
         } catch (error) {
             console.error("Error fetching user data:", error);
-            throw error; // Ném lỗi ra để xử lý sau
+            throw error;
         }
     },
 
+    async getUserById(userId) {
+        try {
+            const response = await axios.get(`${constants.API_BASE_URL}/api/users/${userId}`);
+            return response.data;
+        } catch (error) {
+            console.error("Error fetching user by ID:", error);
+            throw error;
+        }
+    },
+
+    async createUser(userData) {
+        try {
+            const response = await axios.post(`${constants.API_BASE_URL}/api/users`, userData);
+            return response.data;
+        } catch (error) {
+            console.error("Error creating user:", error);
+            throw error;
+        }
+    },
+
+    async updateUser(userId, userData) {
+        try {
+            const response = await axios.put(`${constants.API_BASE_URL}/api/users/${userId}`, userData);
+            return response.data;
+        } catch (error) {
+            console.error("Error updating user:", error);
+            throw error;
+        }
+    },
+
+    async deleteUser(userId) {
+        try {
+            const response = await axios.delete(`${constants.API_BASE_URL}/api/users/${userId}`);
+            return response.data;
+        } catch (error) {
+            console.error("Error deleting user:", error);
+            throw error;
+        }
+    },
+    
     async getInfor(page = 0, size = 10, keyword = '') {
         try {
             const response = await axios.get(`${constants.API_BASE_URL}/api/users/get-infor`, {
@@ -53,25 +92,12 @@ const UserService = {
         }
     },
     searchUsersByName: async (name) => {
-        const response = await axios.get(
-            `${constants.API_BASE_URL}/api/users/search`,
-            { params: { name } }
-        );
-        return response.data;
-    },
-
-    async changePassword(passwordData) {
-        try {
-            const response = await axios.post(`${constants.API_BASE_URL}/change-password`, passwordData);
-            return response.data; // Trả về dữ liệu từ phản hồi
-        } catch (error) {
-            console.error("Đã xảy ra lỗi khi đổi mật khẩu:", error);
-            
-            // Xử lý thông báo lỗi từ server
-            const errorMessage = error.response?.data?.message || "Đổi mật khẩu thất bại";
-            return { success: false, message: errorMessage };
-        }
-    }
+    const response = await axios.get(
+      `${constants.API_BASE_URL}/api/users/search`,
+      { params: { name } }
+    );
+    return response.data;
+  },
 };
 
 export default UserService;
