@@ -51,7 +51,7 @@ const adminRoutes = [
   { path: '/settings-team', component: Team, role: 'admin' },
   { path: '/calendar', component: Calendar, role: 'admin' },
   { path: '/transactions', component: Transactions, role: 'admin' },
-  { path: '/settings-profile', component: ProfileSettings, role: ['admin', 'customer'] },
+  { path: '/settings-profile', component: ProfileSettings, role: ['admin'] },
   { path: '/change-password', component: ChangePassword, role: 'admin' }
 ];
 
