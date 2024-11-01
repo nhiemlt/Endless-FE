@@ -144,9 +144,13 @@ function Cart() {
                       <dt>Tổng số lượng</dt>
                       <dd>{totalQuantity()}</dd>
                     </div>
+                    <div className="flex justify-between">
+                      <dt>Tổng số lượng</dt>
+                      <dd>{totalQuantity()}</dd>
+                    </div>
                     <div className="flex justify-between !text-base font-medium">
                       <dt>Tổng cộng</dt>
-                      <dd>{formatCurrency(totalAmount())}</dd>
+                      <dd className="text-red-500"><b>{formatCurrency(totalAmount())}</b></dd>
                     </div>
                   </dl>
 

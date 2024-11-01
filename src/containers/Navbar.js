@@ -52,7 +52,7 @@ function Navbar() {
     };
 
     return (
-        <div className="navbar bg-base-100 sticky top-0 z-10 shadow-md">
+        <div className="lg:px-32 navbar bg-base-100 sticky top-0 z-10 shadow-md">
             <div className="navbar-start">
                 <div className="dropdown">
                     <div tabIndex={0} className="btn btn-ghost lg:hidden">
@@ -75,6 +75,7 @@ function Navbar() {
                         <li><Link to="/">Trang Chủ</Link></li>
                         <li><Link to="/products">Danh Sách Sản Phẩm</Link></li>
                         <li><Link to="/help">Trung Tâm Trợ Giúp</Link></li>
+                        <li><Link to="/about-us">Về chúng tôi</Link></li>
                     </ul>
                 </div>
                 <Link to="/" className="btn btn-ghost text-xl"><img className="h-full" src="./logo-theme.png"></img></Link>
@@ -84,6 +85,7 @@ function Navbar() {
                     <li><Link to="/">Trang Chủ</Link></li>
                     <li><Link to="/products">Danh Sách Sản Phẩm</Link></li>
                     <li><Link to="/help">Trung Tâm Trợ Giúp</Link></li>
+                    <li><Link to="/about-us">Về chúng tôi</Link></li>
                 </ul>
             </div>
             <div className="navbar-end flex items-center space-x-2">
@@ -123,6 +125,7 @@ function Navbar() {
                     </label>
                     <ul tabIndex={0} className="menu menu-compact dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box w-52">
                         <li><Link to={'/settings-profile'}>Thông tin cá nhân</Link></li>
+                        <li><Link to={'/order'}>Lịch sử mua hàng</Link></li>
                         <li><Link to={'/change-password'}>Thay đổi mật khẩu</Link></li>
                         <div className="divider mt-0 mb-0"></div>
                         <li><a onClick={logoutUser}>Đăng xuất</a></li>

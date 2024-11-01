@@ -3,6 +3,7 @@ import { lazy } from 'react';
 
 const Cart = lazy(() => import('../pages/public/Cart'));
 const HelpCenter = lazy(() => import('../pages/public/HelpCenter'));
+const AboutUs = lazy(() => import('../pages/public/AboutUs'));
 const Order = lazy(() => import('../pages/public/Order'));
 const Pay = lazy(() => import('../pages/public/Pay'));
 const Purchase = lazy(() => import('../pages/public/Purchase'));
@@ -19,7 +20,8 @@ const ChangePassword = lazy(() => import('../pages/protected/ChangePassword'));
 const customerRoutes = [
   { path: '/', component: Home },
   { path: '/cart', component: Cart, role: 'customer' },
-  { path: '/help', component: HelpCenter, role: 'customer' },
+  { path: '/help', component: HelpCenter, role: 'customer' },  
+  { path: '/about-us', component: AboutUs, role: 'customer' },
   { path: '/order', component: Order, role: 'customer' },
   { path: '/pay', component: Pay, role: 'customer' },
   { path: '/purchase', component: Purchase, role: 'customer' },
