@@ -1,4 +1,5 @@
 import Navbar from "./Navbar"
+import Footer from "./Footer"
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
 import routes from '../routes/customerRoutes'
 import { Suspense, lazy } from 'react'
@@ -46,6 +47,7 @@ function CustomerPageContent() {
                 </Suspense>
                 <div className="h-16"></div>
             </main>
+            <Footer />
         </div> 
     )
 }

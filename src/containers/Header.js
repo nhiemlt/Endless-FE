@@ -19,18 +19,19 @@ function Header() {
     useCurrentUser();
 
     // Hàm long polling
-    const longPolling = async () => {
-        while (true) {
+    const longPolling = async (isPolling) => {
+        while (isPolling.current) {
             await dispatch(fetchUnreadCount());
             await new Promise(resolve => setTimeout(resolve, 5000));
         }
     };
-
+    
     useEffect(() => {
-        const polling = longPolling();
-
+        const isPolling = { current: true };
+        longPolling(isPolling);
+    
         return () => {
-            polling.cancel();
+            isPolling.current = false; // Dừng polling khi component unmount
         };
     }, [dispatch]);
 

@@ -34,27 +34,30 @@ function Login() {
     // Sử dụng auth sau khi Firebase đã được khởi tạo
     const auth = getAuth(app);
 
-    // // Kiểm tra token khi component mount
-    // useEffect(() => {
-    //     const token = getCookie("token");
-    //     if (token) {
-    //         fetch(`${constants.API_BASE_URL}/verify-auth-token?token=${token}`, {
-    //             method: "GET",
-    //             headers: { "Content-Type": "application/json" },
-    //         })
-    //             .then(response => {
-    //                 if (response.ok) {
-    //                     navigate("/app/welcome");
-    //                     window.location.reload(); 
-    //                 } else {
-    //                     document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-    //                 }
-    //             })
-    //             .catch(error => {
-    //                 console.error("Error verifying token:", error);
-    //             });
-    //     }
-    // }, [navigate]);
+    // Kiểm tra token khi component mount
+    useEffect(() => {
+        const token = getCookie("token");
+        if (token) {
+            fetch(`${constants.API_BASE_URL}/verify-auth-token?token=${token}`, {
+                method: "GET",
+                headers: { "Content-Type": "application/json" },
+            })
+                .then(response => {
+                    if (response.ok) {
+                        setTimeout(() => {
+                            navigate("/app/welcome");
+                            window.location.reload();
+                        }, 50); // Chờ 1 giây trước khi navigate
+                    } else {
+                        document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                    }
+                })
+                .catch(error => {
+                    console.error("Error verifying token:", error);
+                });
+        }
+    }, [navigate]);
+
 
     // Hàm lấy cookie
     const getCookie = (name) => {
@@ -94,17 +97,26 @@ function Login() {
             } else {
                 const token = data.token;
                 if (token) {
-                    document.cookie = `token=${token}; path=/;`;
+                    const expires = new Date();
+                    if (loginObj.remember) {
+                        expires.setTime(expires.getTime() + 24 * 60 * 60 * 1000); // 1 ngày
+                    } else {
+                        expires.setTime(expires.getTime() + 30 * 60 * 1000); // 30 phút
+                    }
+                    document.cookie = `token=${token}; path=/; expires=${expires.toUTCString()};`;
                     setAlert({ type: "success", message: "Đăng nhập thành công!" });
-                    if(data.role){
-                        navigate("/app/welcome");
-                        console.log(data.role);
+                    if (data.role) {
+                        setTimeout(() => {
+                            navigate("/app/welcome");
+                            window.location.reload();
+                        }, 50);
                     }
-                    else{
-                        navigate("/home");
-                        console.log(data.role);
+                    else {
+                        setTimeout(() => {
+                            navigate("/home");
+                            window.location.reload();
+                        }, 50);
                     }
-                    window.location.reload(); 
                 } else {
                     setAlert({ type: "error", message: "Token không hợp lệ!" });
                 }
@@ -141,15 +153,23 @@ function Login() {
             if (!response.ok) {
                 setAlert({ type: "error", message: data.error || "Đăng nhập bằng Google thất bại!" });
             } else {
-                document.cookie = `token=${data.token}; path=/;`;
+                const expires = new Date();
+                expires.setTime(expires.getTime() + 6 * 60 * 60 * 1000);
+                document.cookie = `token=${data.token}; path=/; expires=${expires.toUTCString()};`;
                 setAlert({ type: "success", message: "Đăng nhập thành công!" });
-                if(data.role){
-                    navigate("/app/welcome");
+                if (data.role) {
+                    setTimeout(() => {
+                        navigate("/app/welcome");
+                        window.location.reload();
+                    }, 50);
                 }
-                else{
-                    navigate("/app/home");
+                else {
+                    setTimeout(() => {
+                        navigate("/home");
+                        window.location.reload();
+                    }, 50);
                 }
-                window.location.reload(); 
+                window.location.reload();
             }
         } catch (error) {
             setAlert({ type: "error", message: error.message });
