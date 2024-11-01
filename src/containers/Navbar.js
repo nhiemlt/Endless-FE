@@ -126,6 +126,7 @@ function Navbar() {
                     <ul tabIndex={0} className="menu menu-compact dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box w-52">
                         <li><Link to={'/settings-profile'}>Thông tin cá nhân</Link></li>
                         <li><Link to={'/order'}>Lịch sử mua hàng</Link></li>
+                        <li><Link to={'/voucher'}>Danh sách voucher</Link></li>
                         <li><Link to={'/change-password'}>Thay đổi mật khẩu</Link></li>
                         <div className="divider mt-0 mb-0"></div>
                         <li><a onClick={logoutUser}>Đăng xuất</a></li>
