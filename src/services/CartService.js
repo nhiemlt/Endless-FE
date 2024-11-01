@@ -40,19 +40,22 @@ const CartService = {
 
     // Cập nhật số lượng sản phẩm trong giỏ hàng
     async updateCartQuantity(cartModel) {
+        console.log("Updating cart with data:", cartModel); // In ra cartModel để kiểm tra dữ liệu gửi lên
         try {
             const response = await axios.put(`${constants.API_BASE_URL}/api/carts/update`, cartModel);
+            console.log("Update successful:", response.data); // In ra response nếu thành công
             return response.data;
         } catch (error) {
+            // Xử lý lỗi trả về từ backend
             if (error.response) {
                 const status = error.response.status;
                 const errorMessage = error.response.data.message || error.message;
 
+                console.log("Error response:", error.response.data); // Log chi tiết lỗi từ backend
+
                 if (status === 404) {
-                    // Sản phẩm trong giỏ hàng không tìm thấy
                     throw new Error("Sản phẩm trong giỏ hàng không tìm thấy");
                 } else if (status === 400) {
-                    // Lỗi số lượng vượt quá tồn kho
                     if (errorMessage.includes("Số lượng vượt quá sản phẩm tồn kho")) {
                         throw new Error("Số lượng vượt quá sản phẩm tồn kho");
                     } else if (errorMessage.includes("Phiên bản sản phẩm không tìm thấy")) {
@@ -60,6 +63,7 @@ const CartService = {
                     }
                 }
             }
+            // Lỗi không mong muốn khác
             throw new Error("Đã xảy ra lỗi không mong muốn: " + (error.message || "Không xác định"));
         }
     },
