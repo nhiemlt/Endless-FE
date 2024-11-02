@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch } from "react-redux";
 import { showNotification } from '../../features/common/headerSlice';
 import TitleCard from "../../components/Cards/TitleCard";
 import CartService from "../../services/CartService";
 import TrashIcon from '@heroicons/react/24/outline/TrashIcon';
 
-function Cart() {
+const Cart = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const [products, setProducts] = useState([]);
   const [selectedProducts, setSelectedProducts] = useState({});
@@ -32,63 +33,81 @@ function Cart() {
 
   const incrementQuantity = async (index) => {
     const updatedProduct = { ...products[index] };
+    const originalQuantity = updatedProduct.quantity; // Lưu lại số lượng gốc
 
-    // Tính toán tổng số lượng sau khi tăng lên 1
     const newQuantity = updatedProduct.quantity + 1;
 
-    // Kiểm tra xem tổng số lượng có vượt quá tồn kho không
     if (newQuantity > updatedProduct.stock) {
       dispatch(showNotification({ message: "Số lượng vượt quá số lượng tồn kho", status: 0 }));
-      return; // Ngưng hàm nếu số lượng vượt quá
+      return;
     }
 
-    // Cập nhật số lượng sản phẩm
     updatedProduct.quantity = newQuantity;
 
-    // Cập nhật lại danh sách sản phẩm trong state
     setProducts((prevProducts) =>
       prevProducts.map((product, i) => (i === index ? updatedProduct : product))
     );
 
     try {
-      // Cập nhật số lượng sản phẩm trong giỏ hàng
       await CartService.updateCartQuantity(updatedProduct);
     } catch (error) {
-      dispatch(showNotification({ message: "Số lượng vượt quá số lượng tồn kho", status: 0 }));
+      dispatch(showNotification({ message: "Lỗi khi cập nhật số lượng", status: 0 }));
+      // Khôi phục lại số lượng gốc nếu có lỗi
+      updatedProduct.quantity = originalQuantity;
+      setProducts((prevProducts) =>
+        prevProducts.map((product, i) => (i === index ? updatedProduct : product))
+      );
     }
   };
 
   const decrementQuantity = async (index) => {
     const updatedProduct = { ...products[index] };
+    const originalQuantity = updatedProduct.quantity; // Lưu lại số lượng gốc
 
-    // Giảm số lượng nếu nó lớn hơn 1
     if (updatedProduct.quantity > 1) {
       updatedProduct.quantity -= 1;
 
-      // Cập nhật lại danh sách sản phẩm trong state
       setProducts((prevProducts) =>
         prevProducts.map((product, i) => (i === index ? updatedProduct : product))
       );
 
       try {
-        // Gọi API cập nhật số lượng
         await CartService.updateCartQuantity(updatedProduct);
       } catch (error) {
         dispatch(showNotification({ message: "Lỗi khi cập nhật số lượng", status: 0 }));
+        // Khôi phục lại số lượng gốc nếu có lỗi
+        updatedProduct.quantity = originalQuantity;
+        setProducts((prevProducts) =>
+          prevProducts.map((product, i) => (i === index ? updatedProduct : product))
+        );
       }
     } else {
       dispatch(showNotification({ message: "Số lượng tối thiểu là 1", status: 0 }));
     }
   };
 
-  const handleQuantityChange = (index, value) => {
-    const newQuantity = Math.max(1, Number(value)); // Đảm bảo số lượng không nhỏ hơn 1
-    const updatedProduct = { ...products[index], quantity: newQuantity }; // Cập nhật số lượng sản phẩm
+  const handleQuantityChange = async (index, value) => {
+    const newQuantity = Math.max(1, Number(value));
+    const updatedProduct = { ...products[index], quantity: newQuantity };
+    const originalQuantity = products[index].quantity; // Lưu lại số lượng gốc
 
     setProducts((prevProducts) =>
       prevProducts.map((product, i) => (i === index ? updatedProduct : product))
     );
+
+    try {
+      await CartService.updateCartQuantity(updatedProduct);
+    } catch (error) {
+      dispatch(showNotification({ message: "Lỗi khi cập nhật số lượng", status: 0 }));
+      // Khôi phục lại số lượng gốc nếu có lỗi
+      updatedProduct.quantity = originalQuantity;
+      setProducts((prevProducts) =>
+        prevProducts.map((product, i) => (i === index ? updatedProduct : product))
+      );
+    }
   };
+
+
 
   const handleRemoveItem = async (productVersionID) => {
     try {
@@ -106,10 +125,10 @@ function Cart() {
     }
   };
 
-  const handleCheckboxChange = (productVersionID) => {
+  const handleCheckboxChange = (product) => {
     setSelectedProducts((prevSelected) => ({
       ...prevSelected,
-      [productVersionID]: !prevSelected[productVersionID],
+      [product.productVersionID]: !prevSelected[product.productVersionID] ? product : undefined, // Lưu sản phẩm nếu chưa được chọn, hoặc undefined nếu đã được chọn
     }));
   };
 
@@ -131,6 +150,13 @@ function Cart() {
     }, 0);
   };
 
+  const handleCheckout = () => {
+    // Chuyển đến trang thanh toán và truyền selectedProducts
+    const selectedItems = Object.values(selectedProducts).filter(Boolean); // Lọc ra các sản phẩm đã được chọn
+    navigate('/purchase', { state: { selectedItems } }); // Truyền toàn bộ sản phẩm
+  };
+
+
   return (
     <TitleCard>
       <section className="bg-white dark:bg-gray-800">
@@ -146,7 +172,7 @@ function Cart() {
                     <input
                       type="checkbox"
                       checked={!!selectedProducts[product.productVersionID]}
-                      onChange={() => handleCheckboxChange(product.productVersionID)}
+                      onChange={() => handleCheckboxChange(product)} // Truyền cả sản phẩm vào đây
                       className="mr-2"
                     />
                     <img
@@ -184,7 +210,7 @@ function Cart() {
                               type="number"
                               id={`Quantity_${index}`}
                               value={product.quantity} // Lấy giá trị số lượng từ product
-                              onChange={handleQuantityChange} // Cập nhật khi giá trị thay đổi
+                              onChange={(e) => handleQuantityChange(index, e.target.value)} // Cập nhật khi giá trị thay đổi
                               className="h-10 w-20 rounded border border-gray-200 bg-white text-black text-center [-moz-appearance:_textfield] sm:text-sm [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none"
                             />
 
@@ -221,12 +247,12 @@ function Cart() {
                     </div>
                   </dl>
                   <div className="flex justify-end">
-                    <Link
-                      to="/purchase"
+                    <button
+                      onClick={handleCheckout} // Gọi hàm handleCheckout
                       className="block rounded bg-blue-600 px-5 py-3 text-sm text-white transition"
                     >
                       Thanh toán
-                    </Link>
+                    </button>
                   </div>
 
                 </div>
