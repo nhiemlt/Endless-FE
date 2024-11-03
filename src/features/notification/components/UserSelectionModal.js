@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import UserService from '../../../services/UserService';
-import NotificationService from '../../../services/notificationService'; // Nhập NotificationService
+import NotificationService from '../../../services/NotificationService'; // Nhập NotificationService
 import { showNotification } from "../../common/headerSlice";
 import { useDispatch } from "react-redux";
 

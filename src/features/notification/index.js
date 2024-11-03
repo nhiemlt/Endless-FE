@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import TitleCard from "../../components/Cards/TitleCard";
 import NotificationModal from './components/AddNotificationModal';
 import DetailModal from './components/DetailModal';
-import NotificationService from '../../services/notificationService';
+import NotificationService from '../../services/NotificationService';
 import EyeIcon from '@heroicons/react/24/solid/EyeIcon';
 
 function Notification() {

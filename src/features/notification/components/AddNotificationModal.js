@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import UserSelectionModal from './UserSelectionModal';
-import NotificationService from '../../../services/notificationService';
+import NotificationService from '../../../services/NotificationService';
 import { showNotification } from "../../common/headerSlice";
 import { useDispatch } from "react-redux";
 
