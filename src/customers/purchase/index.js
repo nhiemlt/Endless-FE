@@ -15,6 +15,8 @@ const Purchase = () => {
   const [vouchers, setVouchers] = useState([]);
   const [loading, setLoading] = useState(true);
   const selectedItems = location.state?.selectedItems || []; // Sử dụng toán tử `?` để tránh lỗi nếu state không tồn tại
+  const [selectedVoucherDiscount, setSelectedVoucherDiscount] = useState(0);
+
 
   // Hàm định dạng tiền tệ
   const formatCurrency = (value) => {
@@ -68,6 +70,16 @@ const Purchase = () => {
     }, 0);
   };
 
+  //Hàm hiển thị % voucher khi chọn voucher
+  const handleVoucherChange = (event) => {
+    const selectedVoucherId = event.target.value;
+    const selected = vouchers.find(voucher => voucher.voucherID === selectedVoucherId);
+    if (selected) {
+      setSelectedVoucherDiscount(selected.discountLevel);
+    }
+  };
+
+
   return (
     <TitleCard>
       <section className="bg-white py-8 antialiased dark:bg-gray-900 md:py-16">
@@ -108,14 +120,14 @@ const Purchase = () => {
 
                   <dl className="flex items-center justify-between gap-4 py-3">
                     <dt className="text-base font-normal text-gray-500 dark:text-gray-400">Giá giảm voucher</dt>
-                    <dd className="text-base font-medium text-green-500">0</dd>
+                    <dd className="text-base font-medium text-green-500">{selectedVoucherDiscount}%</dd>
                   </dl>
 
                   <dl className="flex items-center justify-between gap-4 py-3">
                     <dt className="text-base font-normal text-gray-500 dark:text-gray-400">Phí vận chuyển</dt>
                     <dd className="text-base font-medium text-gray-900 dark:text-white">$99</dd>
                   </dl>
-
+                  
                   <dl className="flex items-center justify-between gap-4 py-3">
                     <dt className="text-base font-normal text-gray-500 dark:text-gray-400">Tổng tiền</dt>
                     <dd className="text-base font-medium text-gray-900 dark:text-white">$8,193.00</dd>
@@ -180,20 +192,21 @@ const Purchase = () => {
                 <label htmlFor="your_voucher" className="mb-2 block text-sm font-medium text-gray-900 dark:text-white">Voucher</label>
                 <select
                   id="your_voucher"
+                  onChange={handleVoucherChange} // Thêm onChange để xử lý sự kiện
                   className="select select-bordered w-full max-w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
                 >
                   <option disabled selected>Chọn mã voucher</option>
-                  {/* Hiển thị mã voucher nếu có */}
                   {loading ? (
-                    <option>Đang tải...</option> // Hiển thị thông báo đang tải
+                    <option>Đang tải...</option>
                   ) : (
                     vouchers.map(voucher => (
-                      <option key={voucher.voucherID} value={voucher.voucherID}> {/* Thay `voucher.id` và `voucher.code` bằng thuộc tính thích hợp từ response của bạn */}
-                        {voucher.voucherCode} - {voucher.discountLevel}% {/* Thay `voucher.name` bằng tên voucher */}
+                      <option key={voucher.voucherID} value={voucher.voucherID}>
+                        {voucher.voucherCode} - {voucher.discountLevel}%
                       </option>
                     ))
                   )}
                 </select>
+
               </div>
               <div className="space-y-4">
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Phương thức thanh toán</h3>
