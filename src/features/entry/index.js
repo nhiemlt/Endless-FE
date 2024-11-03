@@ -3,6 +3,7 @@ import TitleCard from '../../components/Cards/TitleCard';
 import EntryService from '../../services/EntryService';
 import CreateEntryModal from './components/CreateEntryModal';
 import DetailModal from './components/DetailModal'; // Import DetailModal
+import EyeIcon from '@heroicons/react/24/solid/EyeIcon';
 
 function Entry() {
   const [entries, setEntries] = useState([]);
@@ -114,7 +115,9 @@ function Entry() {
                     })}</td>
                   <td>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(entry.totalMoney)}</td>
                   <td>
-                    <button className="btn btn-sm" onClick={() => openDetailModal(entry)}>Xem chi tiết</button>
+                    <button className="btn btn-sm btn-outline btn-primary" onClick={() => openDetailModal(entry)}>
+                      <EyeIcon className="h-4 w-4" aria-hidden="true" />
+                    </button>
                   </td>
                 </tr>
               ))
