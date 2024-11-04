@@ -80,18 +80,23 @@ const GHNService = {
                 },
                 {
                     headers: {
-                        'Token': constants.GHN_API_TOKEN, // Chữ "Token" phải viết hoa
-                        'ShopId': constants.SHOP_ID, // Chữ "ShopId" phải viết hoa
+                        'Token': constants.GHN_API_TOKEN,
+                        'ShopId': constants.SHOP_ID,
                         'Content-Type': 'application/json',
                     },
                 }
             );
             return response.data;
         } catch (error) {
-            console.error('Error calculating shipping fee:', error.response ? error.response.data : error.message);
-            throw error;
+            if (error.response) {
+                console.error('API Error:', error.response.data);
+            } else {
+                console.error('Network or configuration error:', error.message);
+            }
+            throw error; // Vẫn ném lỗi để phía gọi hàm có thể xử lý
         }
     }
+    
     
 };
 

@@ -21,7 +21,7 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
   const [error, setError] = useState(null);
   const [selectedVoucher, setSelectedVoucher] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState('');
-  const [toDistrictId, setDistrictId ] = useState('');
+  const [toDistrictId, setDistrictId] = useState('');
   const [toWardCode, setWardCode] = useState('');
   const navigate = useNavigate();
 
@@ -115,16 +115,15 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
     return Math.round(weight);
   };
 
+  const getDistrictID = async () => {
+    return userAddresses;
+  }
+
   const calculateShippingFee = async () => {
-    if (!toDistrictId || !toWardCode) {
-      setError('Vui lòng chọn quận/huyện trước khi tính phí vận chuyển.');
-      return;
-    }
-
-
     setLoading(true);
     setError(null);
-
+    console.log('toDistrictId:', toDistrictId);
+    console.log('toWardCode:', toWardCode);
     let weight = await calculatorWeight();
     let items = [];
 
@@ -141,8 +140,8 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
 
     try {
       const response = await GHNService.calculateShippingFee({
-        toDistrictId,
-        toWardCode,
+        toDistrictId: Number(toDistrictId), // đảm bảo là kiểu số
+        toWardCode: String(toWardCode),
         weight,
         items
       });
@@ -157,10 +156,10 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
   };
 
   useEffect(() => {
-    if (fromDistrictId && fromWardCode && toDistrictId && toWardCode && productDetails) {
+    if (toDistrictId && toWardCode) {
       calculateShippingFee();
     }
-  }, [fromDistrictId, fromWardCode, toDistrictId, toWardCode, productDetails]);
+  }, [toDistrictId, toWardCode]);
 
   const handlePaymentMethodChange = (event) => {
     setPaymentMethod(event.target.value);
@@ -180,17 +179,18 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
   };
 
   const handleChangeAddress = (event) => {
-    const newAddressId = event.target.value;
-    setSelectedAddress(newAddressId);
+    // Lấy đúng districtID và wardCode từ các thuộc tính của option
+    const selectedOption = event.target.selectedOptions[0];
+    setDistrictId(selectedOption.getAttribute('data-district-id'));
+    setWardCode(selectedOption.value);
+  };
 
-    // Tìm địa chỉ tương ứng từ mảng userAddresses
-    const selectedAddressObj = userAddresses.find(address => address.id === newAddressId);
-    console.log(selectedAddressObj); // In ra đối tượng địa chỉ đã chọn
-
-    // Nếu cần, có thể tính toán lại phí vận chuyển
-    if (selectedAddressObj) {
-      calculateShippingFee();
-    }
+  // Hàm tính tổng tiền
+  const calculateTotalAmount = () => {
+    const totalPrice = calculateTotalOriginalPrice();
+    const discountAmount = (totalPrice * selectedVoucherDiscount) / 100; // Tính số tiền giảm giá
+    const totalAmount = totalPrice - discountAmount + (shippingFee || 0); // Tổng tiền = tổng giá - giảm giá + phí vận chuyển
+    return totalAmount;
   };
 
 
@@ -246,14 +246,14 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
                       <dd className="text-base font-medium text-red-500">{error}</dd>
                     ) : (
                       <dd className="text-base font-medium text-gray-900 dark:text-white">
-                        {shippingFee ? `$${shippingFee}` : 'Chưa có phí'}
+                        {shippingFee ? `${formatCurrency(shippingFee)}` : 'Chưa có phí'}
                       </dd>
                     )}
                   </dl>
 
                   <dl className="flex items-center justify-between gap-4 py-3">
                     <dt className="text-base font-normal text-gray-500 dark:text-gray-400">Tổng tiền</dt>
-                    <dd className="text-base font-medium text-gray-900 dark:text-white">$8,193.00</dd>
+                    <dd className="text-base font-medium text-gray-900 dark:text-white">{formatCurrency(calculateTotalAmount())}</dd>
                   </dl>
                 </div>
               </div>
@@ -299,22 +299,23 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
                 </div>
 
                 <div className="w-full">
-                  <label htmlFor="your_address" className="mb-2 block text-sm font-medium text-gray-900 dark:text-white">
+                  <label className="mb-2 block text-sm font-medium text-gray-900 dark:text-white">
                     Địa chỉ
                   </label>
                   <select
-                    id="your_address"
+                    id="address-selector"
                     className="select select-bordered w-full max-w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
-                    value={selectedAddress}
-                    onChange={handleChangeAddress} // Cập nhật địa chỉ đã chọn
+                    onChange={handleChangeAddress}
                   >
                     {userAddresses.map((address, index) => (
-                      <option key={index} value={address.id}>
+                      <option
+                        key={index}
+                        value={address.wardCode}
+                        data-district-id={address.districtID} // Lưu districtID làm thuộc tính data
+                      >
                         {address.detailAddress}, {address.wardName}, {address.districtName}, {address.provinceName}
                       </option>
                     ))}
-                    {/* Hiển thị thông báo nếu không có địa chỉ */}
-                    {userAddresses.length === 0 && <option disabled>Bạn chưa có địa chỉ nào.</option>}
                   </select>
                 </div>
               </div>
