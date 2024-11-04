@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import TitleCard from "../../components/Cards/TitleCard";
 import NotificationModal from './components/AddNotificationModal';
 import DetailModal from './components/DetailModal';
-import NotificationService from '../../services/notificationService';
+import NotificationService from '../../services/NotificationService';
+import EyeIcon from '@heroicons/react/24/solid/EyeIcon';
 
 function Notification() {
   const [showModal, setShowModal] = useState(false);
@@ -131,7 +132,7 @@ function Notification() {
             <input
               type="text"
               placeholder="Tìm kiếm thông báo"
-              className="grow"
+              className=" dark:bg-base-100"
               value={searchTerm}
               onChange={handleSearch}
             />
@@ -205,8 +206,8 @@ function Notification() {
                     })}
                   </td>
                   <td>
-                    <button className="btn btn-sm" onClick={() => handleDetailModalOpen(notification)}>
-                      Xem chi tiết
+                    <button className="btn btn-sm btn-outline btn-primary" onClick={() => handleDetailModalOpen(notification)}>
+                    <EyeIcon className="h-4 w-4" aria-hidden="true" />
                     </button>
                   </td>
                 </tr>

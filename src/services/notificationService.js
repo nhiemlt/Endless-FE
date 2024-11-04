@@ -92,7 +92,6 @@ const NotificationService = {
     sendNotification: async (notificationModel) => {
         try {
             const response = await axios.post(`${constants.API_BASE_URL}/notifications/send`, notificationModel);
-            console.log('Gửi riêng')
             return response.data;
         } catch (error) {
             console.error("Lỗi khi gửi thông báo:", error);
@@ -104,7 +103,6 @@ const NotificationService = {
     sendNotificationForAll: async (notificationModelForAll) => {
         try {
             const response = await axios.post(`${constants.API_BASE_URL}/notifications/send-all`, notificationModelForAll);
-            console.log('Gửi tất cả')
             return response.data;
         } catch (error) {
             console.error("Lỗi khi gửi thông báo tới tất cả người dùng:", error);

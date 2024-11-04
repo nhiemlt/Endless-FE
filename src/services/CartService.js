@@ -5,7 +5,7 @@ const CartService = {
     // Lấy danh sách giỏ hàng
     async getCarts() {
         try {
-            const response = await axios.get(`${constants.API_BASE_URL}/api/carts`);
+            const response = await axios.get(`${constants.API_BASE_URL}/carts`);
             return response.data;
         } catch (error) {
             throw error.response?.data || error.message;
@@ -15,7 +15,7 @@ const CartService = {
     // Thêm sản phẩm vào giỏ hàng
     async addToCart(cartModel) {
         try {
-            const response = await axios.post(`${constants.API_BASE_URL}/api/carts/add-to-cart`, cartModel);
+            const response = await axios.post(`${constants.API_BASE_URL}/carts/add-to-cart`, cartModel);
             return response.data;
         } catch (error) {
             if (error.response) {
@@ -42,7 +42,7 @@ const CartService = {
     async updateCartQuantity(cartModel) {
         console.log("Updating cart with data:", cartModel); // In ra cartModel để kiểm tra dữ liệu gửi lên
         try {
-            const response = await axios.put(`${constants.API_BASE_URL}/api/carts/update`, cartModel);
+            const response = await axios.put(`${constants.API_BASE_URL}/carts/update`, cartModel);
             console.log("Update successful:", response.data); // In ra response nếu thành công
             return response.data;
         } catch (error) {
@@ -71,7 +71,7 @@ const CartService = {
     // Xóa sản phẩm khỏi giỏ hàng
     async deleteCartItem(productVersionID) {
         try {
-            const response = await axios.delete(`${constants.API_BASE_URL}/api/carts/${productVersionID}`);
+            const response = await axios.delete(`${constants.API_BASE_URL}/carts/${productVersionID}`);
             return response.data;
         } catch (error) {
             throw error.response?.data || error.message;

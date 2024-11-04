@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import useNotifications from '../../../hooks/useNotifications';
-import NotificationService from '../../../services/notificationService';
+import NotificationService from '../../../services/NotificationService';
 import { markNotificationAsRead } from '../../../features/common/headerSlice';
 import TrashIcon from '@heroicons/react/24/outline/TrashIcon';
 
@@ -18,7 +18,6 @@ function NotificationBodyRightDrawer({ closeRightDrawer }) {
         if (!isRead) {
             try {
                 const message = await NotificationService.markAsRead(notificationRecipientId);
-                console.log(message); // Hiển thị thông báo thành công nếu cần
                 setLocalNotifications((prevNotifications) =>
                     prevNotifications.map((notification) =>
                         notification.notificationRecipientID === notificationRecipientId

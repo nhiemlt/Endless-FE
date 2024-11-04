@@ -1,12 +1,11 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import NotificationService from '../../services/notificationService';
+import NotificationService from '../../services/NotificationService';
 
 // Thunk để lấy số lượng thông báo chưa đọc
 export const fetchUnreadCount = createAsyncThunk(
     'header/fetchUnreadCount',
     async () => {
         const count = await NotificationService.getUnreadCount();
-        console.log(count);
         return count;
     }
 );
