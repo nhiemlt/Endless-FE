@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux'; // Import useDispatch để sử dụng trong component
 import RoleService from '../../../services/roleService';
 import PermissionService from '../../../services/PermissionService';
-import { showNotification } from "../../common/headerSlice";
+import { showNotification } from "../../common/headerSlice"; // Import showNotification
 
 const UpdateRoleModal = ({ showModal, closeModal, role, onRoleUpdated }) => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch(); // Khởi tạo useDispatch
   const [roleName, setRoleName] = useState('');
   const [selectedPermissions, setSelectedPermissions] = useState([]);
   const [permissionsByModule, setPermissionsByModule] = useState({});
