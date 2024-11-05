@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import TitleCard from '../../components/Cards/TitleCard';
 import UserAddressService from "../../services/userAddressService";
 import ProfileService from "../../services/profileService";
+import VoucherService from "../../services/voucherService";
 import UserVoucherService from "../../services/userVoucherService";
 import GHNService from "../../services/GHNService";
 import { useLocation } from 'react-router-dom';
@@ -11,48 +12,48 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
 
   const [userAddresses, setUserAddresses] = useState([]);
   const [userInfo, setUserInfo] = useState(null);
-  const location = useLocation();
   const [selectedAddress, setSelectedAddress] = useState('');
   const [vouchers, setVouchers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const selectedItems = location.state?.selectedItems || [];
-  const [selectedVoucherDiscount, setSelectedVoucherDiscount] = useState(0);
   const [shippingFee, setShippingFee] = useState(null);
   const [error, setError] = useState(null);
   const [selectedVoucher, setSelectedVoucher] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState('');
   const [toDistrictId, setDistrictId] = useState('');
   const [toWardCode, setWardCode] = useState('');
+  const location = useLocation();
   const navigate = useNavigate();
+  const selectedItems = location.state?.selectedItems || [];
+  const [selectedVoucherDiscount, setSelectedVoucherDiscount] = useState(0);
 
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
-  };
+  const formatCurrency = (value) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
 
   useEffect(() => {
-  }, [selectedItems]);
+    fetchUserData();
+    fetchVouchers();
+    calculateShippingFee();
+  }, []);
 
-  const fetchUserAddresses = async () => {
+  useEffect(() => {
+    if (toDistrictId && toWardCode) {
+      calculateShippingFee();
+    }
+  }, [toDistrictId, toWardCode]);
+
+  const fetchUserData = async () => {
     try {
-      const addresses = await UserAddressService.fetchUserAddresses();
+      const [addresses, user] = await Promise.all([UserAddressService.fetchUserAddresses(), ProfileService.fetchCurrentUser()]);
       const sortedAddresses = addresses.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       setUserAddresses(sortedAddresses);
+      setUserInfo(user);
+
       if (sortedAddresses.length > 0) {
         setSelectedAddress(sortedAddresses[0]);
         setDistrictId(sortedAddresses[0].districtID);
         setWardCode(sortedAddresses[0].wardCode);
       }
     } catch (error) {
-      console.error("Lỗi khi lấy danh sách địa chỉ người dùng:", error);
-    }
-  };
-
-  const fetchCurrentUser = async () => {
-    try {
-      const user = await ProfileService.fetchCurrentUser();
-      setUserInfo(user);
-    } catch (error) {
-      console.error("Lỗi khi lấy thông tin người dùng:", error);
+      console.error("Error fetching user data:", error);
     }
   };
 
@@ -62,32 +63,21 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
       const response = await UserVoucherService.getUserVouchers();
       const sortedVouchers = response?.length ? response.sort((a, b) => b.discountLevel - a.discountLevel) : [];
       setVouchers(sortedVouchers);
+
       if (sortedVouchers.length > 0) {
         const highestDiscountVoucher = sortedVouchers[0];
         setSelectedVoucher(highestDiscountVoucher.voucherID);
         setSelectedVoucherDiscount(highestDiscountVoucher.discountLevel);
-      } else {
-        setSelectedVoucher(null);
-        setSelectedVoucherDiscount(0);
       }
     } catch (error) {
-      console.error("Lỗi khi lấy danh sách voucher:", error);
+      console.error("Error fetching vouchers:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchUserAddresses();
-    fetchCurrentUser();
-    fetchVouchers();
-    calculateShippingFee();
-  }, []);
-
   const calculateTotalOriginalPrice = () => {
-    return selectedItems.reduce((total, item) => {
-      return total + (item.discountPrice * item.quantity);
-    }, 0);
+    return selectedItems.reduce((total, item) => total + (item.discountPrice * item.quantity), 0);
   };
 
   const handleVoucherChange = (event) => {
@@ -100,49 +90,33 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
     }
 
     const selected = vouchers.find(voucher => voucher.voucherID === selectedVoucherId);
-    if (selected) {
-      setSelectedVoucherDiscount(selected.discountLevel);
-    } else {
-      setSelectedVoucherDiscount(0);
-    }
+    setSelectedVoucherDiscount(selected ? selected.discountLevel : 0);
   };
-
-  const calculatorWeight = async () => {
-    let weight = 0;
-    selectedItems.forEach(item => {
-      weight += item.weight * item.quantity;
-    });
-    return Math.round(weight);
-  };
-
-  const getDistrictID = async () => {
-    return userAddresses;
-  }
 
   const calculateShippingFee = async () => {
+    if (!toDistrictId || !toWardCode) {
+      setShippingFee(0);
+      return;
+    }
+
     setLoading(true);
     setError(null);
-    console.log('toDistrictId:', toDistrictId);
-    console.log('toWardCode:', toWardCode);
-    let weight = await calculatorWeight();
-    let items = [];
-
-    selectedItems.forEach(item => {
-      items.push({
-        "name": item.productName + " " + item.versionName,
-        "quantity": item.quantity,
-        "height": Math.round(item.height),
-        "weight": Math.round(item.weight),
-        "length": Math.round(item.length),
-        "width": Math.round(item.width),
-      });
-    });
 
     try {
+      const weight = selectedItems.reduce((total, item) => total + (item.weight * item.quantity), 0);
+      const items = selectedItems.map(item => ({
+        name: item.productName + " " + item.versionName,
+        quantity: item.quantity,
+        height: Math.round(item.height),
+        weight: Math.round(item.weight),
+        length: Math.round(item.length),
+        width: Math.round(item.width),
+      }));
+
       const response = await GHNService.calculateShippingFee({
-        toDistrictId: Number(toDistrictId), // đảm bảo là kiểu số
+        toDistrictId: Number(toDistrictId),
         toWardCode: String(toWardCode),
-        weight,
+        weight: Math.round(weight),
         items
       });
 
@@ -155,43 +129,54 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
     }
   };
 
-  useEffect(() => {
-    if (toDistrictId && toWardCode) {
-      calculateShippingFee();
-    }
-  }, [toDistrictId, toWardCode]);
-
   const handlePaymentMethodChange = (event) => {
     setPaymentMethod(event.target.value);
   };
 
   const handleSubmit = (event) => {
     event.preventDefault();
-
     if (!paymentMethod) {
       setError('Vui lòng chọn phương thức thanh toán.');
       return;
     }
-
     if (paymentMethod === 'vnpay') {
       navigate('/pay');
     }
   };
 
   const handleChangeAddress = (event) => {
-    // Lấy đúng districtID và wardCode từ các thuộc tính của option
     const selectedOption = event.target.selectedOptions[0];
     setDistrictId(selectedOption.getAttribute('data-district-id'));
     setWardCode(selectedOption.value);
   };
 
-  // Hàm tính tổng tiền
+  const calculateDiscountAmount = () => {
+    const totalPrice = calculateTotalOriginalPrice();
+    const selectedVoucherInfo = vouchers.find(voucher => voucher.voucherID === selectedVoucher);
+
+    if (!selectedVoucherInfo) return 0;
+
+    const { biggestDiscount, discountLevel, leastDiscount } = selectedVoucherInfo;
+    let discountAmount = (totalPrice * discountLevel) / 100;
+
+    // Điều chỉnh mức giảm giá theo giới hạn trên và dưới
+    if (discountAmount > biggestDiscount) {
+      discountAmount = biggestDiscount;
+    } else if (discountAmount < leastDiscount) {
+      discountAmount = leastDiscount;
+    }
+
+    return discountAmount;
+  };
+
   const calculateTotalAmount = () => {
     const totalPrice = calculateTotalOriginalPrice();
-    const discountAmount = (totalPrice * selectedVoucherDiscount) / 100; // Tính số tiền giảm giá
-    const totalAmount = totalPrice - discountAmount + (shippingFee || 0); // Tổng tiền = tổng giá - giảm giá + phí vận chuyển
-    return totalAmount;
+    const discountAmount = calculateDiscountAmount();
+
+    // Tổng tiền cuối cùng = tổng giá trị sản phẩm - giảm giá + phí vận chuyển
+    return totalPrice - discountAmount + (shippingFee || 0);
   };
+
 
 
   return (
@@ -234,7 +219,7 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
 
                   <dl className="flex items-center justify-between gap-4 py-3">
                     <dt className="text-base font-normal text-gray-500 dark:text-gray-400">Giá giảm voucher</dt>
-                    <dd className="text-base font-medium text-green-500">{selectedVoucherDiscount}%</dd>
+                    <dd className="text-base font-medium text-gray-900"><i>{formatCurrency(calculateDiscountAmount())}</i></dd>
                   </dl>
 
 
@@ -253,7 +238,7 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
 
                   <dl className="flex items-center justify-between gap-4 py-3">
                     <dt className="text-base font-normal text-gray-500 dark:text-gray-400">Tổng tiền</dt>
-                    <dd className="text-base font-medium text-gray-900 dark:text-white">{formatCurrency(calculateTotalAmount())}</dd>
+                    <dd className="text-base font-medium text-red-500 dark:text-white"><b>{formatCurrency(calculateTotalAmount())}</b></dd>
                   </dl>
                 </div>
               </div>
@@ -311,7 +296,7 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
                       <option
                         key={index}
                         value={address.wardCode}
-                        data-district-id={address.districtID} // Lưu districtID làm thuộc tính data
+                        data-district-id={address.districtID}
                       >
                         {address.detailAddress}, {address.wardName}, {address.districtName}, {address.provinceName}
                       </option>
@@ -362,7 +347,12 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
                       </div>
                       <div className="ms-4 text-sm">
                         <label htmlFor="credit-card" className="font-medium leading-none text-gray-900 dark:text-white">Thanh toán VNPAY</label>
-                        <p id="credit-card-text" className="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400">Thanh toán bằng VNPay của bạn</p>
+                        <img
+                          id="credit-card-text"
+                          className="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400"
+                          src="./logo-vnpay-payment.png"
+                          style={{ width: '100px', height: 'auto'}}
+                        />
                       </div>
                     </div>
                   </div>
@@ -382,7 +372,12 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
                       </div>
                       <div className="ms-4 text-sm">
                         <label htmlFor="pay-on-delivery" className="font-medium leading-none text-gray-900 dark:text-white">Thanh toán khi nhận hàng</label>
-                        <p id="pay-on-delivery-text" className="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400">Nhận hàng và thanh toán trực tiếp</p>
+                        <img
+                          id="credit-card-text"
+                          className="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400"
+                          src="./logo-direct-payment.png"
+                          style={{ width: '100px', height: 'auto' }}
+                        />
                       </div>
                     </div>
                   </div>

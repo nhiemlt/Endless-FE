@@ -1,51 +1,56 @@
 import { useState, useEffect } from 'react';
 import { useDispatch } from "react-redux";
+import { useNavigate } from 'react-router-dom'; // Nhập useNavigate
 import productVersionService from "../../services/productVersionService";
 import CartService from "../../services/CartService";
-import { showNotification } from "../../";
+import { showNotification } from "../../features/common/headerSlice";
 
 function Product() {
   const dispatch = useDispatch();
-
-
-  const [products, setProducts] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
+  const navigate = useNavigate(); // Khởi tạo useNavigate
+  const [products, setProducts] = useState([]); // Trạng thái lưu danh sách sản phẩm
+  const [searchTerm, setSearchTerm] = useState(""); // Trạng thái lưu từ khóa tìm kiếm
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const data = await productVersionService.getAllProductVersions();
-        setProducts(data.content);
-        console.log(data);
+        const data = await productVersionService.getAllProductVersions(); // Lấy danh sách sản phẩm
+        setProducts(data.content); // Cập nhật danh sách sản phẩm vào trạng thái
       } catch (error) {
-        console.error("Error fetching products:", error);
+        console.error("Error fetching products:", error); // In lỗi nếu có
       }
     };
 
-    fetchProducts();
+    fetchProducts(); // Gọi hàm lấy sản phẩm khi component được render
   }, []);
 
   const formatCurrency = (amount) => {
     return amount.toLocaleString("vi-VN", {
       style: "currency",
-      currency: "VND",
+      currency: "VND", // Định dạng tiền tệ theo VND
     });
   };
 
   const handleAddToCart = async (product) => {
     const cartModel = {
-      productVersionID: product.productVersionID,
-      quantity: 1,
+      productVersionID: product.productVersionID, // ID phiên bản sản phẩm
+      quantity: 1, // Số lượng mặc định là 1
     };
 
     try {
-      const result = await CartService.addToCart(cartModel);
-      console.log("Sản phẩm đã được thêm vào giỏ hàng:", result);
+      const result = await CartService.addToCart(cartModel); // Gọi API thêm sản phẩm vào giỏ hàng
+      dispatch(showNotification({ message: "Sản phẩm đã được thêm vào giỏ hàng.", status: 1 })); // Hiển thị thông báo thành công
+      window.location.reload(); // Tải lại trang
     } catch (error) {
-      console.error("Lỗi khi thêm vào giỏ hàng:", error);
+      dispatch(showNotification({ message: "Lỗi khi thêm vào giỏ hàng.", status: 0 })); // Hiển thị thông báo lỗi
+      console.error("Lỗi khi thêm vào giỏ hàng:", error); // In lỗi nếu có
     }
   };
 
+  // Hàm xử lý khi hình ảnh sản phẩm được chọn
+  const handleImageClick = (productId) => {
+    navigate(`/product-detail/${productId}`); // Chuyển đến trang chi tiết sản phẩm theo ID
+  };
   return (
     <div className="flex">
       {/* Phần lọc và tìm kiếm */}
@@ -184,24 +189,18 @@ function Product() {
       <div className="flex-1 p-4">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {products.map((product) => (
-            <a
-              key={product.productVersionID}
-              href="#"
-              className="group relative block overflow-hidden"
-            >
-              <span className="absolute w-15 h-15 end-4 top-4 z-10 flex items-center justify-center rounded-full bg-white p-2 text-gray-900 transition opacity-25">
-                <span className="text-sm font-bold">{product.discountPercentage} %</span>
-              </span>
-
+            <div key={product.productVersionID} className="group relative block overflow-hidden">
               <img
                 src={product.image}
                 className="h-48 w-full object-cover transition duration-500 group-hover:scale-105"
+                onClick={() => handleImageClick(product.productVersionID)} // Thêm sự kiện onClick cho hình ảnh
+                alt={product.product.name} // Thêm thuộc tính alt cho hình ảnh
               />
-
               <div className="relative border border-gray-100 bg-white p-4">
                 <p className="mt-2 text-lg text-gray-900 h-20">
                   <b>{product.product.name} | {product.versionName}</b>
                 </p>
+
 
                 {/* Hiển thị đánh giá */}
                 <div className="flex items-center mt-2">
@@ -246,7 +245,7 @@ function Product() {
 
                 <span className="mt-1 text-xs text-gray-400">Đã bán: {product.quantitySold} | </span>
                 <span className="mt-1 text-xs text-gray-400">
-                 Tồn kho:{" "}
+                  Tồn kho:{" "}
                   <span className={product.quantityAvailable < 10 ? "text-red-600" : "text-gray-400"}>
                     {product.quantityAvailable}
                   </span>
@@ -264,7 +263,7 @@ function Product() {
                   </button>
                 </form>
               </div>
-            </a>
+            </div>
           ))}
         </div>
         {/* Phân trang */}
