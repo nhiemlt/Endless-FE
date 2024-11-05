@@ -77,6 +77,16 @@ const CartService = {
             throw error.response?.data || error.message;
         }
     },
+
+    // Lấy tổng số lượng sản phẩm trong giỏ hàng
+    async getTotalCartQuantity() {
+        try {
+            const response = await axios.get(`${constants.API_BASE_URL}/carts/total-quantity`);
+            return response.data; // Giả định response.data chứa tổng số lượng
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
 };
 
 export default CartService;
