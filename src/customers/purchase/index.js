@@ -219,7 +219,7 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
 
                   <dl className="flex items-center justify-between gap-4 py-3">
                     <dt className="text-base font-normal text-gray-500 dark:text-gray-400">Giá giảm voucher</dt>
-                    <dd className="text-base font-medium text-gray-900"><i>{formatCurrency(calculateDiscountAmount())}</i></dd>
+                    <dd className="text-base font-medium text-gray-900 dark:text-white"><i>{formatCurrency(calculateDiscountAmount())}</i></dd>
                   </dl>
 
 
