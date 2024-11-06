@@ -1,202 +1,184 @@
 import { useState, useEffect } from 'react';
 import TitleCard from '../../components/Cards/TitleCard';
-import InputText from '../../components/Input/InputText';
 import { useDispatch } from 'react-redux';
 import { showNotification } from '../common/headerSlice';
 import SearchBar from '../../components/Input/SearchBar';
 import CategoryService from '../../services/CategoryService';
 import TrashIcon from '@heroicons/react/24/outline/TrashIcon';
 import PencilIcon from '@heroicons/react/24/outline/PencilIcon';
+import AddCategoryModal from './components/AddCategoryModal'; // Nhập modal thêm danh mục
+import EditCategoryModal from './components/EditCategoryModal'; // Nhập modal chỉnh sửa danh mục
 
 function CategoryPage() {
   const dispatch = useDispatch();
   const [categories, setCategories] = useState([]);
-  // const [category, setCategory] = useState({ id: null, name: '' });
-  const [category, setCategory] = useState({ id: '', name: '', enName: '' });
-  const [searchText, setSearchText] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10); // Thay đổi số lượng bản ghi hiển thị
-
+  const [currentPage, setCurrentPage] = useState(0);
+  const [size] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editCategory, setEditCategory] = useState(null);
 
   useEffect(() => {
     fetchCategories();
-  }, []);
+  }, [currentPage, searchKeyword]); // Tải lại danh mục khi trang hoặc từ khóa tìm kiếm thay đổi
 
   const fetchCategories = async () => {
+    setLoading(true);
     try {
-      const data = await CategoryService.getCategories();
-      setCategories(data);
+      const response = await CategoryService.getCategories({
+        page: currentPage,
+        size,
+        keyword: searchKeyword,
+      });
+      setCategories(response.content);
+      setTotalPages(response.totalPages);
     } catch (err) {
-      setError('Failed to fetch categories');
+      setError('Không thể tải danh mục');
+      dispatch(showNotification({ message: "Không thể tải danh mục", status: 0 }));
     } finally {
       setLoading(false);
     }
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setCategory({ ...category, [name]: value });
-
+  const handleCategoryAdded = (newCategory) => {
+    setCategories([...categories, newCategory]);
+    setShowAddModal(false);
+    fetchCategories(); // Tải lại danh mục sau khi thêm
   };
-  const saveCategory = async () => {
+
+  const handleCategoryUpdated = (updatedCategory) => {
+    setCategories(categories.map(c => (c.categoryID === updatedCategory.categoryID ? updatedCategory : c)));
+    setShowEditModal(false);
+    fetchCategories(); // Tải lại danh mục sau khi cập nhật
+  };
+
+  const handleDelete = async (id) => {
     try {
-      if (category.id) {
-        await CategoryService.updateCategory(category.id, category); // Cập nhật
-        dispatch(
-          showNotification({
-            message: 'Category Updated Successfully!',
-            status: 1, // Status 1 có thể đại diện cho thành công
-          })
-        );
-      } else {
-        await CategoryService.createCategory(category); // Thêm mới
-        dispatch(
-          showNotification({
-            message: 'Category Created Successfully!',
-            status: 1,
-          })
-        );
-      }
-      fetchCategories(); // Cập nhật danh sách
-      setCategory({ id: '', name: '', enName: '' }); // Reset form
+      await CategoryService.deleteCategory(id);
+      setCategories(categories.filter((category) => category.categoryID !== id));
+      dispatch(showNotification({ message: 'Danh mục đã được xóa thành công!', status: 1 }));
     } catch (error) {
-      console.error('Error saving category:', error);
-      dispatch(
-        showNotification({
-          message: 'Failed to Save Category!',
-          status: 0, // Status 0 có thể đại diện cho lỗi
-        })
-      );
+      console.error('Lỗi khi xóa danh mục:', error);
+      dispatch(showNotification({ message: 'Xóa danh mục không thành công!', status: 0 }));
     }
   };
 
-  const editCategory = (cat) => {
-    setCategory({ id: cat.categoryID, name: cat.name, enName: cat.enName });
+  const applySearch = (keyword) => {
+    setSearchKeyword(keyword);
+    setCurrentPage(0); // Reset về trang đầu khi tìm kiếm
   };
 
-  const deleteCategory = async (id) => {
-    console.log("Deleting category with id:", id); // Thêm dòng này để kiểm tra id
-    if (window.confirm('Are you sure you want to delete this category?')) {
-      try {
-        await CategoryService.deleteCategory(id); // Xóa
-        fetchCategories(); // Cập nhật danh sách
-
-        dispatch(
-          showNotification({
-            message: 'Category Deleted Successfully!',
-            status: 1, // Status 1 cho thành công
-          })
-        );
-      } catch (error) {
-        console.error('Error deleting category:', error);
-        dispatch(
-          showNotification({
-            message: 'Failed to Delete Category!',
-            status: 0, // Status 0 cho lỗi
-          })
-        );
-      }
-    }
+  const handlePrevPage = () => {
+    setCurrentPage(currentPage - 1);
   };
 
-
-  const applySearch = (value) => setSearchText(value);
-  const filteredCategories = categories.filter((cat) => cat.name.toLowerCase().includes(searchText.toLowerCase()));
-
-  const indexOfLastCategory = currentPage * itemsPerPage;
-  const indexOfFirstCategory = indexOfLastCategory - itemsPerPage;
-  const currentCategories = filteredCategories.slice(indexOfFirstCategory, indexOfLastCategory);
-
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>{error}</div>;
+  const handleNextPage = () => {
+    setCurrentPage(currentPage + 1);
+  };
 
   return (
-    <TitleCard title="Manage Categories" topMargin="mt-6">
-      <div className="mb-12 flex items-center">
-        <div className=" rounded-lg flex-grow mr-2">
-          <div className="relative bg-inherit">
-            <input
-              type="text"
-              value={category.name}
-              onChange={handleInputChange}
-              id="name"
-              placeholder=" "
-              name="name"
-              className="w-full peer bg-transparent h-10 rounded-lg text-black placeholder-transparent ring-2 px-2 ring-gray-200 focus:ring-sky-600 focus:outline-none focus:border-rose-600"
-            />
-            <label
-              htmlFor="name"
-              className="absolute left-0 -top-3 text-sm text-gray-500 bg-white px-1 transition-all peer-placeholder-shown:top-2 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-500 peer-focus:-top-3 peer-focus:text-sky-600"
-            >
-              Category Name
-            </label>
-          </div>
+    <TitleCard title="Quản lý danh mục" topMargin="mt-6">
+      <div className="flex flex-col md:flex-row justify-between items-center w-full mb-4">
+        <div className="flex justify-start items-center space-x-2 mb-2 mr-2 md:mb-0">
+          <SearchBar searchText={searchKeyword} setSearchText={applySearch} styleClass="mb-4" />
         </div>
-        <div className="flex-none">
-          <button className="btn btn-primary h-10 mt-1" onClick={saveCategory}>
-            {category.id ? 'Update Category' : 'Save Category'}
-          </button>
-        </div>
+        <button className="btn btn-outline btn-sm btn-primary" onClick={() => setShowAddModal(true)}>Thêm danh mục</button>
       </div>
 
-      <SearchBar searchText={searchText} setSearchText={applySearch} styleClass="mb-4" />
-      <div className="overflow-x-auto w-full">
-        <table className="table w-full">
+      <div className="overflow-x-auto">
+        <table className="table table-xs w-full">
           <thead>
             <tr>
-              <th>No.</th>
-              <th className="text-center">Category Name</th>
-              <th colSpan={2} className="text-center">Action</th>
+              <th>STT</th>
+              <th className="text-center">Tên Danh Mục</th>
+              <th colSpan={2} className="text-center">Hành Động</th>
             </tr>
           </thead>
           <tbody>
-            {currentCategories.map((cat, index) => (
-              <tr key={cat.categoryID}> {/* Đảm bảo rằng cat.id là duy nhất */}
-                <td>{index + 1 + (currentPage - 1) * itemsPerPage}</td>
-                <td className="text-center">{cat.name}</td>
-                <td className="text-center">
-                  <button
-                    className="btn btn-sm btn-outline btn-info"
-                    onClick={() => editCategory(cat)}>
-                    <PencilIcon className="h-4 w-4" />
-                  </button>
-                  <button
-                    className="btn btn-sm btn-outline btn-error"
-                    onClick={() => deleteCategory(cat.categoryID)}> {/* Kiểm tra cat.id ở đây */}
-                    <TrashIcon className="h-4 w-4" />
-                  </button>
-                </td>
-              </tr>
-            ))}
+            {
+              loading ? (
+                <tr>
+                  <td colSpan={3} className="text-center">Đang tải...</td>
+                </tr>
+              ) : categories.length > 0 ? (
+                categories.map((cat, index) => (
+                  <tr key={cat.categoryID}>
+                    <td>{index + 1 + currentPage * size}</td>
+                    <td className="text-center">{cat.name}</td>
+                    <td className="text-center">
+                      <div className="flex justify-center space-x-2">
+                        <PencilIcon
+                          className="w-5 h-5 cursor-pointer text-info"
+                          onClick={() => {
+                            setEditCategory(cat);
+                            setShowEditModal(true);
+                          }}
+                        />
+                        <TrashIcon
+                          className="w-5 h-5 cursor-pointer text-error"
+                          onClick={() => handleDelete(cat.categoryID)}
+                        />
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={3} className="text-center">Không có dữ liệu.</td>
+                </tr>
+              )
+            }
           </tbody>
-
         </table>
       </div>
-      <div className="join flex justify-center mt-5">
+
+      {/* Điều hướng phân trang */}
+      <div className="join mt-4 flex justify-center w-full">
         <button
-          className="join-item btn"
-          onClick={() => setCurrentPage(currentPage > 1 ? currentPage - 1 : 1)}
-          disabled={currentPage === 1}
+          className="join-item btn btn-sm btn-primary"
+          onClick={handlePrevPage}
+          disabled={currentPage === 0}
         >
-          «
+          Trước
         </button>
-        <button className="join-item btn">Page {currentPage}</button>
+        {Array.from({ length: totalPages }, (_, index) => (
+          <button
+            key={index}
+            onClick={() => setCurrentPage(index)}
+            className={`join-item btn btn-sm btn-primary ${currentPage === index ? "btn-active" : ""}`}
+          >
+            {index + 1}
+          </button>
+        ))}
         <button
-          className="join-item btn"
-          onClick={() =>
-            setCurrentPage(
-              currentPage < Math.ceil(filteredCategories.length / itemsPerPage)
-                ? currentPage + 1
-                : currentPage
-            )
-          }
-          disabled={currentPage >= Math.ceil(filteredCategories.length / itemsPerPage)}
+          className="join-item btn btn-sm btn-primary"
+          onClick={handleNextPage}
+          disabled={currentPage >= totalPages - 1}
         >
-          »
+          Tiếp
         </button>
       </div>
+
+      {/* Modal thêm danh mục */}
+      {showAddModal && (
+        <AddCategoryModal
+          onClose={() => setShowAddModal(false)}
+          onCategoryAdded={handleCategoryAdded} // Sử dụng tên nhất quán
+        />
+      )}
+
+      {/* Modal chỉnh sửa danh mục */}
+      {showEditModal && (
+        <EditCategoryModal
+          onClose={() => setShowEditModal(false)}
+          onCategoryUpdated={handleCategoryUpdated}
+          category={editCategory}
+        />
+      )}
     </TitleCard>
   );
 }

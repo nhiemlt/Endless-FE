@@ -8,11 +8,20 @@ import ProductVersionService from '../../services/productVersionService';
 import PencilIcon from '@heroicons/react/24/outline/PencilIcon';
 import TrashIcon from '@heroicons/react/24/outline/TrashIcon';
 
+import AddProductVersionModal from './components/AddProductVersionModal';
+import EditProductVersionModal from './components/EditProductVersionModal';
+import ConfirmDialog from './components/ConfirmDialog'; // Import ConfirmDialog
+
 function ProductVersionPage() {
   const [productVersions, setProductVersions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchText, setSearchText] = useState('');
+
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false); // State for confirmation dialog
+
 
 
   useEffect(() => {
@@ -32,6 +41,24 @@ function ProductVersionPage() {
     fetchProductVersions();
   }, []);
 
+  const handleAddProductVersion = () => {
+    setIsAddModalOpen(true);
+  };
+
+  const handleEditProductVersion = () => {
+
+    setIsEditModalOpen(true);
+  };
+
+  const handleCloseAddModal = () => {
+    setIsAddModalOpen(false);
+  };
+
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false);
+  };
+
+
   // Hiển thị loading nếu đang tải dữ liệu
   if (loading) {
     return <div>Loading...</div>;
@@ -47,9 +74,24 @@ function ProductVersionPage() {
   return (
     <TitleCard title="Manage Product Versions" topMargin="mt-6">
       <div className="space-y-4">
+        <div className="flex flex-col md:flex-row justify-between items-center w-full mb-4">
+          <div className="flex justify-start items-center space-x-2 mb-2 mr-2 md:mb-0">
+            <input
+              type="text"
+              placeholder="Tìm kiếm..."
+              onChange={(e) => {
+                // setSearchKeyword(e.target.value);
+                // setCurrentPage(0);
+              }}
+              className="input input-bordered w-full md:w-50 h-8"
+            />
+          </div>
+          <button className="btn btn-outline btn-sm btn-primary" onClick={handleAddProductVersion} >
+            Thêm phiên bản
+          </button>
+        </div>
 
-
-        <SearchBar searchText={searchText} setSearchText={applySearch} styleClass="mb-4" />
+        {/* <SearchBar searchText={searchText} setSearchText={applySearch} styleClass="mb-4" /> */}
 
         <div className="overflow-x-auto">
           <table className="table table-xs w-full">
@@ -77,7 +119,7 @@ function ProductVersionPage() {
                   <td>{version.versionName}</td>
                   <td>{version.purchasePrice}</td>
                   <td>{version.price}</td>
-                  <td>{version.shipFee}</td>
+                  <td>{version.weight}</td>
                   <td>{version.height}</td>
                   <td>{version.length}</td>
                   <td>{version.width}</td>
@@ -101,6 +143,19 @@ function ProductVersionPage() {
           </table>
         </div>
       </div>
+      {isAddModalOpen && (
+        <AddProductVersionModal
+
+          onClose={handleCloseAddModal}
+        // onProductAdded={handleProductAdded} // Pass the new function here
+        />
+      )}
+      {isEditModalOpen && (
+        <EditProductVersionModal
+
+          onClose={handleCloseEditModal}
+        />
+      )}
     </TitleCard>
   );
 }
