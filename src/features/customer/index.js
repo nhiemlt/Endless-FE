@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import TitleCard from "../../components/Cards/TitleCard";
 import CustomerService from "../../services/CustomerService";
-import AddCustomerModal from "./components/AddCustomerModal"; // Đổi tên ở đây nếu cần
+import AddCustomerModal from "./components/AddCustomerModal";
 import UpdateCustomerModal from "./components/UpdateCustomerModal";
 import ConfirmDeleteModal from "./components/ConfirmDeleteModal";
 import { useDispatch } from "react-redux";
@@ -20,7 +20,7 @@ function Customer() {
   const [loading, setLoading] = useState(false);
   const [totalPages, setTotalPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(0);
-  const [size, setSize] = useState(10);
+  const [size, setSize] = useState(5);
   const [sortBy, setSortBy] = useState("fullname");
   const [sortDir, setSortDir] = useState("asc");
   const [searchTerm, setSearchTerm] = useState("");
@@ -32,11 +32,9 @@ function Customer() {
       const data = await CustomerService.getAllCustomers(
         currentPage,
         size,
-        searchTerm,
-        sortBy,
-        sortDir
+        searchTerm
       );
-      console.log("Customer data:", data);
+      console.log("Fetched customers data:", data);
       setCustomers(data.content);
       setTotalPages(data.totalPages);
     } catch (error) {
@@ -50,12 +48,11 @@ function Customer() {
     fetchCustomers();
   }, [currentPage, size, sortBy, sortDir, searchTerm]);
 
-  const handleSearch = (event) => {
+  // Sử dụng debounce cho tìm kiếm
+  const debouncedSearch = debounce((event) => {
     setSearchTerm(event.target.value);
     setCurrentPage(0);
-  };
-
-  const debouncedSearch = debounce(handleSearch, 300);
+  }, 300);
 
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
@@ -69,21 +66,33 @@ function Customer() {
     setCurrentPage(0);
   };
 
-  const handlePrevPage = () => {
-    if (currentPage > 0) {
-      setCurrentPage(currentPage - 1);
+  const handleUpdateModalOpen = async (customerId) => {
+    if (!customerId) {
+      dispatch(
+        showNotification({
+          message: "Không thể tìm thấy khách hàng.",
+          status: 0,
+        })
+      );
+      return;
     }
-  };
 
-  const handleNextPage = () => {
-    if (currentPage < totalPages - 1) {
-      setCurrentPage(currentPage + 1);
+    setLoading(true);
+    try {
+      const customer = await CustomerService.getCustomerById(customerId);
+      setCustomerDetails(customer);
+      setShowUpdateModal(true);
+    } catch (error) {
+      console.error("Error fetching customer details:", error);
+      dispatch(
+        showNotification({
+          message: "Không thể lấy thông tin khách hàng.",
+          status: 0,
+        })
+      );
+    } finally {
+      setLoading(false);
     }
-  };
-
-  const handleUpdateModalOpen = (customer) => {
-    setCustomerDetails(customer);
-    setShowUpdateModal(true);
   };
 
   const handleUpdateModalClose = () => {
@@ -101,12 +110,10 @@ function Customer() {
       try {
         await CustomerService.deleteCustomer(customerIdToDelete);
         fetchCustomers();
-        dispatch(
-          showNotification({ message: "Xóa khách hàng thành công!", status: 1 })
-        );
+        dispatch(showNotification({ message: "Xóa khách hàng thành công!", status: 1 }));
       } catch (error) {
         console.error("Error deleting customer:", error);
-        dispatch(showNotification({ message: error.response.data, status: 0 }));
+        dispatch(showNotification({ message: "Xóa khách hàng thất bại.", status: 0 }));
       }
       setCustomerIdToDelete(null);
       setShowDeleteModal(false);
@@ -114,31 +121,46 @@ function Customer() {
   };
 
   const renderPagination = () => {
-    const maxPageButtons = 5;
-    const halfMax = Math.floor(maxPageButtons / 2);
-    let startPage = Math.max(0, currentPage - halfMax);
-    let endPage = Math.min(totalPages - 1, currentPage + halfMax);
+    const pages = [];
+    const maxPages = totalPages - 1;
 
-    if (endPage - startPage < maxPageButtons - 1) {
-      if (startPage === 0) {
-        endPage = Math.min(maxPageButtons - 1, totalPages - 1);
-      } else if (endPage === totalPages - 1) {
-        startPage = Math.max(0, totalPages - maxPageButtons);
+    if (totalPages <= 5) {
+      for (let i = 0; i <= maxPages; i++) {
+        pages.push(i);
       }
+    } else {
+      pages.push(0, 1);
+
+      if (currentPage > 3) pages.push("...");
+
+      const startPage = Math.max(2, currentPage - 1);
+      const endPage = Math.min(maxPages - 2, currentPage + 1);
+
+      for (let page = startPage; page <= endPage; page++) {
+        pages.push(page);
+      }
+
+      if (currentPage < maxPages - 3) pages.push("...");
+
+      pages.push(maxPages - 1, maxPages);
     }
 
     return (
       <div className="join mt-4 flex justify-center w-full">
         <button
-          onClick={handlePrevPage}
+          onClick={() => handlePageChange(currentPage - 1)}
           className="join-item btn"
           disabled={currentPage === 0}
         >
-          Previous
+          Trước
         </button>
-        {Array.from({ length: endPage - startPage + 1 }, (_, index) => {
-          const page = startPage + index;
-          return (
+
+        {pages.map((page, index) =>
+          page === "..." ? (
+            <span key={index} className="join-item btn disabled">
+              ...
+            </span>
+          ) : (
             <button
               key={page}
               onClick={() => handlePageChange(page)}
@@ -148,14 +170,15 @@ function Customer() {
             >
               {page + 1}
             </button>
-          );
-        })}
+          )
+        )}
+
         <button
-          onClick={handleNextPage}
+          onClick={() => handlePageChange(currentPage + 1)}
           className="join-item btn"
-          disabled={currentPage === totalPages - 1}
+          disabled={currentPage === maxPages}
         >
-          Next
+          Tiếp
         </button>
       </div>
     );
@@ -199,6 +222,7 @@ function Customer() {
           <table className="table w-full table-xs">
             <thead>
               <tr>
+                <th>Avatar</th>
                 <th onClick={() => handleSortChange("fullname")}>
                   Tên khách hàng
                 </th>
@@ -212,7 +236,7 @@ function Customer() {
                 <tr key={customer.customerId || index}>
                   <td>
                     <img
-                      src={customer.avatar}
+                      src={customer.avatar || "default-avatar.png"}
                       alt="Avatar"
                       className="w-16 h-16 rounded-full"
                     />
@@ -220,10 +244,10 @@ function Customer() {
                   <td>{customer.fullname}</td>
                   <td className="text-center">{customer.phone}</td>
                   <td className="text-center">{customer.email}</td>
-                  <td className="space-x-2 text-center">
+                  <td className="text-center">
                     <button
                       className="btn btn-sm btn-outline btn-primary"
-                      onClick={() => handleUpdateModalOpen(customer)}
+                      onClick={() => handleUpdateModalOpen(customer.customerId)}
                     >
                       <PencilIcon className="h-4 w-4" aria-hidden="true" />
                     </button>

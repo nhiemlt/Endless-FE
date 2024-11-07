@@ -5,7 +5,7 @@ import { showNotification } from "../../common/headerSlice";
 import GHNService from "../../../services/GHNService";
 import UserAddressService from "../../../services/userAddressService";
 
-const AddCustomerModal = ({ showModal, closeModal, onCustomerCreated }) => {
+const AddCustomerModal = ({ showModal, closeModal }) => {
   const dispatch = useDispatch();
   const [customerName, setCustomerName] = useState("");
   const [email, setEmail] = useState("");
@@ -114,19 +114,38 @@ const AddCustomerModal = ({ showModal, closeModal, onCustomerCreated }) => {
   };
 
   // Hàm xử lý thêm địa chỉ mới
-  const handleAddNewAddress = async (e) => {
-    e.preventDefault();
-
-    // Kiểm tra các trường có hợp lệ không
-    if (
-      !newAddress?.detailAddress ||
-      !newAddress?.provinceID ||
-      !newAddress?.districtID ||
-      !newAddress?.wardCode
-    ) {
+  const handleAddNewAddress = async (userID) => {
+    if (!newAddress?.detailAddress) {
       dispatch(
         showNotification({
-          message: "Vui lòng điền đầy đủ thông tin địa chỉ",
+          message: "Vui lòng điền địa chỉ chi tiết.",
+          status: 0,
+        })
+      );
+      return;
+    }
+    if (!newAddress?.provinceID) {
+      dispatch(
+        showNotification({
+          message: "Vui lòng chọn tỉnh.",
+          status: 0,
+        })
+      );
+      return;
+    }
+    if (!newAddress?.districtID) {
+      dispatch(
+        showNotification({
+          message: "Vui lòng chọn quận/huyện.",
+          status: 0,
+        })
+      );
+      return;
+    }
+    if (!newAddress?.wardCode) {
+      dispatch(
+        showNotification({
+          message: "Vui lòng chọn phường/xã.",
           status: 0,
         })
       );
@@ -134,18 +153,20 @@ const AddCustomerModal = ({ showModal, closeModal, onCustomerCreated }) => {
     }
 
     try {
-      await UserAddressService.addUserAddressCurrent(newAddress); // newAddress sẽ chứa cả ID và Name
+      // Thêm địa chỉ vào bảng `userAddress` với userID được truyền từ `handleSubmit`
+      await UserAddressService.addUserAddressCurrent({
+        ...newAddress,
+        userID, // Lưu ý truyền ID của người dùng vào địa chỉ
+      });
       dispatch(
         showNotification({ message: "Thêm địa chỉ thành công", status: 1 })
       );
+      // Reset thông tin địa chỉ
       setNewAddress({
         detailAddress: "",
         wardCode: "",
-        wardName: "",
         districtID: "",
-        districtName: "",
         provinceID: "",
-        provinceName: "",
       });
       fetchAddresses();
     } catch (error) {
@@ -153,18 +174,14 @@ const AddCustomerModal = ({ showModal, closeModal, onCustomerCreated }) => {
         "Không thể thêm địa chỉ mới:",
         error.response ? error.response.data : error.message
       );
-      if (error.response && error.response.data) {
-        dispatch(
-          showNotification({
-            message: `Thêm địa chỉ thất bại: ${error.response.data.message}`,
-            status: 0,
-          })
-        );
-      } else {
-        dispatch(
-          showNotification({ message: "Thêm địa chỉ thất bại", status: 0 })
-        );
-      }
+      dispatch(
+        showNotification({
+          message: `Thêm địa chỉ thất bại: ${
+            error.response?.data?.message || "Lỗi không xác định"
+          }`,
+          status: 0,
+        })
+      );
     }
   };
 
@@ -191,31 +208,46 @@ const AddCustomerModal = ({ showModal, closeModal, onCustomerCreated }) => {
     event.preventDefault();
 
     // Kiểm tra thông tin khách hàng
-    if (
-      !customerData.username ||
-      !customerData.fullname ||
-      !customerData.phone ||
-      !customerData.email
-    ) {
+    if (!customerData.username) {
       dispatch(
         showNotification({
-          message: "Vui lòng điền đầy đủ thông tin khách hàng",
+          message: "Vui lòng điền tên người dùng.",
           status: 0,
         })
       );
       return;
     }
-
-    // Kiểm tra địa chỉ
-    if (
-      !newAddress.detailAddress ||
-      !newAddress.provinceID ||
-      !newAddress.districtID ||
-      !newAddress.wardCode
-    ) {
+    if (!customerData.fullname) {
       dispatch(
         showNotification({
-          message: "Vui lòng điền đầy đủ thông tin địa chỉ",
+          message: "Vui lòng điền họ và tên.",
+          status: 0,
+        })
+      );
+      return;
+    }
+    if (!customerData.email) {
+      dispatch(
+        showNotification({
+          message: "Vui lòng điền email.",
+          status: 0,
+        })
+      );
+      return;
+    }
+    if (!/\S+@\S+\.\S+/.test(customerData.email)) {
+      dispatch(
+        showNotification({
+          message: "Email không hợp lệ.",
+          status: 0,
+        })
+      );
+      return;
+    }
+    if (!customerData.phone) {
+      dispatch(
+        showNotification({
+          message: "Vui lòng điền số điện thoại.",
           status: 0,
         })
       );
@@ -223,46 +255,35 @@ const AddCustomerModal = ({ showModal, closeModal, onCustomerCreated }) => {
     }
 
     try {
-      // Tạo khách hàng
-      const customerModel = {
-        customerName,
-        email,
-        phone,
-        address,
-        avatar,
-      };
+      // 1. Thêm người dùng vào bảng `user`
+      const createdUser = await CustomerService.createCustomer(customerData);
 
-      await CustomerService.createCustomer(customerModel);
-
-      // Thêm địa chỉ
-      await UserAddressService.addUserAddressCurrent(newAddress);
       dispatch(
-        showNotification({ message: "Tạo khách hàng thành công", status: 1 })
+        showNotification({ message: "Thêm người dùng thành công", status: 1 })
       );
 
-      // Reset dữ liệu
+      // 2. Nếu người dùng đã được thêm, gọi hàm thêm địa chỉ
+      await handleAddNewAddress(createdUser.data.userID); // Truyền ID người dùng mới vào hàm thêm địa chỉ
+
+      // Reset thông tin người dùng sau khi thêm
       setCustomerData({
         username: "",
         fullname: "",
-        phone: "",
         email: "",
-        avatar: "",
+        phone: "",
       });
-      setNewAddress({
-        detailAddress: "",
-        wardCode: "",
-        wardName: "",
-        districtID: "",
-        districtName: "",
-        provinceID: "",
-        provinceName: "",
-      });
-
-      closeModal();
     } catch (error) {
-      console.error("Lỗi khi thêm khách hàng:", error);
+      console.error(
+        "Không thể thêm người dùng mới:",
+        error.response ? error.response.data : error.message
+      );
       dispatch(
-        showNotification({ message: "Tạo khách hàng thất bại", status: 0 })
+        showNotification({
+          message: `Thêm người dùng thất bại: ${
+            error.response?.data?.message || "Lỗi không xác định"
+          }`,
+          status: 0,
+        })
       );
     }
   };
@@ -272,7 +293,7 @@ const AddCustomerModal = ({ showModal, closeModal, onCustomerCreated }) => {
       <div className="modal-box w-full max-w-3xl lg:max-w-4xl">
         <form onSubmit={handleSubmit}>
           <h2 className="font-bold text-lg">Thêm khách hàng mới</h2>
-  
+
           {/* Avatar Upload */}
           <div className="flex flex-col items-center mb-4 mt-5">
             <div className="avatar">
@@ -316,7 +337,8 @@ const AddCustomerModal = ({ showModal, closeModal, onCustomerCreated }) => {
               </div>
             </div>
           </div>
-  
+
+          {/* Các trường nhập liệu */}
           <input
             type="text"
             value={customerData.username}
@@ -324,10 +346,9 @@ const AddCustomerModal = ({ showModal, closeModal, onCustomerCreated }) => {
               setCustomerData({ ...customerData, username: e.target.value })
             }
             placeholder="Tên người dùng"
-            required
             className="input input-bordered w-full mb-4"
           />
-  
+
           <input
             type="text"
             value={customerData.fullname}
@@ -335,10 +356,9 @@ const AddCustomerModal = ({ showModal, closeModal, onCustomerCreated }) => {
               setCustomerData({ ...customerData, fullname: e.target.value })
             }
             placeholder="Họ và tên"
-            required
             className="input input-bordered w-full mb-4"
           />
-  
+
           <input
             type="email"
             value={customerData.email}
@@ -346,10 +366,9 @@ const AddCustomerModal = ({ showModal, closeModal, onCustomerCreated }) => {
               setCustomerData({ ...customerData, email: e.target.value })
             }
             placeholder="Email"
-            required
             className="input input-bordered w-full mb-4"
           />
-  
+
           <input
             type="text"
             value={customerData.phone}
@@ -357,23 +376,30 @@ const AddCustomerModal = ({ showModal, closeModal, onCustomerCreated }) => {
               setCustomerData({ ...customerData, phone: e.target.value })
             }
             placeholder="Số điện thoại"
-            required
             className="input input-bordered w-full mb-4"
           />
-  
+
           <h3 className="font-bold mt-4">Thông Tin Địa Chỉ</h3>
-  
+
           <div className="flex gap-4 mb-4">
             <select
               name="provinceID"
               className="p-2 border-2 rounded-lg flex-1"
               value={newAddress.provinceID}
-              onChange={(e) => handleProvinceChange(e.target.value, e.target.options[e.target.selectedIndex].text)}
+              onChange={(e) =>
+                handleProvinceChange(
+                  e.target.value,
+                  e.target.options[e.target.selectedIndex].text
+                )
+              }
             >
               <option value="">Chọn tỉnh/thành phố</option>
               {provinceIDs.length > 0 ? (
                 provinceIDs.map((provinceID) => (
-                  <option key={provinceID.ProvinceID} value={provinceID.ProvinceID}>
+                  <option
+                    key={provinceID.ProvinceID}
+                    value={provinceID.ProvinceID}
+                  >
                     {provinceID.ProvinceName}
                   </option>
                 ))
@@ -381,22 +407,30 @@ const AddCustomerModal = ({ showModal, closeModal, onCustomerCreated }) => {
                 <option value="">Không có tỉnh nào</option>
               )}
             </select>
-  
+
             <select
               name="districtID"
               className="p-2 border-2 rounded-lg flex-1"
               value={newAddress.districtID}
-              onChange={(e) => handleDistrictChange(e.target.value, e.target.options[e.target.selectedIndex].text)}
+              onChange={(e) =>
+                handleDistrictChange(
+                  e.target.value,
+                  e.target.options[e.target.selectedIndex].text
+                )
+              }
               disabled={!newAddress.provinceID}
             >
               <option value="">Chọn quận/huyện</option>
               {districtIDs.map((districtID) => (
-                <option key={districtID.DistrictID} value={districtID.DistrictID}>
+                <option
+                  key={districtID.DistrictID}
+                  value={districtID.DistrictID}
+                >
                   {districtID.DistrictName}
                 </option>
               ))}
             </select>
-  
+
             <select
               name="wardCode"
               className="p-2 border-2 rounded-lg flex-1"
@@ -411,7 +445,7 @@ const AddCustomerModal = ({ showModal, closeModal, onCustomerCreated }) => {
                 </option>
               ))}
             </select>
-  
+
             <input
               type="text"
               name="detailAddress"
@@ -419,10 +453,9 @@ const AddCustomerModal = ({ showModal, closeModal, onCustomerCreated }) => {
               className="p-2 border-2 rounded-lg flex-1"
               value={newAddress.detailAddress}
               onChange={handleNewAddressChange}
-              required
             />
           </div>
-  
+
           <div className="modal-action">
             <button type="submit" className="btn btn-primary">
               Thêm khách hàng
@@ -435,8 +468,6 @@ const AddCustomerModal = ({ showModal, closeModal, onCustomerCreated }) => {
       </div>
     </div>
   );
-  
-  
 };
 
 export default AddCustomerModal;
