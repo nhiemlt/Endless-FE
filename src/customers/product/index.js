@@ -189,12 +189,12 @@ function Product() {
 
       {/* Phần hiển thị sản phẩm */}
       <div className="flex-1 p-4">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
           {products.map((product) => (
             <div key={product.productVersionID} className="group relative block overflow-hidden">
               <img
                 src={product.image}
-                className="h-48 w-full object-cover transition duration-500 group-hover:scale-105"
+                className="h-30 w-full object-cover transition duration-500 group-hover:scale-105"
                 onClick={() => handleImageClick(product)}
                 alt={product.product.name}
               />
@@ -202,7 +202,7 @@ function Product() {
                 - {product.discountPercentage}%
               </p>
               <div className="relative border border-gray-100 bg-white p-4">
-                <p className="mt-2 text-lg text-gray-900 h-20">
+                <p className="mt-1 text-sm text-gray-900 h-20">
                   <b>{product.product.name} | {product.versionName}</b>
                 </p>
 
@@ -229,11 +229,11 @@ function Product() {
                     </p>
                   )}
                 </div>
-                <span className="mt-1 text-sm text-gray-500">
+                <span className="mt-1 text-xs text-gray-500">
                   <s>{formatCurrency(product.price)}</s>
                 </span>{" "}
                 <span
-                  className="mt-1 text-lg text-red-600"
+                  className="mt-1 text-sm text-red-600"
                   style={{
                     animation: "blink 1s linear infinite",
                   }}
@@ -263,7 +263,7 @@ function Product() {
                     handleAddToCart(product);
                   }}
                 >
-                  <button type="submit" className="w-full rounded btn btn-warning p-2 text-sm">
+                  <button type="submit" className="w-full rounded btn btn-warning p-2 text-xs">
                     Thêm vào giỏ hàng
                   </button>
                 </form>

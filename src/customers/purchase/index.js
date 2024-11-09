@@ -2,13 +2,17 @@ import React, { useState, useEffect } from 'react';
 import TitleCard from '../../components/Cards/TitleCard';
 import UserAddressService from "../../services/userAddressService";
 import ProfileService from "../../services/profileService";
-import VoucherService from "../../services/voucherService";
+import OrderService from "../../services/OrderService";
 import UserVoucherService from "../../services/userVoucherService";
 import GHNService from "../../services/GHNService";
 import { useLocation } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
+import { showNotification } from "../../features/common/headerSlice";
+import { useDispatch } from "react-redux";
 
 const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
+
+  const dispatch = useDispatch();
 
   const [userAddresses, setUserAddresses] = useState([]);
   const [userInfo, setUserInfo] = useState(null);
@@ -133,16 +137,69 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
     setPaymentMethod(event.target.value);
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     if (!paymentMethod) {
       setError('Vui lòng chọn phương thức thanh toán.');
       return;
     }
-    if (paymentMethod === 'vnpay') {
-      navigate('/pay');
+
+    // Kiểm tra nếu phương thức thanh toán là thanh toán khi nhận hàng
+    if (paymentMethod === 'cod') {
+      try {
+        // Tạo đối tượng orderModel theo cấu trúc OrderModel
+        const orderModel = {
+          voucherID: selectedVoucher || null,  // Nếu voucher không có, trả về null
+          orderAddress: selectedAddress?.addressID,
+          orderPhone: userInfo?.phone,
+          orderName: userInfo?.fullname,
+          orderDetails: selectedItems.map(item => ({
+            productVersionID: item.productVersionID,
+            quantity: item.quantity,
+          })),
+          shipFee: shippingFee || 0,
+          codValue: calculateTotalAmount() || 0,
+          insuranceValue: 0,
+          serviceTypeID: 2,
+        };
+
+        // Gọi API để tạo đơn hàng
+        const response = await OrderService.createOrder(orderModel);
+        console.log("Order created:", response);
+        navigate('/products');
+        dispatch(showNotification({ message: "Đặt hàng thành công, đơn hàng đang chờ xác nhận.", status: 1 })); // Hiển thị thông báo
+      } catch (error) {
+        console.error("Error creating order:", error);
+        dispatch(showNotification({ message: "Không thể tạo đơn hàng, vui lòng thử lại.", status: 0 })); // Hiển thị thông báo lỗi
+      }
+    } else if (paymentMethod === 'vnpay') {
+      try {
+        // Tạo đối tượng orderModel theo cấu trúc OrderModel
+        const orderModel = {
+          voucherID: selectedVoucher || null,  // Nếu voucher không có, trả về null
+          orderAddress: selectedAddress?.addressID,
+          orderPhone: userInfo?.phone,
+          orderName: userInfo?.fullname,
+          orderDetails: selectedItems.map(item => ({
+            productVersionID: item.productVersionID,
+            quantity: item.quantity,
+          })),
+          shipFee: shippingFee || 0,
+          codValue: calculateTotalAmount() || 0,
+          insuranceValue: 0,
+          serviceTypeID: 2,
+        };
+        // Gọi API để tạo đơn hàng
+        const response = await OrderService.createOrderVNPay(orderModel);
+        navigate('/pay');
+        dispatch(showNotification({ message: "Đặt hàng thành công, đơn hàng đang chờ thanh toán.", status: 1 })); // Hiển thị thông báo
+      } catch (error) {
+        console.error("Error creating order:", error);
+        dispatch(showNotification({ message: "Không thể tạo đơn hàng, vui lòng thử lại.", status: 0 })); // Hiển thị thông báo lỗi
+      }
     }
   };
+
 
   const handleChangeAddress = (event) => {
     const selectedOption = event.target.selectedOptions[0];
@@ -328,6 +385,7 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
                   )}
                 </select>
               </div>
+
               <div className="space-y-4">
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Phương thức thanh toán</h3>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -351,7 +409,7 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
                           id="credit-card-text"
                           className="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400"
                           src="./logo-vnpay-payment.png"
-                          style={{ width: '100px', height: 'auto'}}
+                          style={{ width: '100px', height: 'auto' }}
                         />
                       </div>
                     </div>
