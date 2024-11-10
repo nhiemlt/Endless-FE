@@ -10,10 +10,26 @@ import UserService from "../../services/UserService";
 
 function PurchaseHistory() {
   const [orders, setOrders] = useState([]);
+  const [filteredOrders, setFilteredOrders] = useState([]);
   const [loggedInUserId, setLoggedInUserId] = useState(null);
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [isPaymentExpanded, setPaymentExpanded] = useState(false);
+  const [activeTab, setActiveTab] = useState("Tất cả");
+  const [searchText, setSearchText] = useState("");
+  const [currentPage, setCurrentPage] = useState(0);
+  const [size, setSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
+
+  const orderStatuses = [
+    "Tất cả",
+    "Chờ xác nhận",
+    "Chờ thanh toán",
+    "Đã thanh toán",
+    "Đã xác nhận",
+    "Đang giao hàng",
+    "Đã giao hàng",
+    "Đã hủy", // Thêm trạng thái "Đã hủy" vào đây
+  ];
 
   useEffect(() => {
     const fetchUserAndOrders = async () => {
@@ -21,15 +37,11 @@ function PurchaseHistory() {
         const currentUser = await UserService.getCurrentUser();
         setLoggedInUserId(currentUser.userID);
 
-        const page = 0;
-        const size = 10;
-        const searchText = currentUser.userID;
-
         const fetchedOrders = await OrderService.getAllOrders(
+          currentUser.userID,
           searchText,
           null,
-          null,
-          page,
+          currentPage,
           size
         );
 
@@ -38,13 +50,43 @@ function PurchaseHistory() {
         );
 
         setOrders(filteredOrders);
+        setTotalPages(fetchedOrders.data.totalPages);
+        setFilteredOrders(filteredOrders);
       } catch (error) {
         console.error("Lỗi khi lấy lịch sử mua hàng:", error);
       }
     };
 
     fetchUserAndOrders();
-  }, []);
+  }, [searchText, currentPage, size]);
+
+  useEffect(() => {
+    if (activeTab === "Tất cả") {
+      setFilteredOrders(
+        orders.filter(
+          (order) =>
+            order.orderID.toLowerCase().includes(searchText.toLowerCase()) ||
+            order.orderDetails.some((item) =>
+              item.productName.toLowerCase().includes(searchText.toLowerCase())
+            )
+        )
+      );
+    } else {
+      setFilteredOrders(
+        orders
+          .filter((order) => order.status === activeTab)
+          .filter(
+            (order) =>
+              order.orderID.toLowerCase().includes(searchText.toLowerCase()) ||
+              order.orderDetails.some((item) =>
+                item.productName
+                  .toLowerCase()
+                  .includes(searchText.toLowerCase())
+              )
+          )
+      );
+    }
+  }, [activeTab, orders, searchText]);
 
   const openModal = (order) => {
     setSelectedOrder(order);
@@ -54,7 +96,72 @@ function PurchaseHistory() {
   const closeModal = () => {
     setModalIsOpen(false);
     setSelectedOrder(null);
-    setPaymentExpanded(false);
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  const renderPagination = () => {
+    const pages = [];
+    const maxPages = totalPages - 1;
+
+    if (totalPages <= 5) {
+      for (let i = 0; i <= maxPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      pages.push(0, 1);
+
+      if (currentPage > 3) pages.push("...");
+
+      const startPage = Math.max(2, currentPage - 1);
+      const endPage = Math.min(maxPages - 2, currentPage + 1);
+
+      for (let page = startPage; page <= endPage; page++) {
+        pages.push(page);
+      }
+
+      if (currentPage < maxPages - 3) pages.push("...");
+
+      pages.push(maxPages - 1, maxPages);
+    }
+
+    return (
+      <div className="join mt-4 flex justify-center w-full">
+        <button
+          onClick={() => handlePageChange(currentPage - 1)}
+          className="join-item btn"
+          disabled={currentPage === 0}
+        >
+          Trước
+        </button>
+
+        {pages.map((page, index) =>
+          page === "..." ? (
+            <span key={index} className="join-item btn disabled">
+              ...
+            </span>
+          ) : (
+            <button
+              key={page}
+              onClick={() => handlePageChange(page)}
+              className={`join-item btn ${currentPage === page ? "btn-primary" : ""}`}
+            >
+              {page + 1}
+            </button>
+          )
+        )}
+
+        <button
+          onClick={() => handlePageChange(currentPage + 1)}
+          className="join-item btn"
+          disabled={currentPage === maxPages}
+        >
+          Tiếp
+        </button>
+      </div>
+    );
   };
 
   function formatMoney(amount) {
@@ -65,22 +172,50 @@ function PurchaseHistory() {
     <div className="bg-base-200 min-h-screen py-12 px-8">
       <h1 className="text-4xl font-bold text-center mb-8">Lịch Sử Mua Hàng</h1>
 
-      <div className="flex flex-col gap-8">
-        {orders.length > 0 ? (
-          orders.map((order) => (
+      {/* Tabs Section */}
+      <div className="tabs tabs-lifted">
+        {orderStatuses.map((status) => (
+          <a
+            key={status}
+            className={`tab tab-lifted ${activeTab === status ? "tab-active" : ""}`}
+            onClick={() => setActiveTab(status)}
+          >
+            {status}
+          </a>
+        ))}
+      </div>
+
+      {/* Orders List */}
+      <div className="flex flex-col gap-8 tab-content bg-base-100 border-base-300 p-6">
+        {activeTab === "Tất cả" && (
+          <div className="flex justify-center mb-4">
+            <input
+              type="text"
+              className="input input-bordered w-full"
+              placeholder="Tìm kiếm theo mã đơn hàng hoặc tên sản phẩm"
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+            />
+          </div>
+        )}
+
+        {filteredOrders.length > 0 ? (
+          filteredOrders.map((order) => (
             <div
               key={order.orderID}
-              className="card bg-white dark:bg-gray-800 shadow-xl p-4 rounded-lg cursor-pointer hover:shadow-2xl transition duration-300 dark:text-white"
+              className="card bg-white dark:bg-gray-800 shadow-xl p-4 rounded-lg cursor-pointer hover:shadow-2xl transition duration-300"
               onClick={() => openModal(order)}
             >
               <div className="flex justify-between items-start">
                 <span
                   className={`text-sm font-semibold px-2 py-1 rounded ${
                     order.status === "Chờ xác nhận"
-                      ? "bg-yellow-300 text-yellow-800 dark:bg-yellow-500 dark:text-yellow-200"
-                      : order.status === "Đã giao"
-                      ? "bg-green-300 text-green-800 dark:bg-green-500 dark:text-green-200"
-                      : "bg-gray-300 text-gray-800 dark:bg-gray-600 dark:text-gray-200"
+                      ? "bg-yellow-300 text-yellow-800"
+                      : order.status === "Đã giao hàng"
+                      ? "bg-green-300 text-green-800"
+                      : order.status === "Đã hủy"
+                      ? "bg-red-300 text-red-800" // Màu sắc cho trạng thái "Đã hủy"
+                      : "bg-gray-300 text-gray-800"
                   }`}
                 >
                   {order.status}
@@ -95,23 +230,24 @@ function PurchaseHistory() {
                 />
 
                 <div className="flex flex-col justify-between flex-1">
-                  <h2 className="text-lg font-semibold">
-                    {order.orderDetails[0].productName}
-                  </h2>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <h2 className="text-lg font-semibold">{order.orderDetails[0].productName}</h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
                     {order.orderDetails[0].productVersionName}
                   </p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Số lượng: {order.orderDetails[0].quantity}
-                  </p>
 
-                  <div className="flex items-center space-x-2">
-                    <p className="text-sm text-gray-400 line-through dark:text-gray-500">
-                      {formatMoney(order.orderDetails[0].price)} đ
+                  <div className="flex justify-between items-center">
+                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                      Số lượng: {order.orderDetails[0].quantity}
                     </p>
-                    <p className="text-lg font-semibold text-gray-800 dark:text-white">
-                      {formatMoney(order.orderDetails[0].discountPrice)} đ
-                    </p>
+
+                    <div className="flex items-center space-x-2">
+                      <p className="text-sm text-gray-400 dark:text-gray-500 line-through">
+                        {formatMoney(order.orderDetails[0].price)} đ
+                      </p>
+                      <p className="text-lg font-semibold text-gray-800 dark:text-white">
+                        {formatMoney(order.orderDetails[0].discountPrice)} đ
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -125,21 +261,31 @@ function PurchaseHistory() {
             </div>
           ))
         ) : (
-          <p className="text-center text-gray-500">Không có đơn hàng nào</p>
+          <p className="text-center text-gray-500 dark:text-gray-300">
+            Không có đơn hàng nào
+          </p>
         )}
       </div>
 
+      {renderPagination()}
+
       {modalIsOpen && selectedOrder && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-11/12 sm:w-3/4 md:w-2/3 lg:w-1/2 xl:w-1/3">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-11/12 sm:w-3/4 md:w-2/3 lg:w-1/2 xl:w-1/2">
             <h2 className="text-2xl font-bold mb-4 text-center text-gray-900 dark:text-white">
               Thông Tin Hóa Đơn
             </h2>
 
-            <div className="steps mb-6 flex justify-between w-full">
+            {/* Dòng chữ mã hóa đơn */}
+            <p className="text-sm text-center text-gray-600 dark:text-gray-300 mb-4">
+              Mã hóa đơn:{" "}
+              <span className="font-semibold">{selectedOrder.orderID}</span>
+            </p>
+
+            <div className="steps mb-6 flex justify-between w-full items-stretch">
               {/* Step 1 - Chờ xác nhận */}
               <div
-                className={`step w-1/6 flex flex-col items-center justify-between min-h-[120px] ${
+                className={`step flex-1 flex flex-col items-center ${
                   [
                     "Chờ xác nhận",
                     "Chờ thanh toán",
@@ -160,7 +306,7 @@ function PurchaseHistory() {
 
               {/* Step 2 - Chờ thanh toán */}
               <div
-                className={`step w-1/6 flex flex-col items-center justify-between min-h-[120px] ${
+                className={`step flex-1 flex flex-col items-center ${
                   [
                     "Chờ thanh toán",
                     "Đã thanh toán",
@@ -180,7 +326,7 @@ function PurchaseHistory() {
 
               {/* Step 3 - Đã thanh toán */}
               <div
-                className={`step w-1/6 flex flex-col items-center justify-between min-h-[120px] ${
+                className={`step flex-1 flex flex-col items-center ${
                   [
                     "Đã thanh toán",
                     "Đã xác nhận",
@@ -199,7 +345,7 @@ function PurchaseHistory() {
 
               {/* Step 4 - Đã xác nhận */}
               <div
-                className={`step w-1/6 flex flex-col items-center justify-between min-h-[120px] ${
+                className={`step flex-1 flex flex-col items-center ${
                   ["Đã xác nhận", "Đang giao hàng", "Đã giao hàng"].includes(
                     selectedOrder.status
                   )
@@ -215,7 +361,7 @@ function PurchaseHistory() {
 
               {/* Step 5 - Đang giao hàng */}
               <div
-                className={`step w-1/6 flex flex-col items-center justify-between min-h-[120px] ${
+                className={`step flex-1 flex flex-col items-center ${
                   ["Đang giao hàng", "Đã giao hàng"].includes(
                     selectedOrder.status
                   )
@@ -231,7 +377,7 @@ function PurchaseHistory() {
 
               {/* Step 6 - Đã giao hàng */}
               <div
-                className={`step w-1/6 flex flex-col items-center justify-between min-h-[120px] ${
+                className={`step flex-1 flex flex-col items-center ${
                   selectedOrder.status === "Đã giao hàng"
                     ? "step-primary text-teal-500"
                     : "step-inactive text-gray-400 dark:text-gray-500"
@@ -284,7 +430,7 @@ function PurchaseHistory() {
                 <div className="flex justify-between">
                   <p className="text-lg font-semibold">Tổng tiền:</p>
                   <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {formatMoney(selectedOrder.totalMoney)} đ
+                    {formatMoney(selectedOrder.totalProductPrice)} đ
                   </p>
                 </div>
 
@@ -305,12 +451,7 @@ function PurchaseHistory() {
                 <div className="flex justify-between border-t pt-4">
                   <p className="text-lg font-semibold">Tổng thanh toán:</p>
                   <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {formatMoney(
-                      selectedOrder.totalMoney +
-                        selectedOrder.shipFee -
-                        selectedOrder.voucherDiscount
-                    )}{" "}
-                    đ
+                    {formatMoney(selectedOrder.totalMoney)} đ
                   </p>
                 </div>
               </div>
