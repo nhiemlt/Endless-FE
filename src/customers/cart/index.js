@@ -74,7 +74,6 @@ const Cart = () => {
 
       try {
         await CartService.updateCartQuantity(updatedProduct);
-        window.location.reload();
       } catch (error) {
         dispatch(showNotification({ message: "Lỗi khi cập nhật số lượng", status: 0 }));
         // Khôi phục lại số lượng gốc nếu có lỗi
@@ -120,7 +119,6 @@ const Cart = () => {
         delete newSelected[productVersionID];
         return newSelected;
       });
-      window.location.reload();
     } catch (error) {
       console.error("Error removing item:", error);
     }
