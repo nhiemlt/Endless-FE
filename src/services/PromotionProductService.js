@@ -1,27 +1,51 @@
 import axios from 'axios';
+import constants from '../utils/globalConstantUtil'; // Import constants
 
-
-const BASE_URL = 'http://localhost:8080/api/promotion-products';
+// Sử dụng constants để lấy URL API
+const API_URL = `${constants.API_BASE_URL}/api/promotion-products`; // Thay đổi URL bằng constants
 
 const PromotionProductService = {
-    //Lấy danh sách
+    // Lấy danh sách các sản phẩm khuyến mãi
     getPromotionProducts: async () => {
-        const response = await axios.get(BASE_URL);
-        return response.data;
+        try {
+            const response = await axios.get(API_URL);
+            return response.data;
+        } catch (error) {
+            console.error("Error fetching promotion products:", error);
+            throw new Error('Failed to fetch promotion products');
+        }
     },
 
+    // Tạo mới sản phẩm khuyến mãi
     createPromotionProduct: async (product) => {
-        const response = await axios.post(BASE_URL, product);
-        return response.data;
+        try {
+            const response = await axios.post(API_URL, product);
+            return response.data;
+        } catch (error) {
+            console.error("Error creating promotion product:", error);
+            throw new Error('Failed to create promotion product');
+        }
     },
 
+    // Cập nhật sản phẩm khuyến mãi
     updatePromotionProduct: async (id, product) => {
-        const response = await axios.put(`${BASE_URL}/${id}`, product);
-        return response.data;
+        try {
+            const response = await axios.put(`${API_URL}/${id}`, product);
+            return response.data;
+        } catch (error) {
+            console.error(`Error updating promotion product with ID: ${id}`, error);
+            throw new Error('Failed to update promotion product');
+        }
     },
 
+    // Xóa sản phẩm khuyến mãi
     deletePromotionProduct: async (id) => {
-        await axios.delete(`${BASE_URL}/${id}`);
+        try {
+            await axios.delete(`${API_URL}/${id}`);
+        } catch (error) {
+            console.error(`Error deleting promotion product with ID: ${id}`, error);
+            throw new Error('Failed to delete promotion product');
+        }
     }
 };
 
