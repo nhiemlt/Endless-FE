@@ -40,7 +40,6 @@ function Product() {
     try {
       const result = await CartService.addToCart(cartModel); // Gọi API thêm sản phẩm vào giỏ hàng
       dispatch(showNotification({ message: "Sản phẩm đã được thêm vào giỏ hàng.", status: 1 })); // Hiển thị thông báo thành công
-      window.location.reload(); // Tải lại trang
     } catch (error) {
       dispatch(showNotification({ message: "Lỗi khi thêm vào giỏ hàng.", status: 0 })); // Hiển thị thông báo lỗi
       console.error("Lỗi khi thêm vào giỏ hàng:", error); // In lỗi nếu có
@@ -48,9 +47,12 @@ function Product() {
   };
 
   // Hàm xử lý khi hình ảnh sản phẩm được chọn
-  const handleImageClick = (productId) => {
-    navigate(`/product-detail/${productId}`); // Chuyển đến trang chi tiết sản phẩm theo ID
+  const handleImageClick = (product) => {
+    navigate(`/product-detail/${product.productVersionID}`, { state: { product } });
+    console.log(product);
   };
+
+
   return (
     <div className="flex">
       {/* Phần lọc và tìm kiếm */}
@@ -187,17 +189,20 @@ function Product() {
 
       {/* Phần hiển thị sản phẩm */}
       <div className="flex-1 p-4">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
           {products.map((product) => (
             <div key={product.productVersionID} className="group relative block overflow-hidden">
               <img
                 src={product.image}
-                className="h-48 w-full object-cover transition duration-500 group-hover:scale-105"
-                onClick={() => handleImageClick(product.productVersionID)} // Thêm sự kiện onClick cho hình ảnh
-                alt={product.product.name} // Thêm thuộc tính alt cho hình ảnh
+                className="h-30 w-full object-cover transition duration-500 group-hover:scale-105"
+                onClick={() => handleImageClick(product)}
+                alt={product.product.name}
               />
+              <p className="absolute top-2 left-2 bg-red-600 text-white font-semibold text-xs px-2 py-1 rounded-md shadow-md">
+                - {product.discountPercentage}%
+              </p>
               <div className="relative border border-gray-100 bg-white p-4">
-                <p className="mt-2 text-lg text-gray-900 h-20">
+                <p className="mt-1 text-sm text-gray-900 h-20">
                   <b>{product.product.name} | {product.versionName}</b>
                 </p>
 
@@ -215,7 +220,7 @@ function Product() {
                         <path d="M20.924 7.625a1.523 1.523 0 0 0-1.238-1.044l-5.051-.734-2.259-4.577a1.534 1.534 0 0 0-2.752 0L7.365 5.847l-5.051.734A1.535 1.535 0 0 0 1.463 9.2l3.656 3.563-.863 5.031a1.532 1.532 0 0 0 2.226 1.616L11 17.033l4.518 2.375a1.534 1.534 0 0 0 2.226-1.617l-.863-5.03L20.537 9.2a1.523 1.523 0 0 0 .387-1.575Z" />
                       </svg>
                       <p className="ms-2 text-sm font-bold text-gray-900 text-dark">
-                        {product.averageRating.toFixed(2)}
+                        {product.averageRating.toFixed(1)}/5
                       </p>
                     </>
                   ) : (
@@ -224,11 +229,11 @@ function Product() {
                     </p>
                   )}
                 </div>
-                <span className="mt-1 text-sm text-gray-500">
+                <span className="mt-1 text-xs text-gray-500">
                   <s>{formatCurrency(product.price)}</s>
                 </span>{" "}
                 <span
-                  className="mt-1 text-lg text-red-600"
+                  className="mt-1 text-sm text-red-600"
                   style={{
                     animation: "blink 1s linear infinite",
                   }}
@@ -258,7 +263,7 @@ function Product() {
                     handleAddToCart(product);
                   }}
                 >
-                  <button type="submit" className="w-full rounded btn btn-warning p-2 text-sm">
+                  <button type="submit" className="w-full rounded btn btn-warning p-2 text-xs">
                     Thêm vào giỏ hàng
                   </button>
                 </form>

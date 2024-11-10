@@ -39,10 +39,15 @@ function Transactions() {
             if (response.data.content.length > 0) {
                 const orderDates = response.data.content.map(order => new Date(order.orderDate));
                 const minDate = new Date(Math.min(...orderDates));
-                const maxDate = new Date(Math.max(...orderDates));
+                minDate.setDate(minDate.getDate() - 1); // Cộng 1 ngày vào minDate
 
-                setStartDate(minDate.toISOString().slice(0, 10)); // Đặt giá trị ngày bắt đầu
-                setEndDate(maxDate.toISOString().slice(0, 10)); // Đặt giá trị ngày kết thúc
+                const maxDate = new Date(Math.max(...orderDates));
+                maxDate.setDate(maxDate.getDate() + 1); // Cộng 1 ngày vào maxDate
+                maxDate.setHours(23, 59, 59, 999);     // Đặt thời gian maxDate thành 23:59:59.999
+
+                // Đặt giá trị ngày bắt đầu và ngày kết thúc
+                setStartDate(minDate.toISOString().slice(0, 10));  // Định dạng YYYY-MM-DD
+                setEndDate(maxDate.toISOString().slice(0, 10));
             }
         } catch (error) {
             console.error("Error fetching orders:", error);
@@ -55,7 +60,8 @@ function Transactions() {
             const orderDate = new Date(order.orderDate);
             const isInRange =
                 (!startDate || orderDate >= new Date(startDate)) &&
-                (!endDate || orderDate <= new Date(endDate));
+                (!endDate || (new Date(endDate).setHours(23, 59, 59, 999), orderDate <= new Date(endDate)));
+
 
             const matchesSearch = order.customer.fullname.toLowerCase().includes(searchText.toLowerCase()) ||
                 order.orderID.toString().includes(searchText);
@@ -165,7 +171,7 @@ function Transactions() {
                             <SearchBar searchText={searchText} styleClass="w-full md:w-50" setSearchText={applySearch} />
                         </div>
                         {/* Các thành phần bên phải */}
-                        <div className="flex flex-wrap items-center space-x-2">
+                        <div className="flex items-center justify-end space-x-4 flex-nowrap">
                             {/* Tiêu đề cho input ngày bắt đầu */}
                             <div className="flex items-center space-x-2">
                                 <label htmlFor="startDate" className="text-sm font-medium">Thời gian:</label>
@@ -255,10 +261,10 @@ function Transactions() {
                                     <td className="hidden md:table-cell p-2">
                                         <span
                                             className={`badge badge-md ${order.status === "Chờ xác nhận"
-                                                    ? "bg-yellow-500"
-                                                    : order.status === "Đã thanh toán"
-                                                        ? "bg-pink-500"
-                                                        : order.status === "Đã xác nhận"
+                                                ? "bg-yellow-500"
+                                                : order.status === "Đã thanh toán"
+                                                    ? "bg-pink-500"
+                                                    : order.status === "Đã xác nhận"
                                                         ? "bg-green-500"
                                                         : order.status === "Đang giao hàng"
                                                             ? "bg-blue-700"
@@ -282,7 +288,7 @@ function Transactions() {
                                             )}
                                             {order.status === 'Đã xác nhận' && (
                                                 <TruckIcon className="w-5 cursor-pointer text-blue-800" onClick={() => handleMarkOrderAsShipping(order)}>Vận chuyển</TruckIcon>
-                                            )}  
+                                            )}
                                             {order.status === 'Đã thanh toán' && (
                                                 <TruckIcon className="w-5 cursor-pointer text-blue-800" onClick={() => handleMarkOrderAsShipping(order)}>Vận chuyển</TruckIcon>
                                             )}
