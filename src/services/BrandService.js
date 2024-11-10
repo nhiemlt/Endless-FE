@@ -1,6 +1,9 @@
+// src/services/brandService.js
 import axios from 'axios';
+import constants from '../utils/globalConstantUtil'; // Import constants
 
-const BASE_URL = 'http://localhost:8080/api/brands';
+// Sử dụng constants để lấy URL API
+const BASE_URL = `${constants.API_BASE_URL}/api/brands`; // Thay đổi URL bằng constants
 
 const BrandService = {
 
@@ -10,7 +13,6 @@ const BrandService = {
             const response = await axios.get(BASE_URL, { params });
             return response.data; // Giả sử API trả về { content: [...], totalPages: ... }
         } catch (error) {
-            // Xử lý lỗi nếu cần
             console.error('Error fetching brands:', error);
             throw error;
         }
@@ -18,27 +20,46 @@ const BrandService = {
 
     // Tạo thương hiệu mới
     createBrand: async (brandData) => {
-        const response = await axios.post(BASE_URL, brandData);
-        return response.data;
+        try {
+            const response = await axios.post(BASE_URL, brandData);
+            return response.data;
+        } catch (error) {
+            console.error('Error creating brand:', error);
+            throw error;
+        }
     },
 
     // Cập nhật thương hiệu
     updateBrand: async (id, brandData) => {
-        const response = await axios.put(`${BASE_URL}/${id}`, brandData);
-        return response.data;
+        try {
+            const response = await axios.put(`${BASE_URL}/${id}`, brandData);
+            return response.data;
+        } catch (error) {
+            console.error('Error updating brand:', error);
+            throw error;
+        }
     },
-
 
     // Xóa thương hiệu theo ID
     deleteBrand: async (id) => {
-        await axios.delete(`${BASE_URL}/${id}`);
+        try {
+            await axios.delete(`${BASE_URL}/${id}`);
+        } catch (error) {
+            console.error('Error deleting brand:', error);
+            throw error;
+        }
     },
 
+    // Lấy thông tin thương hiệu theo ID
     getBrandById: async (id) => {
-        const response = await axios.get(`${BASE_URL}/${id}`);
-        return response.data;
+        try {
+            const response = await axios.get(`${BASE_URL}/${id}`);
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching brand by id:', error);
+            throw error;
+        }
     },
-
 
 };
 

@@ -1,6 +1,9 @@
+// src/services/productService.js
 import axios from 'axios';
+import constants from '../utils/globalConstantUtil'; // Import constants
 
-const BASE_URL = 'http://localhost:8080/api/products';
+// Sử dụng constants để lấy URL API
+const BASE_URL = `${constants.API_BASE_URL}/api/products`; // Thay đổi URL bằng constants
 
 const ProductService = {
     // Lấy danh sách sản phẩm hoặc thông tin chi tiết theo ID
@@ -17,15 +20,25 @@ const ProductService = {
 
     // Phương thức để lấy danh sách danh mục
     getCategories: async () => {
-        const response = await axios.get('http://localhost:8080/api/categories'); // Thay đổi URL cho phù hợp với API của bạn
-        return response.data.content;
-    },
-    // Phương thức để lấy danh sách thương hiệu
-    getBrands: async () => {
-        const response = await axios.get('http://localhost:8080/api/brands'); // Thay đổi URL cho phù hợp với API của bạn
-        return response.data.content;
+        try {
+            const response = await axios.get(`${constants.API_BASE_URL}/api/categories`); // Thay đổi URL
+            return response.data.content;
+        } catch (error) {
+            throw error.response ? error.response.data : error.message;
+        }
     },
 
+    // Phương thức để lấy danh sách thương hiệu
+    getBrands: async () => {
+        try {
+            const response = await axios.get(`${constants.API_BASE_URL}/api/brands`); // Thay đổi URL
+            return response.data.content;
+        } catch (error) {
+            throw error.response ? error.response.data : error.message;
+        }
+    },
+
+    // Lấy thông tin sản phẩm theo ID
     getProductById: async (id) => {
         try {
             const response = await axios.get(`${BASE_URL}/${id}`);
@@ -35,12 +48,13 @@ const ProductService = {
         }
     },
 
+    // Thêm sản phẩm mới
     addProduct: async (productModel) => {
         try {
             const response = await axios.post(BASE_URL, productModel);
             return response.data; // Trả về sản phẩm mới tạo
         } catch (error) {
-            console.error('Error adding product:', error); // In ra thông báo lỗi chi tiết
+            console.error('Error adding product:', error);
             throw error.response ? error.response.data : error.message;
         }
     },

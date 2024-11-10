@@ -1,6 +1,9 @@
+// src/services/categoryService.js
 import axios from 'axios';
+import constants from '../utils/globalConstantUtil'; // Import constants
 
-const BASE_URL = 'http://localhost:8080/api/categories';
+// Sử dụng constants để lấy URL API
+const BASE_URL = `${constants.API_BASE_URL}/api/categories`; // Thay đổi URL bằng constants
 
 const CategoryService = {
     // Lấy danh sách danh mục với phân trang và tìm kiếm
@@ -9,12 +12,12 @@ const CategoryService = {
             const response = await axios.get(BASE_URL, { params });
             return response.data; // Giả sử API trả về { content: [...], totalPages: ... }
         } catch (error) {
-            // Xử lý lỗi nếu cần
             console.error('Error fetching categories:', error);
             throw error;
         }
     },
 
+    // Tạo danh mục mới
     createCategory: async (categoryData) => {
         try {
             const response = await axios.post(BASE_URL, categoryData);
@@ -27,22 +30,36 @@ const CategoryService = {
         }
     },
 
-
     // Cập nhật danh mục
     updateCategory: async (id, categoryData) => {
-        const response = await axios.put(`${BASE_URL}/${id}`, categoryData);
-        return response.data;
+        try {
+            const response = await axios.put(`${BASE_URL}/${id}`, categoryData);
+            return response.data;
+        } catch (error) {
+            console.error('Error updating category:', error);
+            throw error;
+        }
     },
 
     // Xóa danh mục theo ID
     deleteCategory: async (id) => {
-        await axios.delete(`${BASE_URL}/${id}`);
+        try {
+            await axios.delete(`${BASE_URL}/${id}`);
+        } catch (error) {
+            console.error('Error deleting category:', error);
+            throw error;
+        }
     },
 
     // Lấy danh mục theo ID
     getCategoryById: async (id) => {
-        const response = await axios.get(`${BASE_URL}/${id}`);
-        return response.data;
+        try {
+            const response = await axios.get(`${BASE_URL}/${id}`);
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching category by id:', error);
+            throw error;
+        }
     },
 };
 

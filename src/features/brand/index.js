@@ -170,11 +170,15 @@ function BrandPage() {
       </TitleCard>
 
       {/* Hiển thị modal thêm */}
-      {isAddModalOpen && <AddBrandModal onClose={() =>
-        setIsAddModalOpen(false)} onBrandAdded={handleBrandAdded} />}
+      {
+        isAddModalOpen && <AddBrandModal onClose={() =>
+          setIsAddModalOpen(false)} onBrandAdded={handleBrandAdded} />
+      }
       {/* Hiển thị modal cập nhật */}
-      {isEditModalOpen && <EditBrandModal brand={editBrand} onClose={() =>
-        setIsEditModalOpen(false)} onBrandUpdated={handleBrandUpdated} />}
+      {
+        isEditModalOpen && <EditBrandModal brand={editBrand} onClose={() =>
+          setIsEditModalOpen(false)} onBrandUpdated={handleBrandUpdated} />
+      }
     </div>
   );
 }

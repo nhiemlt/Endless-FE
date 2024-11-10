@@ -1,7 +1,9 @@
 // src/services/attributeService.js
 import axios from 'axios';
+import constants from '../utils/globalConstantUtil'; // Import constants
 
-const API_URL = 'http://localhost:8080/api/attributes'; // Thay đổi URL nếu cần
+// Sử dụng constants để lấy URL API
+const API_URL = `${constants.API_BASE_URL}/api/attributes`; // Thay đổi URL bằng constants
 
 const attributeService = {
     // Lấy tất cả thuộc tính với các tham số lọc, tìm kiếm, và phân trang
@@ -18,9 +20,6 @@ const attributeService = {
         }
     },
 
-
-
-
     // Thêm mới thuộc tính
     createAttribute: async (attributeDTO) => {
         try {
@@ -28,10 +27,9 @@ const attributeService = {
             return response.data;
         } catch (error) {
             console.error("Error in createAttribute:", error.response ? error.response.data : error.message);
-            throw new Error(error.response ? error.response.data.message : 'Failed to create attribute'); // Trả về thông điệp lỗi rõ ràng
+            throw new Error(error.response ? error.response.data.message : 'Failed to create attribute');
         }
     },
-
 
     // Cập nhật thuộc tính
     updateAttribute: async (id, attributeDTO) => {

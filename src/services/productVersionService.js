@@ -1,6 +1,7 @@
 import axios from 'axios';
+import constants from '../utils/globalConstantUtil'; // Adjust the path to your file structure
 
-const BASE_URL = 'http://localhost:8080/api/product-versions';
+const BASE_URL = constants.API_BASE_URL + '/api/product-versions';
 
 const ProductVersionService = {
     // Lấy danh sách tất cả các phiên bản sản phẩm
