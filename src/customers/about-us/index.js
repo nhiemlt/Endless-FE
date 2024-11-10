@@ -3,13 +3,13 @@ import { Link } from "react-router-dom";
 
 function AboutUs() {
   return (
-    <div className="bg-base-200 min-h-screen">
-      <div className="bg-white dark:bg-gray-800 rounded-lg min-h-screen">
+    <div className="bg-base-200">
+      <div className="bg-white dark:bg-gray-800 rounded-lg">
         {" "}
         {/* Bo góc và đổi màu nền tối */}
         {/* Phần Giới thiệu */}
-        <div className="bg-base-200 py-12 px-8">
-          <h2 className="text-4xl font-bold text-blue-600 text-center mb-8">
+        <div className=" py-12 px-8">
+          <h2 className=" text-4xl font-bold text-blue-600 text-center mb-8">
             Về Chúng Tôi
           </h2>
           <div className="flex flex-col md:flex-row gap-8">
