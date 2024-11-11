@@ -48,14 +48,17 @@ function ProductVersionPage() {
     fetchProductVersions();
   }, []);
 
+  const handleEditProductVersion = (version) => {
+    setSelectedVersion(version); // Lưu phiên bản sản phẩm cần chỉnh sửa
+    setIsEditModalOpen(true); // Mở modal chỉnh sửa
+  };
+
+
   const handleAddProductVersion = () => {
     setIsAddModalOpen(true);
   };
 
-  const handleEditProductVersion = () => {
 
-    setIsEditModalOpen(true);
-  };
 
   const handleCloseAddModal = () => {
     setIsAddModalOpen(false);
@@ -256,6 +259,13 @@ function ProductVersionPage() {
               onClose={handleCloseAttributesModal}
             />
           )}
+          {isEditModalOpen && (
+            <EditProductVersionModal
+              version={selectedVersion} // Truyền phiên bản sản phẩm cần chỉnh sửa vào modal
+              onClose={handleCloseEditModal} // Hàm đóng modal
+            />
+          )}
+
 
         </div>
       </div>
