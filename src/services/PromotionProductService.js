@@ -5,47 +5,56 @@ import constants from '../utils/globalConstantUtil'; // Import constants
 const API_URL = `${constants.API_BASE_URL}/api/promotion-products`; // Thay đổi URL bằng constants
 
 const PromotionProductService = {
-    // Lấy danh sách các sản phẩm khuyến mãi
-    getPromotionProducts: async () => {
-        try {
-            const response = await axios.get(API_URL);
-            return response.data;
-        } catch (error) {
-            console.error("Error fetching promotion products:", error);
-            throw new Error('Failed to fetch promotion products');
+    // Lấy danh sách các sản phẩm khuyến mãi với phân trang và lọc theo percentDiscount
+    getAllPromotionProducts: (page = 0, size = 10, percentDiscount = null) => {
+        let url = `${API_URL}?page=${page}&size=${size}`;
+
+        // Nếu có percentDiscount thì thêm vào query params
+        if (percentDiscount) {
+            url += `&percentDiscount=${percentDiscount}`;
         }
+
+        return axios.get(url)
+            .then(response => response.data)
+            .catch(error => {
+                console.error('There was an error fetching the promotion products!', error);
+                throw error;
+            });
     },
 
-    // Tạo mới sản phẩm khuyến mãi
-    createPromotionProduct: async (product) => {
-        try {
-            const response = await axios.post(API_URL, product);
-            return response.data;
-        } catch (error) {
-            console.error("Error creating promotion product:", error);
-            throw new Error('Failed to create promotion product');
-        }
+    // Thêm một PromotionProduct mới
+    createPromotionProduct: (promotionDetailID, productVersionIDs) => {
+        const requestBody = {
+            promotionDetailID,
+            productVersionIDs
+        };
+
+        return axios.post(API_URL, requestBody)
+            .then(response => response.data)
+            .catch(error => {
+                console.error('There was an error creating the promotion product!', error);
+                throw error;
+            });
     },
 
-    // Cập nhật sản phẩm khuyến mãi
-    updatePromotionProduct: async (id, product) => {
-        try {
-            const response = await axios.put(`${API_URL}/${id}`, product);
-            return response.data;
-        } catch (error) {
-            console.error(`Error updating promotion product with ID: ${id}`, error);
-            throw new Error('Failed to update promotion product');
-        }
+    // Cập nhật PromotionProduct theo ID
+    updatePromotionProduct: (id, promotionProductModel) => {
+        return axios.put(`${API_URL}/${id}`, promotionProductModel)
+            .then(response => response.data)
+            .catch(error => {
+                console.error('There was an error updating the promotion product!', error);
+                throw error;
+            });
     },
 
-    // Xóa sản phẩm khuyến mãi
-    deletePromotionProduct: async (id) => {
-        try {
-            await axios.delete(`${API_URL}/${id}`);
-        } catch (error) {
-            console.error(`Error deleting promotion product with ID: ${id}`, error);
-            throw new Error('Failed to delete promotion product');
-        }
+    // Xóa PromotionProduct theo ID
+    deletePromotionProduct: (id) => {
+        return axios.delete(`${API_URL}/${id}`)
+            .then(() => { })
+            .catch(error => {
+                console.error('There was an error deleting the promotion product!', error);
+                throw error;
+            });
     }
 };
 
