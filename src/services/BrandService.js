@@ -1,57 +1,66 @@
+// src/services/brandService.js
 import axios from 'axios';
-import convertImageToBase64 from '../utils/convertImageToBase64';
-import constants from '../utils/globalConstantUtil';
+import constants from '../utils/globalConstantUtil'; // Import constants
 
-
-
-const BASE_URL = 'http://localhost:8080/api/brands';
+// Sử dụng constants để lấy URL API
+const BASE_URL = `${constants.API_BASE_URL}/api/brands`; // Thay đổi URL bằng constants
 
 const BrandService = {
-    // Lấy danh sách thương hiệu
-    getBrands: async () => {
-        const response = await axios.get(`${constants.API_BASE_URL}/api/brands`);
-        return response.data;
-    },
 
-    createBrand: async (brand, file) => {
+    // Lấy danh sách thương hiệu với phân trang và tìm kiếm
+    getBrands: async (params) => {
         try {
-            // Kiểm tra xem file có phải là một đối tượng File hay không
-            if (!(file instanceof File)) {
-                throw new Error('Invalid file: Expected a File object.');
-            }
-
-            const base64Image = await convertImageToBase64.convertImageToBase64(file);
-            const newBrand = { ...brand, logo: base64Image }; // Gán chuỗi Base64 cho trường 'logo'
-
-            const response = await axios.post(BASE_URL, newBrand);
-            return response.data;
+            const response = await axios.get(BASE_URL, { params });
+            return response.data; // Giả sử API trả về { content: [...], totalPages: ... }
         } catch (error) {
-            console.error('Lỗi khi tạo thương hiệu:', error);
+            console.error('Error fetching brands:', error);
             throw error;
         }
     },
 
-
-    updateBrand: async (id, brand, file) => {
+    // Tạo thương hiệu mới
+    createBrand: async (brandData) => {
         try {
-            const base64Image = await convertImageToBase64.convertImageToBase64(file);
-            const updatedBrand = { ...brand, logo: base64Image }; // Gán chuỗi Base64 cho trường 'logo'
-
-            const response = await axios.put(`${BASE_URL}/${id}`, updatedBrand);
+            const response = await axios.post(BASE_URL, brandData);
             return response.data;
         } catch (error) {
-            console.error('Lỗi khi cập nhật thương hiệu:', error);
+            console.error('Error creating brand:', error);
             throw error;
         }
     },
 
+    // Cập nhật thương hiệu
+    updateBrand: async (id, brandData) => {
+        try {
+            const response = await axios.put(`${BASE_URL}/${id}`, brandData);
+            return response.data;
+        } catch (error) {
+            console.error('Error updating brand:', error);
+            throw error;
+        }
+    },
+
+    // Xóa thương hiệu theo ID
     deleteBrand: async (id) => {
-        await axios.delete(`${BASE_URL}/${id}`);
-    }
+        try {
+            await axios.delete(`${BASE_URL}/${id}`);
+        } catch (error) {
+            console.error('Error deleting brand:', error);
+            throw error;
+        }
+    },
+
+    // Lấy thông tin thương hiệu theo ID
+    getBrandById: async (id) => {
+        try {
+            const response = await axios.get(`${BASE_URL}/${id}`);
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching brand by id:', error);
+            throw error;
+        }
+    },
+
 };
-
-
-
-
 
 export default BrandService;
