@@ -19,6 +19,20 @@ const UpdateAttributeModal = ({ onClose, attribute, onAttributeUpdated }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        // Kiểm tra trùng lặp trong danh sách values
+        const duplicateValue = values.find((value, index) =>
+            values.findIndex(v => v.attributeValue === value.attributeValue) !== index
+        );
+
+        if (duplicateValue) {
+            // Nếu có trùng, hiển thị thông báo lỗi và không tiếp tục
+            dispatch(showNotification({
+                message: `Giá trị "${duplicateValue.attributeValue}" đã tồn tại. Vui lòng nhập giá trị khác.`,
+                status: 0
+            }));
+            return;
+        }
+
         try {
             const updatedAttribute = { ...attribute, attributeName, attributeValues: values }; // Cập nhật đúng giá trị
             await attributeService.updateAttribute(attribute.attributeID, updatedAttribute);

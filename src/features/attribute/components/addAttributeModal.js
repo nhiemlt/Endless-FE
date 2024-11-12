@@ -17,6 +17,15 @@ const AddAttributeModal = ({ onClose, onAttributeAdded }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // Kiểm tra trùng lặp trong danh sách values
+        const duplicateValue = values.find((value, index) => values.indexOf(value) !== index);
+
+        if (duplicateValue) {
+            // Nếu có trùng, hiển thị thông báo lỗi và không tiếp tục
+            dispatch(showNotification({ message: `Giá trị "${duplicateValue}" đã tồn tại. Vui lòng nhập giá trị khác.`, status: 0 }));
+            return;
+        }
         try {
             const newAttribute = {
                 attributeName,
@@ -29,8 +38,13 @@ const AddAttributeModal = ({ onClose, onAttributeAdded }) => {
             resetForm();
             onClose();
         } catch (error) {
+            if (error.message.includes("Thuộc tính đã tồn tại")) {
+                dispatch(showNotification({ message: 'Thuộc tính đã tồn tại, vui lòng thử tên khác.', status: 0 }));
+                dispatch(showNotification({ message: 'Thêm thuộc tính không thành công! Lỗi: ' + error.message, status: 0 }));
+            } else {
+                dispatch(showNotification({ message: 'Thêm thuộc tính không thành công! Lỗi: ' + error.message, status: 0 }));
+            }
             console.error("Error creating attribute:", error);
-            dispatch(showNotification({ message: 'Thêm thuộc tính không thành công! Lỗi: ' + error.message, status: 0 }));
         }
     };
 
