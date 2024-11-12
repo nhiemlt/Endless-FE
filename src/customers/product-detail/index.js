@@ -3,11 +3,18 @@ import TitleCard from '../../components/Cards/TitleCard';
 import React, { useEffect, useState } from 'react';
 import ratingService from "../../services/ratingService";
 import { useLocation } from 'react-router-dom';
+import { showNotification } from "../../features/common/headerSlice";
+import { useDispatch } from "react-redux";
+import CartService from "../../services/CartService";
+import { useNavigate } from 'react-router-dom';
 
 function ProductDetail() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const location = useLocation();
-  const { product } = location.state || {};
 
+  const { product } = location.state || {};
+  const [selectedProduct, setSelectedProduct] = useState(null);
   const [ratings, setRatings] = useState([]);  // State to store all the ratings
   const [selectedTab, setSelectedTab] = useState(5); // Default to 5 stars tab
 
@@ -43,17 +50,38 @@ function ProductDetail() {
     return ratingsByStar[stars] ? ratingsByStar[stars].length : 0;
   };
 
+  //Hàm thêm sản phẩm vào giỏ hàng
+  const handleAddToCart = async (product) => {
+    const cartModel = {
+      productVersionID: product.productVersionID, // ID phiên bản sản phẩm
+      quantity: 1, // Số lượng mặc định là 1
+    };
+
+    try {
+      const result = await CartService.addToCart(cartModel); // Gọi API thêm sản phẩm vào giỏ hàng
+      dispatch(showNotification({ message: "Sản phẩm đã được thêm vào giỏ hàng.", status: 1 })); // Hiển thị thông báo thành công
+    } catch (error) {
+      dispatch(showNotification({ message: "Lỗi khi thêm vào giỏ hàng.", status: 0 })); // Hiển thị thông báo lỗi
+      console.error("Lỗi khi thêm vào giỏ hàng:", error); // In lỗi nếu có
+    }
+  };
+
+  // Hàm xử lý khi nhấn nút "Mua"
+  const handleBuyNow = (product) => {
+    setSelectedProduct(product); // Lưu sản phẩm vào trạng thái
+    navigate('/purchase', { state: { product } });  // Chuyển hướng và truyền thông tin sản phẩm
+  };
+
   return (
     <TitleCard>
       <div className="font-sans bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200">
         <div className="p-4 lg:max-w-7xl max-w-4xl mx-auto">
 
-
           {/* Phần sản phẩm */}
-          <div className="grid items-start grid-cols-1 lg:grid-cols-5 gap-12 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.3)] p-6 rounded-lg dark:shadow-[0_2px_10px_-3px_rgba(237,237,237,0.3)]">
-            <div className="lg:col-span-3 w-full lg:sticky top-0 text-center">
-              <div className="px-4 py-10 rounded-lg shadow-[0_2px_10px_-3px_rgba(6,81,237,0.3)] relative dark:shadow-[0_2px_10px_-3px_rgba(237,237,237,0.3)]">
-                <div className="relative w-3/4 mx-auto">
+          <div className="grid items-start grid-cols-1 lg:grid-cols-5 gap-12 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.3)] p-6 rounded-lg dark:bg-base-100">
+            <div className="lg:col-span-2 w-full lg:sticky top-0 text-center">
+              <div className="p-1 rounded-lg shadow-[0_2px_10px_-3px_rgba(6,81,237,0.3)] relative dark:shadow-[0_2px_10px_-3px_rgba(237,237,237,0.3)]">
+                <div className="relative">
                   <img
                     src={product?.image || "default-image-url"}
                     alt={product?.product?.name || "product"}
@@ -65,8 +93,8 @@ function ProductDetail() {
                 </div>
               </div>
             </div>
-            <div className="lg:col-span-2">
-              <h2 className="text-2xl font-extrabold text-gray-800 dark:text-gray-200">
+            <div className="lg:col-span-3">
+              <h2 className="text-2xl font-extrabold text-gray-900 dark:text-white">
                 {product?.product?.name} | {product?.versionName}
               </h2>
               <div className="flex space-x-2 mt-4">
@@ -106,28 +134,24 @@ function ProductDetail() {
                   </strike>
                 </p>
               </div>
-              <div className="flex gap-2 mt-8">
-                <button
-                  type="button"
-                  className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white text-sm font-semibold rounded"
-                >
-                  Mua
-                </button>
+              <p className="text-2xl font-extrabold text-gray-900 dark:text-white">
+                {product?.product?.description}
+              </p>
+              <div className="mt-8">
                 <button
                   type="button"
                   className="flex-1 px-4 py-2.5 border border-yellow-600 dark:bg-yellow-400 bg-transparent dark:hover:bg-yellow-500 text-gray-950 text-sm font-semibold rounded"
+                  onClick={() => handleAddToCart(product)} // Thêm sự kiện onClick để gọi hàm handleAddToCart
                 >
                   Thêm vào giỏ hàng
                 </button>
               </div>
-
-
             </div>
           </div>
 
 
           {/* Phần thuộc tính */}
-          <div className="mt-16 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.3)] p-6 dark:shadow-[0_2px_10px_-3px_rgba(237,237,237,0.3)] dark:bg-gray-700 dark:text-gray-200">
+          <div className="mt-16 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.3)] p-6 dark:bg-base-100 dark:text-gray-200">
             <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">Thông tin chi tiết</h3>
             <ul className="mt-4 space-y-6 text-gray-800 dark:text-gray-100">
               {product.versionAttributes.map((attribute, index) => (
@@ -140,7 +164,7 @@ function ProductDetail() {
           </div>
 
           {/* Phần đánh giá */}
-          <div className="mt-16 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.3)] p-6 dark:shadow-[0_2px_10px_-3px_rgba(237,237,237,0.3)] dark:bg-gray-700 dark:text-gray-200">
+          <div className="mt-16 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.3)] p-6 dark:bg-base-100 dark:text-gray-200">
             <div className="grid md:grid-cols-1 gap-12 mt-4 dark:text-gray-100 text-gray-800">
 
               <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 d-block">
