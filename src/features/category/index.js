@@ -6,8 +6,9 @@ import SearchBar from '../../components/Input/SearchBar';
 import CategoryService from '../../services/CategoryService';
 import TrashIcon from '@heroicons/react/24/outline/TrashIcon';
 import PencilIcon from '@heroicons/react/24/outline/PencilIcon';
-import AddCategoryModal from './components/AddCategoryModal'; // Nhập modal thêm danh mục
-import EditCategoryModal from './components/EditCategoryModal'; // Nhập modal chỉnh sửa danh mục
+import AddCategoryModal from './components/AddCategoryModal';
+import EditCategoryModal from './components/EditCategoryModal';
+import ConfirmDialog from './components/ConfirmDialog';
 
 function CategoryPage() {
   const dispatch = useDispatch();
@@ -21,10 +22,12 @@ function CategoryPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editCategory, setEditCategory] = useState(null);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [deleteCategoryId, setDeleteCategoryId] = useState(null);
 
   useEffect(() => {
     fetchCategories();
-  }, [currentPage, searchKeyword]); // Tải lại danh mục khi trang hoặc từ khóa tìm kiếm thay đổi
+  }, [currentPage, searchKeyword]);
 
   const fetchCategories = async () => {
     setLoading(true);
@@ -47,29 +50,37 @@ function CategoryPage() {
   const handleCategoryAdded = (newCategory) => {
     setCategories([...categories, newCategory]);
     setShowAddModal(false);
-    fetchCategories(); // Tải lại danh mục sau khi thêm
+    fetchCategories();
   };
 
   const handleCategoryUpdated = (updatedCategory) => {
     setCategories(categories.map(c => (c.categoryID === updatedCategory.categoryID ? updatedCategory : c)));
     setShowEditModal(false);
-    fetchCategories(); // Tải lại danh mục sau khi cập nhật
+    fetchCategories();
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = (id) => {
+    setDeleteCategoryId(id);
+    setShowConfirmDialog(true); // Hiển thị hộp thoại xác nhận
+  };
+
+  const confirmDelete = async () => {
     try {
-      await CategoryService.deleteCategory(id);
-      setCategories(categories.filter((category) => category.categoryID !== id));
+      await CategoryService.deleteCategory(deleteCategoryId);
+      setCategories(categories.filter((category) => category.categoryID !== deleteCategoryId));
       dispatch(showNotification({ message: 'Danh mục đã được xóa thành công!', status: 1 }));
     } catch (error) {
       console.error('Lỗi khi xóa danh mục:', error);
       dispatch(showNotification({ message: 'Xóa danh mục không thành công!', status: 0 }));
+    } finally {
+      setShowConfirmDialog(false);
+      setDeleteCategoryId(null);
     }
   };
 
   const applySearch = (keyword) => {
     setSearchKeyword(keyword);
-    setCurrentPage(0); // Reset về trang đầu khi tìm kiếm
+    setCurrentPage(0);
   };
 
   const handlePrevPage = () => {
@@ -136,7 +147,6 @@ function CategoryPage() {
         </table>
       </div>
 
-      {/* Điều hướng phân trang */}
       <div className="join mt-4 flex justify-center w-full">
         <button
           className="join-item btn btn-sm btn-primary"
@@ -163,20 +173,27 @@ function CategoryPage() {
         </button>
       </div>
 
-      {/* Modal thêm danh mục */}
       {showAddModal && (
         <AddCategoryModal
           onClose={() => setShowAddModal(false)}
-          onCategoryAdded={handleCategoryAdded} // Sử dụng tên nhất quán
+          onCategoryAdded={handleCategoryAdded}
         />
       )}
 
-      {/* Modal chỉnh sửa danh mục */}
       {showEditModal && (
         <EditCategoryModal
           onClose={() => setShowEditModal(false)}
           onCategoryUpdated={handleCategoryUpdated}
           category={editCategory}
+        />
+      )}
+
+      {/* Hộp thoại xác nhận xóa */}
+      {showConfirmDialog && (
+        <ConfirmDialog
+          message="Bạn có chắc chắn muốn xóa danh mục này không?"
+          onConfirm={confirmDelete}
+          onCancel={() => setShowConfirmDialog(false)}
         />
       )}
     </TitleCard>

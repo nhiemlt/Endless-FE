@@ -5,9 +5,10 @@ import TitleCard from '../../components/Cards/TitleCard';
 import PencilIcon from '@heroicons/react/24/outline/PencilIcon';
 import TrashIcon from '@heroicons/react/24/outline/TrashIcon';
 import attributeService from '../../services/attributeService';
-import AddAttributeModal from './components/addAttributeModal'; // Nhập modal thêm thuộc tính
-import UpdateAttributeModal from './components/updateAttributeModal'; // Nhập modal chỉnh sửa thuộc tính
+import AddAttributeModal from './components/addAttributeModal';
+import UpdateAttributeModal from './components/updateAttributeModal';
 import SearchBar from '../../components/Input/SearchBar';
+import ConfirmDialog from './components/ConfirmDialog'; // Import ConfirmDialog
 
 function AttributePage() {
   const dispatch = useDispatch();
@@ -17,11 +18,12 @@ function AttributePage() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedAttribute, setSelectedAttribute] = useState(null);
   const [searchKeyword, setSearchKeyword] = useState('');
+  const [confirmDialogVisible, setConfirmDialogVisible] = useState(false); // Hiển thị ConfirmDialog
+  const [attributeToDelete, setAttributeToDelete] = useState(null); // Lưu thuộc tính cần xóa
 
   const fetchAttributes = async () => {
     try {
       const response = await attributeService.getAttributes();
-      console.log(response.data); // Kiểm tra cấu trúc dữ liệu
       if (response.data && Array.isArray(response.data)) {
         setAttributesList(response.data);
       } else {
@@ -32,8 +34,6 @@ function AttributePage() {
       dispatch(showNotification({ message: 'Lỗi khi tải danh sách thuộc tính', status: 0 }));
     }
   };
-
-
 
   useEffect(() => {
     fetchAttributes();
@@ -51,17 +51,22 @@ function AttributePage() {
     );
   };
 
-  const handleDeleteAttribute = async (attributeID) => {
-    const confirmDelete = window.confirm("Bạn có chắc chắn muốn xóa thuộc tính này?");
-    if (confirmDelete) {
-      try {
-        await attributeService.deleteAttribute(attributeID);
-        setAttributesList((prev) => prev.filter(attr => attr.attributeID !== attributeID));
-        dispatch(showNotification({ message: 'Xóa thuộc tính thành công!', status: 1 }));
-      } catch (error) {
-        dispatch(showNotification({ message: 'Xóa thuộc tính không thành công!', status: 0 }));
-      }
+  const handleDeleteAttribute = async () => {
+    try {
+      await attributeService.deleteAttribute(attributeToDelete.attributeID);
+      setAttributesList((prev) => prev.filter(attr => attr.attributeID !== attributeToDelete.attributeID));
+      dispatch(showNotification({ message: 'Xóa thuộc tính thành công!', status: 1 }));
+      setConfirmDialogVisible(false);
+      setAttributeToDelete(null);
+    } catch (error) {
+      dispatch(showNotification({ message: 'Xóa thuộc tính không thành công!', status: 0 }));
     }
+  };
+
+  // Xác nhận xóa thuộc tính
+  const showConfirmDelete = (attribute) => {
+    setAttributeToDelete(attribute);
+    setConfirmDialogVisible(true);
   };
 
   // Hàm tìm kiếm thuộc tính
@@ -107,7 +112,6 @@ function AttributePage() {
                         : 'Không có giá trị'}
                     </td>
                     <td>
-
                       <div className="flex justify-center space-x-2">
                         <PencilIcon
                           className="w-5 h-5 cursor-pointer text-info"
@@ -118,7 +122,7 @@ function AttributePage() {
                         />
                         <TrashIcon
                           className="w-5 h-5 cursor-pointer text-error"
-                          onClick={() => handleDeleteAttribute(attribute.attributeID)}
+                          onClick={() => showConfirmDelete(attribute)} // Hiển thị ConfirmDialog khi nhấn xóa
                         />
                       </div>
                     </td>
@@ -130,8 +134,6 @@ function AttributePage() {
                 </tr>
               )}
             </tbody>
-
-
           </table>
         </div>
       </TitleCard>
@@ -148,6 +150,15 @@ function AttributePage() {
           onClose={() => setShowEditModal(false)}
           attribute={selectedAttribute}
           onAttributeUpdated={handleAttributeUpdated}
+        />
+      )}
+
+      {/* ConfirmDialog hiển thị khi confirmDialogVisible là true */}
+      {confirmDialogVisible && (
+        <ConfirmDialog
+          message="Bạn có chắc chắn muốn xóa thuộc tính này?"
+          onConfirm={handleDeleteAttribute} // Thực hiện xóa khi nhấn Confirm
+          onCancel={() => setConfirmDialogVisible(false)} // Đóng dialog khi nhấn Cancel
         />
       )}
     </div>

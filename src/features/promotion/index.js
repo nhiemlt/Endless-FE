@@ -160,8 +160,15 @@ function PromotionList() {
   }, [currentPage, size, searchKeyword]); // Lấy lại dữ liệu khi thay đổi trang, kích thước hoặc từ khóa tìm kiếm
 
 
+  console.log(promotionProducts);
 
+  promotionProducts.forEach((promotion) => {
+    promotion.productVersionIDs.forEach((version) => {
+      console.log(version.productVersionID);
+    });
+  });
 
+  console.log(promotionProducts.productVersionIDs?.productVersionID);
   return (
     <>
       {/* Tabs */}
@@ -345,8 +352,8 @@ function PromotionList() {
               <thead>
                 <tr>
                   <th>STT</th>
-                  <th>Promotion Detail ID </th>
-                  <th>Product Version ID</th>
+                  <th>Phần trăm khuyến mãi (%) </th>
+                  <th>Phiên bản sản phẩm</th>
                   <th className="text-center" colSpan={2}>Action</th>
                 </tr>
               </thead>
@@ -359,8 +366,12 @@ function PromotionList() {
                   promotionProducts.map((product, index) => (
                     <tr key={product.id || index}>
                       <td>{currentPage * size + index + 1}</td>
-                      <td>{product.promotionDetailID}</td>
-                      <td>{product.productVersionID}</td>
+                      <td>{product.percentDiscount}%</td>
+                      <td>
+                        {product.productVersionIDs?.map((version) => (
+                          <div key={version.productVersionID}>{version.versionName}</div>
+                        ))}
+                      </td>
                       <td className="text-center">
                         <div className="flex justify-center space-x-2">
                           <PencilIcon className="w-5 h-5 cursor-pointer text-info" />
