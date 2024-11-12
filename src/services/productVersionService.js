@@ -28,7 +28,7 @@ const ProductVersionService = {
             console.error("Error searching product versions:", error);
             throw error;
         }
-    },  
+    },
 
     // Lấy phiên bản sản phẩm theo ID
     getProductVersionById: async (id) => {
