@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom'
+import { Link } from 'react-router-dom';
+import { useRef } from "react";
+import { useDispatch } from "react-redux";
+import { useNavigate } from 'react-router-dom';
+import { showNotification } from "../../features/common/headerSlice";
 import CheckIcon from '@heroicons/react/24/outline/CheckIcon';
 import ForwardIcon from '@heroicons/react/24/outline/ForwardIcon';
 import GiftIcon from '@heroicons/react/24/outline/GiftIcon';
@@ -7,11 +11,65 @@ import BanknotesIcon from '@heroicons/react/24/outline/BanknotesIcon';
 import HandThumbUpIcon from '@heroicons/react/24/outline/HandThumbUpIcon';
 import PhoneArrowUpRightIcon from '@heroicons/react/24/outline/PhoneArrowUpRightIcon';
 import productVersionService from "../../services/productVersionService";
+import CartService from "../../services/CartService";
 
 
 function Home() {
 
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
   const [products, setProducts] = useState([]);
+  const productsSectionRef = useRef(null);
+
+  useEffect(() => {
+    // Lấy top sản phẩm bán chạy
+    const fetchTopSellingProducts = async () => {
+      try {
+        const data = await productVersionService.getTopSellingProductVersionsAllTime();
+        setProducts(data.content);  // Giả sử response là một mảng
+        console.log(data.content)
+      } catch (error) {
+        console.error("Error fetching top-selling products:", error);
+      }
+    };
+
+    fetchTopSellingProducts();
+  }, []);
+
+  const formatCurrency = (amount) => {
+    return amount.toLocaleString("vi-VN", {
+      style: "currency",
+      currency: "VND", // Định dạng tiền tệ theo VND
+    });
+  };
+
+  const handleAddToCart = async (product) => {
+    const cartModel = {
+      productVersionID: product.productVersionID, // ID phiên bản sản phẩm
+      quantity: 1, // Số lượng mặc định là 1
+    };
+
+    try {
+      const result = await CartService.addToCart(cartModel); // Gọi API thêm sản phẩm vào giỏ hàng
+      dispatch(showNotification({ message: "Sản phẩm đã được thêm vào giỏ hàng.", status: 1 })); // Hiển thị thông báo thành công
+    } catch (error) {
+      dispatch(showNotification({ message: "Lỗi khi thêm vào giỏ hàng.", status: 0 })); // Hiển thị thông báo lỗi
+      console.error("Lỗi khi thêm vào giỏ hàng:", error); // In lỗi nếu có
+    }
+  };
+
+  // Hàm xử lý khi hình ảnh sản phẩm được chọn
+  const handleImageClick = (product) => {
+    navigate(`/product-detail/${product.productVersionID}`, { state: { product } });
+    console.log(product);
+  };
+
+  const scrollToProducts = () => {
+    // Cuộn tới phần tử có ref 'productsSectionRef'
+    productsSectionRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
 
   return (
     <div>
@@ -21,27 +79,25 @@ function Home() {
           <div className="bg-white dark:bg-base-100 flex relative items-center overflow-hidden">
             <div className="container mx-auto px-6 flex relative py-16">
               <div className="sm:w-2/3 lg:w-2/5 flex flex-col relative">
-                <h4 className="font-bebas-neue uppercase text-5xl sm:text-5xl font-black flex flex-col leading-none dark:text-white text-gray-800">
+                <h4 className="font-bebas-neue uppercase text-5xl sm:text-5xl font-black flex flex-col leading-none dark:text-white text-gray-900">
                   Khám Phá
                   <span className="text-7xl sm:text-7xl">ENDLESS</span>
                 </h4>
-                <p className="text-sm sm:text-base text-gray-700 dark:text-white">
+                <p className="text-sm sm:text-base text-gray-900 dark:text-white">
                   Chào mừng bạn đến với ENDLESS – điểm đến lý tưởng cho những tín đồ yêu thích công nghệ!
                   Tại ENDLESS, chúng tôi cung cấp một loạt các sản phẩm điện tử chất lượng cao với mức giá hấp dẫn, giúp bạn dễ dàng chọn lựa và sở hữu những thiết bị công nghệ tiên tiến. Hãy khám phá các ưu đãi đặc biệt và trải nghiệm dịch vụ giao hàng nhanh chóng, an toàn.
                   Cảm ơn bạn đã lựa chọn ENDLESS – nơi mua sắm không giới hạn!
                 </p>
                 <div className="flex mt-8">
                   <a
-                    href="#"
+                    href="#products"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      scrollToProducts(); // Gọi hàm cuộn xuống
+                    }}
                     className="uppercase py-2 px-4 rounded-lg bg-pink-500 border-2 border-transparent text-white text-md mr-4 hover:bg-pink-400"
                   >
-                    Băt đầu ngay
-                  </a>
-                  <a
-                    href="#"
-                    className="uppercase py-2 px-4 rounded-lg bg-transparent border-2 border-pink-500 text-pink-500 dark:text-white hover:bg-pink-500 hover:text-white text-md"
-                  >
-                    Xem thêm
+                    Bắt đầu ngay
                   </a>
                 </div>
               </div>
@@ -56,13 +112,12 @@ function Home() {
           </div>
         </section>
 
-
-        <section className="p-5 mb-5 bg-white">
+        <section className="p-5 mb-5 dark:bg-base-100  bg-white">
           <div className="mx-auto max-w-screen-xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
             <div className="mx-auto max-w-3xl text-center">
-              <h2 className="text-3xl font-bold text-gray-900 sm:text-2xl">Được tin cậy bởi các doanh nghiệp thương mại điện tử</h2>
+              <h2 className="text-3xl font-bold dark:text-white text-gray-900 sm:text-2xl">Được tin cậy bởi các doanh nghiệp thương mại điện tử</h2>
 
-              <p className="mt-4 text-gray-500 sm:text-sm">
+              <p className="mt-4 dark:text-white text-gray-900 sm:text-sm">
                 ENDLESS tự hào cung cấp cho các doanh nghiệp thương mại điện tử những sản phẩm chất lượng, dịch vụ chăm sóc khách hàng tận tâm và các giải pháp công nghệ tiên tiến. Chúng tôi cam kết mang đến cho khách hàng một trải nghiệm mua sắm tuyệt vời, giúp họ phát triển mạnh mẽ trong thế giới số.
               </p>
             </div>
@@ -95,11 +150,11 @@ function Home() {
           </div>
         </section>
 
-        <section className="p-5 mb-5 bg-white">
+        <section className="p-5 mb-5 dark:bg-base-100  bg-white">
           <div className="container mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-3">
               {/* Free Shipping */}
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-3 dark:text-white text-gray-900">
                 <div className="text-center text-5xl font-bold">
                   <i className="fa-solid fa-truck-fast"></i>
                 </div>
@@ -111,7 +166,7 @@ function Home() {
               </div>
 
               {/* Daily Surprise Offers */}
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-3 dark:text-white text-gray-900">
                 <div className="text-center text-5xl font-bold">
                   <i className="fa-solid fa-gift"></i>
                 </div>
@@ -123,7 +178,7 @@ function Home() {
               </div>
 
               {/* Support 24/7 */}
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-3 dark:text-white text-gray-900">
                 <div className="text-center text-5xl font-bold">
                   <i className="fa-solid fa-headset"></i>
                 </div>
@@ -135,7 +190,7 @@ function Home() {
               </div>
 
               {/* Affordable Prices */}
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-3 dark:text-white text-gray-900">
                 <div className="text-center text-5xl font-bold">
                   <i className="fa-solid fa-hand-holding-dollar"></i>
                 </div>
@@ -150,7 +205,7 @@ function Home() {
         </section>
 
         <section className="p-3 mt-3 mb-5">
-          <div className="container bg-white rounded-xl shadow-lg">
+          <div className="container dark:bg-blue-50 bg-white rounded-xl shadow-lg">
             <div className="grid grid-cols-2 md:grid-cols-6 lg:grid-cols-12 text-center gap-3 p-3">
               <div className="flex justify-center items-center">
                 <img src="./images/apple.png" className="w-1/2" alt="Apple" />
@@ -192,7 +247,7 @@ function Home() {
           </div>
         </section>
 
-        <section className="mb-5 p-5">
+        <section className="mb-5 p-5 dark:bg-base-100 bg-white">
           <section className=" text-black dark:text-white">
             <div className="max-w-screen-xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8 lg:py-16">
               <div className="max-w-xl">
@@ -272,122 +327,98 @@ function Home() {
           </section>
         </section>
 
-        <section className="p-3 mb-5">
+        <section
+          ref={productsSectionRef} // Gán ref cho phần tử này
+          className="p-3 mb-5 dark:bg-base-100 bg-white"
+          id="products"
+        >
           <div className="container">
             <div className="flex justify-between items-center">
               <h1 className="text-lg font-bold">Sản phẩm bán chạy</h1>
-              <a href="/product" className="text-primary">View all</a>
+              <a href="/products" className="text-primary">Tất cả sản phẩm</a>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-6 mt-5">
-              {/* Product Card */}
-              <div className="flex flex-col">
-                <div className="relative w-full">
-                  <span className="absolute top-2 left-2 bg-yellow-400 text-white px-2 py-1 text-xs font-bold rounded">-10%</span>
-                  <a href="product/detail?id=1">
-                    <img src="./images/iphone15promax.png" className="w-full rounded-lg" alt="Iphone 15" />
-                  </a>
-                </div>
-                <div className="w-full pl-4 mt-2">
-                  <h6 className="text-red-500">Apple</h6>
-                  <h4 className="font-bold text-lg">Iphone 15</h4>
-                  <h6 className="mt-1 flex items-center">
-                    <i className="fa-solid fa-star text-yellow-400 mr-1"></i> 4.9/5
-                  </h6>
-                  <div className="flex items-center space-x-2">
-                    <b className="text-red-500">$300.00</b>
-                    <s className="text-gray-500">$350</s>
-                  </div>
-                  <a href="cart?prod=1" className="mt-2 inline-block bg-blue-500 text-white px-3 py-1 rounded">Add to cart</a>
-                </div>
-              </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5 mt-3">
+              {Array.isArray(products) && products.length > 0 ? (
+                products.map((product) => (
+                  <div key={product.productVersionID} className="group relative block overflow-hidden">
+                    <img
+                      src={product.image}
+                      className="h-30 w-full object-cover transition duration-500 group-hover:scale-105"
+                      onClick={() => handleImageClick(product)}
+                      alt={product.product.name}
+                    />
+                    <p className="absolute top-2 left-2 bg-red-600 text-white font-semibold text-xs px-2 py-1 rounded-md shadow-md">
+                      - {product.discountPercentage}%
+                    </p>
+                    <div className="relative bg-blue-50 p-4">
+                      <p className="mt-1 text-sm text-gray-900 h-20">
+                        <b>{product.product.name} | {product.versionName}</b>
+                      </p>
+                      <div className="flex items-center mt-2">
+                        {product.averageRating ? (
+                          <>
+                            <svg
+                              className="w-4 h-4 text-yellow-300"
+                              aria-hidden="true"
+                              fill="currentColor"
+                              viewBox="0 0 22 20"
+                            >
+                              <path d="M20.924 7.625a1.523 1.523 0 0 0-1.238-1.044l-5.051-.734-2.259-4.577a1.534 1.534 0 0 0-2.752 0L7.365 5.847l-5.051.734A1.535 1.535 0 0 0 1.463 9.2l3.656 3.563-.863 5.031a1.532 1.532 0 0 0 2.226 1.616L11 17.033l4.518 2.375a1.534 1.534 0 0 0 2.226-1.617l-.863-5.03L20.537 9.2a1.523 1.523 0 0 0 .387-1.575Z" />
+                            </svg>
+                            <p className="ms-2 text-sm font-bold text-gray-900 text-dark">
+                              {product.averageRating.toFixed(1)}/5
+                            </p>
+                          </>
+                        ) : (
+                          <p className="text-sm font-bold text-gray-800 text-dark">
+                            Chưa có đánh giá
+                          </p>
+                        )}
+                      </div>
+                      <span className="mt-1 text-xs text-gray-500">
+                        <s>{formatCurrency(product.price)}</s>
+                      </span>{" "}
+                      <span
+                        className="mt-1 text-sm text-red-600"
+                        style={{
+                          animation: "blink 1s linear infinite",
+                        }}
+                      >
+                        <b>{formatCurrency(product.discountPrice)}</b>
+                        <br />
+                      </span>
 
-              {/* Product Card 2 */}
-              <div className="flex flex-col">
-                <div className="relative w-full">
-                  <span className="absolute top-2 left-2 bg-yellow-400 text-white px-2 py-1 text-xs font-bold rounded">-10%</span>
-                  <a href="product/detail?id=1">
-                    <img src="./images/iphone15promax.png" className="w-full rounded-lg" alt="Iphone 15 Pro" />
-                  </a>
-                </div>
-                <div className="w-full pl-4 mt-2">
-                  <h6 className="text-red-500">Apple</h6>
-                  <h4 className="font-bold text-lg">Iphone 15 Pro</h4>
-                  <h6 className="mt-1 flex items-center">
-                    <i className="fa-solid fa-star text-yellow-400 mr-1"></i> 4.9/5
-                  </h6>
-                  <div className="flex items-center space-x-2">
-                    <b className="text-red-500">$350.00</b>
-                    <s className="text-gray-500">$400</s>
-                  </div>
-                  <a href="cart?prod=1" className="mt-2 inline-block bg-blue-500 text-white px-3 py-1 rounded">Add to cart</a>
-                </div>
-              </div>
+                      <style>
+                        {`@keyframes blink {
+                        0%, 100% { opacity: 1; }
+                        50% { opacity: 0; }}`}
+                      </style>
 
-              {/* Product Card 3 */}
-              <div className="flex flex-col">
-                <div className="relative w-full">
-                  <span className="absolute top-2 left-2 bg-yellow-400 text-white px-2 py-1 text-xs font-bold rounded">-10%</span>
-                  <a href="product/detail?id=1">
-                    <img src="./images/iphone15promax.png" className="w-full rounded-lg" alt="Iphone 15 Pro Max" />
-                  </a>
-                </div>
-                <div className="w-full pl-4 mt-2">
-                  <h6 className="text-red-500">Apple</h6>
-                  <h4 className="font-bold text-lg">Iphone 15 Pro Max</h4>
-                  <h6 className="mt-1 flex items-center">
-                    <i className="fa-solid fa-star text-yellow-400 mr-1"></i> 4.9/5
-                  </h6>
-                  <div className="flex items-center space-x-2">
-                    <b className="text-red-500">$400.00</b>
-                    <s className="text-gray-500">$450</s>
-                  </div>
-                  <a href="cart?prod=1" className="mt-2 inline-block bg-blue-500 text-white px-3 py-1 rounded">Add to cart</a>
-                </div>
-              </div>
+                      <span className="mt-1 text-xs text-gray-400">Đã bán: {product.quantitySold} | </span>
+                      <span className="mt-1 text-xs text-gray-400">
+                        Tồn kho:{" "}
+                        <span className={product.quantityAvailable < 10 ? "text-red-600" : "text-gray-400"}>
+                          {product.quantityAvailable}
+                        </span>
+                      </span>
 
-              {/* Product Card 4 */}
-              <div className="flex flex-col">
-                <div className="relative w-full">
-                  <span className="absolute top-2 left-2 bg-yellow-400 text-white px-2 py-1 text-xs font-bold rounded">-10%</span>
-                  <a href="product/detail?id=1">
-                    <img src="./images/iphone15promax.png" className="w-full rounded-lg" alt="Iphone 14" />
-                  </a>
-                </div>
-                <div className="w-full pl-4 mt-2">
-                  <h6 className="text-red-500">Apple</h6>
-                  <h4 className="font-bold text-lg">Iphone 14</h4>
-                  <h6 className="mt-1 flex items-center">
-                    <i className="fa-solid fa-star text-yellow-400 mr-1"></i> 4.7/5
-                  </h6>
-                  <div className="flex items-center space-x-2">
-                    <b className="text-red-500">$250.00</b>
-                    <s className="text-gray-500">$300</s>
+                      <form
+                        className="mt-4"
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          handleAddToCart(product);
+                        }}
+                      >
+                        <button type="submit" className="w-full rounded btn btn-warning p-2 text-xs">
+                          Thêm vào giỏ hàng
+                        </button>
+                      </form>
+                    </div>
                   </div>
-                  <a href="cart?prod=1" className="mt-2 inline-block bg-blue-500 text-white px-3 py-1 rounded">Add to cart</a>
-                </div>
-              </div>
-
-              {/* Product Card 5 */}
-              <div className="flex flex-col">
-                <div className="relative w-full">
-                  <span className="absolute top-2 left-2 bg-yellow-400 text-white px-2 py-1 text-xs font-bold rounded">-10%</span>
-                  <a href="product/detail?id=1">
-                    <img src="./images/iphone15promax.png" className="w-full rounded-lg" alt="Iphone SE" />
-                  </a>
-                </div>
-                <div className="w-full pl-4 mt-2">
-                  <h6 className="text-red-500">Apple</h6>
-                  <h4 className="font-bold text-lg">Iphone SE</h4>
-                  <h6 className="mt-1 flex items-center">
-                    <i className="fa-solid fa-star text-yellow-400 mr-1"></i> 4.6/5
-                  </h6>
-                  <div className="flex items-center space-x-2">
-                    <b className="text-red-500">$200.00</b>
-                    <s className="text-gray-500">$250</s>
-                  </div>
-                  <a href="cart?prod=1" className="mt-2 inline-block bg-blue-500 text-white px-3 py-1 rounded">Add to cart</a>
-                </div>
-              </div>
+                ))
+              ) : (
+                <p>Không có sản phẩm bán chạy nào.</p>
+              )}
             </div>
           </div>
         </section>
