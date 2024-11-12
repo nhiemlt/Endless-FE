@@ -26,47 +26,86 @@ function ProductVersionPage() {
   // Thêm state để lưu trữ phiên bản sản phẩm đang xem chi tiết
   const [selectedVersion, setSelectedVersion] = useState(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
+  const itemsPerPage = 10; // Số lượng items hiển thị trên mỗi trang
+
+  // const totalPages = Math.ceil(productVersions.length / itemsPerPage); // Lấy giá trị từ state
+  // Define totalPages state
+  const [totalPages, setTotalPages] = useState(0);
 
 
+  const fetchProductVersions = async () => {
+    setLoading(true);
+    try {
+      const response = await ProductVersionService.getAllProductVersions(
+        currentPage,
+        itemsPerPage,
+        'versionName',
+        'ASC',
+        searchText
+      );
+      console.log("Fetched Product Versions:", response);
+      setProductVersions(response.content); // Giả sử content là danh sách các ProductVersionDTO
+      const totalPages = Math.ceil(response.totalElements / itemsPerPage); // Tính lại tổng số trang
+      setTotalPages(totalPages);
+    } catch (err) {
+      console.error("Error fetching product versions:", err);
+      setError("Có lỗi xảy ra khi tải dữ liệu.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchProductVersions = async () => {
-      setLoading(true);
-      try {
-        const response = await ProductVersionService.getAllProductVersions();
-        console.log("Fetched Product Versions:", response);  // Log tất cả dữ liệu trả về từ API
-        setProductVersions(response.content); // Giả sử content là danh sách các ProductVersionDTO
-      } catch (err) {
-        console.error("Error fetching product versions:", err);
-        setError("Có lỗi xảy ra khi tải dữ liệu.");
-      } finally {
-        setLoading(false);
-      }
-    };
+    fetchProductVersions();  // Gọi hàm ngoài useEffect
+  }, [currentPage, searchText]);  // Thêm currentPage và searchText vào dependency array
 
-
-    fetchProductVersions();
-  }, []);
 
   const handleEditProductVersion = (version) => {
+    // console.log("Selected version data:", version); // Kiểm tra dữ liệu được ghi log
     setSelectedVersion(version); // Lưu phiên bản sản phẩm cần chỉnh sửa
     setIsEditModalOpen(true); // Mở modal chỉnh sửa
   };
-
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false);
+  };
 
   const handleAddProductVersion = () => {
     setIsAddModalOpen(true);
   };
 
-
-
   const handleCloseAddModal = () => {
     setIsAddModalOpen(false);
   };
 
-  const handleCloseEditModal = () => {
-    setIsEditModalOpen(false);
+  const handleDeleteProductVersion = (versionID) => {
+    setSelectedVersion(versionID); // Lưu ID của phiên bản sản phẩm cần xóa
+    setIsConfirmDialogOpen(true); // Mở hộp thoại xác nhận
   };
+
+  const handleConfirmDelete = async () => {
+    try {
+      await ProductVersionService.deleteProductVersion(selectedVersion); // Gọi API xóa
+      setProductVersions((prev) =>
+        prev.filter((version) => version.productVersionID !== selectedVersion)
+      );
+      dispatch(showNotification({ message: "Xóa thành công!", status: 1 }));
+      // Tải lại bảng sau khi xóa thành công
+      fetchProductVersions();  // Gọi lại hàm fetchProductVersions để tải lại dữ liệu
+      // Tải lại bảng sau khi xóa thành công
+    } catch (error) {
+      dispatch(showNotification({ message: "Xóa thất bại!", status: 0 }));
+    }
+    setIsConfirmDialogOpen(false); // Đóng hộp thoại xác nhận
+    setSelectedVersion(null); // Xóa ID phiên bản đã chọn
+  };
+
+
+  const handleCloseConfirmDialog = () => {
+    setIsConfirmDialogOpen(false);
+    setSelectedVersion(null); // Reset ID khi đóng hộp thoại
+  };
+
 
   const handleViewAttributes = (version) => {
     setSelectedVersion(version); // Lưu phiên bản sản phẩm để hiển thị trong modal
@@ -132,6 +171,22 @@ function ProductVersionPage() {
     const newStatus = currentStatus === "Active" ? "Inactive" : "Active";
     openConfirmDialog(versionID, newStatus);
   };
+  const handleProductUpdated = (updatedVersion) => {
+    setProductVersions((prev) =>
+      prev.map((version) =>
+        version.productVersionID === updatedVersion.productVersionID
+          ? updatedVersion
+          : version
+      )
+    );
+  };
+  const handlePrevPage = () => {
+    if (currentPage > 0) setCurrentPage(currentPage - 1);
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages - 1) setCurrentPage(currentPage + 1);
+  };
 
 
   // Hiển thị loading nếu đang tải dữ liệu
@@ -143,6 +198,8 @@ function ProductVersionPage() {
   if (error) {
     return <div>{error}</div>;
   }
+
+
   const applySearch = (value) => setSearchText(value);
 
 
@@ -173,8 +230,8 @@ function ProductVersionPage() {
             <thead>
               <tr>
                 <th>ID</th>
-                <th>Version Name</th>
                 <th>Product</th>
+                <th>Version Name</th>
                 <th>Thuộc tính</th>
                 <th>Cost Price</th>
                 <th>Price</th>
@@ -189,11 +246,11 @@ function ProductVersionPage() {
                 <tr key={version.productVersionID}>
                   {/* Some spacing here could be an issue */}
                   <td>{index + 1}</td>
-                  <td>{version.versionName}</td>
                   <td>{version.product.name}</td>
+                  <td>{version.versionName}</td>
                   <td>
                     <button
-                      className="btn btn-sm btn-outline btn-primary"
+                      className="btn btn-sm btn-outline btn-primary border-0"
                       onClick={() => handleViewAttributes(version)}>
                       <EyeIcon className="h-4 w-4" />
                     </button>
@@ -225,10 +282,14 @@ function ProductVersionPage() {
                     <img src={version.image} alt={version.versionName} className="w-10 h-10 object-cover" />
                   </td>
                   <td>
-                    <button key={`edit-${version.productVersionID}`} className="btn btn-sm btn-outline btn-primary border-0">
+                    <button
+                      key={`edit-${version.productVersionID}`}
+                      className="btn btn-sm btn-outline btn-primary border-0"
+                      onClick={() => handleEditProductVersion(version)} // Mở modal khi nhấn nút
+                    >
                       <PencilIcon className="h-4 w-4" />
                     </button>
-                    <button key={`delete-${version.productVersionID}`} className="btn btn-sm btn-outline btn-error border-0">
+                    <button onClick={() => handleDeleteProductVersion(version.productVersionID)} key={`delete-${version.productVersionID}`} className="btn btn-sm btn-outline btn-error border-0">
                       <TrashIcon className="h-4 w-4" />
                     </button>
                   </td>
@@ -246,6 +307,13 @@ function ProductVersionPage() {
               onCancel={closeConfirmDialog}
             />
           )}
+          {isConfirmDialogOpen && (
+            <ConfirmDialog
+              message="Bạn có chắc chắn muốn xóa phiên bản này?"
+              onConfirm={handleConfirmDelete}
+              onCancel={handleCloseConfirmDialog}
+            />
+          )}
 
           {/* Hiển thị DetailsModal khi nhấp vào EyeIcon */}
           {isDetailsModalOpen && (
@@ -259,27 +327,52 @@ function ProductVersionPage() {
               onClose={handleCloseAttributesModal}
             />
           )}
-          {isEditModalOpen && (
-            <EditProductVersionModal
-              version={selectedVersion} // Truyền phiên bản sản phẩm cần chỉnh sửa vào modal
-              onClose={handleCloseEditModal} // Hàm đóng modal
-            />
-          )}
-
-
         </div>
+
+
+        {/* Điều hướng phân trang */}
+        <div className="join mt-4 flex justify-center w-full">
+          <button
+            className="join-item btn btn-sm btn-primary"
+            onClick={handlePrevPage}
+            disabled={currentPage === 0}
+          >
+            Trước
+          </button>
+          {Array.from({ length: totalPages }, (_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentPage(index)}
+              className={`join-item btn btn-sm btn-primary ${currentPage === index ? "btn-active" : ""}`}
+            >
+              {index + 1}
+            </button>
+          ))}
+          <button
+            className="join-item btn btn-sm btn-primary"
+            onClick={handleNextPage}
+            disabled={currentPage >= totalPages - 1}
+          >
+            Tiếp
+          </button>
+        </div>
+
       </div>
       {isAddModalOpen && (
         <AddProductVersionModal
           onClose={handleCloseAddModal}
-        // onProductAdded={handleProductAdded} // Pass the new function here
+          // onProductAdded={handleProductAdded} // Pass the new function here
+          onProductAdded={fetchProductVersions}
         />
       )}
       {isEditModalOpen && (
         <EditProductVersionModal
+          productVersion={selectedVersion} // Đảm bảo `selectedVersion` không bị `null`
           onClose={handleCloseEditModal}
+          onProductUpdated={handleProductUpdated} // Pass handleProductUpdated here
         />
       )}
+
     </TitleCard>
   );
 }

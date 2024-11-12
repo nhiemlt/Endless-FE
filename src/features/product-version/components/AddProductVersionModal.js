@@ -11,10 +11,7 @@ import ProductService from '../../../services/ProductService'; // Service để 
 const AddProductVersionModal = ({ onClose, onProductAdded }) => {
 
     const [isAttributeModalOpen, setAttributeModalOpen] = useState(false);
-
     const [selectedValueID, setSelectedValueID] = useState(null); // Thay đổi từ 'selectedValue' sang 'selectedValueID'
-
-
     const [attributes, setAttributes] = useState([]);
     const [error, setError] = useState('');
     const [versionName, setVersionName] = useState('');
@@ -97,9 +94,6 @@ const AddProductVersionModal = ({ onClose, onProductAdded }) => {
         }
     };
 
-
-
-
     const resetImage = () => {
         setPreviewLogo(null);
         setImageUrl(''); // Đảm bảo không có URL nếu ảnh không hợp lệ hoặc chưa tải lên
@@ -109,30 +103,19 @@ const AddProductVersionModal = ({ onClose, onProductAdded }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Kiểm tra trùng tên versionName
-        const existingVersion = await ProductVersionService.checkVersionName(versionName); // Giả sử có API để kiểm tra tên phiên bản
-        if (existingVersion) {
-            // dispatch(showNotification({ message: 'Tên sản phẩm đã tồn tại!', status: 0 }));
-            setError('Tên phiên bản đã tồn tại.');
-            return;
-        }
 
         const selectedAttributes = attributes.filter((attr) => attr.isChecked);
         console.log("AttributeValue:", selectedAttributes);
 
         const selectedAttributeValueID = selectedAttributes.map(attr => attr.attributeValueID);
 
-        if (selectedAttributes.length === 0) {
-            setError('Vui lòng chọn ít nhất một thuộc tính');
-            return;
-        }
 
         // Thực hiện tải ảnh lên Firebase nếu có ảnh được chọn
         if (previewLogo) {
             try {
                 const downloadURL = await UploadFileService.uploadProductImage(previewLogo); // Upload ảnh lên Firebase
                 setImageUrl(downloadURL); // Lưu URL của ảnh vào state
-                dispatch(showNotification({ message: 'Tải ảnh lên thành công!', status: 1 }));
+                // dispatch(showNotification({ message: 'Tải ảnh lên thành công!', status: 1 }));
             } catch (error) {
                 dispatch(showNotification({ message: 'Lỗi khi tải ảnh lên.', status: 0 }));
                 resetImage(); // Đặt lại ảnh nếu tải lên thất bại
@@ -155,7 +138,6 @@ const AddProductVersionModal = ({ onClose, onProductAdded }) => {
         };
 
         console.log("Data gửi lên API:", productVersionData);
-        console.log("Ảnh gửi lên API:", imageUrl);
 
 
         try {
@@ -163,11 +145,15 @@ const AddProductVersionModal = ({ onClose, onProductAdded }) => {
             console.log('API Response:', result);
 
             dispatch(showNotification({ message: 'Thêm phiên bản sản phẩm thành công!', status: 1 }));
-            if (onProductAdded) onProductAdded();
+            if (onProductAdded) onProductAdded();  // Gọi callback để tải lại bảng sản phẩm
             onClose();
         } catch (error) {
             console.error("Error creating product version:", error.message);
-            dispatch(showNotification({ message: 'Thêm phiên bản sản phẩm thất bại!', status: 0 }));
+            if (error.response && error.response.data && error.response.data.message === 'Phiên bản sản phẩm với tên này đã tồn tại') {
+                dispatch(showNotification({ message: 'Tên phiên bản sản phẩm đã tồn tại, vui lòng chọn tên khác.', status: 0 }));
+            } else {
+                dispatch(showNotification({ message: 'Thêm phiên bản sản phẩm thất bại!', status: 0 }));
+            }
             setError('Có lỗi xảy ra khi thêm phiên bản sản phẩm.');
         }
     };
@@ -197,9 +183,6 @@ const AddProductVersionModal = ({ onClose, onProductAdded }) => {
                                 ))}
                             </select>
 
-
-
-
                             <input
                                 type="text"
                                 placeholder="Tên Phiên Bản"
@@ -208,7 +191,6 @@ const AddProductVersionModal = ({ onClose, onProductAdded }) => {
                                 onChange={(e) => setVersionName(e.target.value)}
                                 required
                             />
-
                             <input
                                 type="number"
                                 placeholder="Giá Gốc"
@@ -225,7 +207,6 @@ const AddProductVersionModal = ({ onClose, onProductAdded }) => {
                                 }}
                                 required
                             />
-
                             <input
                                 type="number"
                                 placeholder="Giá Bán"
