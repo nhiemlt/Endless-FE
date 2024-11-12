@@ -4,6 +4,8 @@ import {
   TruckIcon,
   ClockIcon,
   CurrencyDollarIcon,
+  ClipboardDocumentCheckIcon,
+  ShieldCheckIcon,
 } from "@heroicons/react/24/solid";
 import OrderService from "../../services/OrderService";
 
@@ -312,7 +314,10 @@ function PurchaseHistory() {
                 )}
                 {order.status === "Đang giao hàng" && (
                   <button
-                    onClick={() => handleMarkAsDelivered(order.orderID)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleMarkAsDelivered(order.orderID);
+                    }}
                     className="btn btn-success w-auto text-sm"
                   >
                     Đã nhận hàng
@@ -359,7 +364,7 @@ function PurchaseHistory() {
                     : "step-inactive text-gray-400 dark:text-gray-500"
                 }`}
               >
-                <ClockIcon className="w-6 h-6 mb-2" />
+                <ClockIcon className="w-10 h-10 mb-2" />
                 <span className="text-sm text-center text-gray-900 dark:text-white">
                   Chờ xác nhận
                 </span>
@@ -379,7 +384,7 @@ function PurchaseHistory() {
                     : "step-inactive text-gray-400 dark:text-gray-500"
                 }`}
               >
-                <CurrencyDollarIcon className="w-6 h-6 mb-2" />
+                <CurrencyDollarIcon className="w-10 h-10 mb-2" />
                 <span className="text-sm text-center text-gray-900 dark:text-white">
                   Chờ thanh toán
                 </span>
@@ -398,7 +403,7 @@ function PurchaseHistory() {
                     : "step-inactive text-gray-400 dark:text-gray-500"
                 }`}
               >
-                <CheckCircleIcon className="w-6 h-6 mb-2" />
+                <ClipboardDocumentCheckIcon className="w-10 h-10 mb-2" />
                 <span className="text-sm text-center text-gray-900 dark:text-white">
                   Đã thanh toán
                 </span>
@@ -414,7 +419,7 @@ function PurchaseHistory() {
                     : "step-inactive text-gray-400 dark:text-gray-500"
                 }`}
               >
-                <CheckCircleIcon className="w-6 h-6 mb-2" />
+                <ShieldCheckIcon className="w-10 h-10 mb-2" />
                 <span className="text-sm text-center text-gray-900 dark:text-white">
                   Đã xác nhận
                 </span>
@@ -430,7 +435,7 @@ function PurchaseHistory() {
                     : "step-inactive text-gray-400 dark:text-gray-500"
                 }`}
               >
-                <TruckIcon className="w-6 h-6 mb-2" />
+                <TruckIcon className="w-10 h-10 mb-2" />
                 <span className="text-sm text-center text-gray-900 dark:text-white">
                   Đang giao hàng
                 </span>
@@ -444,7 +449,7 @@ function PurchaseHistory() {
                     : "step-inactive text-gray-400 dark:text-gray-500"
                 }`}
               >
-                <CheckCircleIcon className="w-6 h-6 mb-2" />
+                <CheckCircleIcon className="w-10 h-10 mb-2" />
                 <span className="text-sm text-center text-gray-900 dark:text-white">
                   Đã giao hàng
                 </span>
