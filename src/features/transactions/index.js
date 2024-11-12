@@ -330,15 +330,15 @@ function Transactions() {
                             </div>
                             <div className="p-4 bg-white shadow rounded dark:bg-gray-700">
                                 <p className="text-gray-800 dark:text-gray-200"><strong>Phí sản phẩm:</strong> {selectedOrder?.totalProductPrice || 'Không sử dụng'}</p>
-                                <p className="text-gray-800 dark:text-gray-200"><strong>Phí giao hàng:</strong> {selectedOrder?.shipFee.toLocaleString()} VND</p>
+                                <p className="text-gray-800 dark:text-gray-200"><strong>Phí giao hàng:</strong> {selectedOrder?.shipFee?.toLocaleString()} VND</p>
                             </div>
                             <div className="p-4 bg-white shadow rounded dark:bg-gray-700">
                                 <p className="text-gray-800 dark:text-gray-200"><strong>Mã giảm giá:</strong> {selectedOrder?.voucher || 'Không sử dụng'}</p>
-                                <p className="text-gray-800 dark:text-gray-200"><strong>Số tiền giảm:</strong> {selectedOrder?.voucherDiscount.toLocaleString()} VND</p>
+                                <p className="text-gray-800 dark:text-gray-200"><strong>Số tiền giảm:</strong> {selectedOrder?.voucherDiscount?.toLocaleString()} VND</p>
                             </div>
                             <div className="p-4 bg-white shadow rounded dark:bg-gray-700">
-                                <p className="text-gray-800 dark:text-gray-200"><strong>Tổng số tiền:</strong> {selectedOrder?.totalMoney} VND</p>
-                                <p className="text-gray-800 dark:text-gray-200"><strong>Thành tiền:</strong> {selectedOrder?.money} VND</p>
+                                <p className="text-gray-800 dark:text-gray-200"><strong>Tổng số tiền:</strong> {selectedOrder?.money} VND</p>
+                                <p className="text-gray-800 dark:text-gray-200"><strong>Thành tiền:</strong> {selectedOrder?.totalMoney} VND</p>
                             </div>
                         </div>
                         <p className="mb-2 text-gray-800 dark:text-gray-200"><strong>Địa chỉ giao hàng:</strong> {selectedOrder.shippingAddress || 'Chưa cập nhật'}</p>
