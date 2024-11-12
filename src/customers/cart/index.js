@@ -74,7 +74,6 @@ const Cart = () => {
 
       try {
         await CartService.updateCartQuantity(updatedProduct);
-        window.location.reload();
       } catch (error) {
         dispatch(showNotification({ message: "Lỗi khi cập nhật số lượng", status: 0 }));
         // Khôi phục lại số lượng gốc nếu có lỗi
@@ -120,7 +119,6 @@ const Cart = () => {
         delete newSelected[productVersionID];
         return newSelected;
       });
-      window.location.reload();
     } catch (error) {
       console.error("Error removing item:", error);
     }
@@ -201,7 +199,7 @@ const Cart = () => {
                             <button
                               type="button"
                               onClick={() => decrementQuantity(index)} // Gọi hàm giảm số lượng
-                              className={`size-10 leading-10 font-bold text-black transition hover:opacity-75 ${product.quantity === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                              className={`size-10 leading-10 font-bold dark:text-white text-gray-900 transition hover:opacity-75 ${product.quantity === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
                               disabled={product.quantity === 1} // Vô hiệu hóa nếu số lượng là 1
                             >
                               -
@@ -218,7 +216,7 @@ const Cart = () => {
                             <button
                               type="button"
                               onClick={() => incrementQuantity(index)} // Gọi hàm tăng số lượng
-                              className="size-10 leading-10 font-bold text-black transition hover:opacity-75"
+                              className="size-10 leading-10 font-bold dark:text-white text-gray-900 transition hover:opacity-75"
                             >
                               +
                             </button>

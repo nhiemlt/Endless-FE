@@ -46,17 +46,17 @@ function PasswordChange() {
     <>
       <TitleCard title="Thay đổi mật khẩu">
         <div className="flex justify-center items-center min-h-0">
-          <div className="bg-white shadow-[10px_15px_30px_rgba(0,0,0,0.4)] rounded-lg p-4 w-full max-w-md ">
-            <h2 className="text-2xl font-bold text-center mb-6">Đổi mật khẩu</h2>
+          <div className=" shadow-[0_2px_10px_-3px_rgba(6,81,237,0.3)] dark:bg-base-300 dark:text-gray-200 rounded-lg p-4 w-full max-w-md ">
+            <h2 className="text-2xl font-bold text-center mb-6 text-gray-900 dark:text-blue-700">Đổi mật khẩu</h2>
             <form onSubmit={handleChangePassword}>
               <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="oldPassword">
+                <label className="block text-gray-900 dark:text-gray-200 text-sm font-semibold mb-2" htmlFor="oldPassword">
                   Mật khẩu hiện tại
                 </label>
                 <input
                   type="password"
                   id="oldPassword"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+                  className="w-full px-4 py-2 border dark:bg-base-100 border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
                   value={oldPassword}
                   onChange={(e) => setOldPassword(e.target.value)}
                   required
@@ -64,13 +64,13 @@ function PasswordChange() {
               </div>
 
               <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="newPassword">
+                <label className="block text-gray-900 dark:text-gray-200 text-sm font-semibold mb-2" htmlFor="newPassword">
                   Mật khẩu mới
                 </label>
                 <input
                   type="password"
                   id="newPassword"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+                  className="w-full px-4 py-2 border dark:bg-base-100 border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
@@ -78,13 +78,13 @@ function PasswordChange() {
               </div>
 
               <div className="mb-6">
-                <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="confirmPassword">
+                <label className="block text-gray-900 dark:text-gray-200 text-sm font-semibold mb-2" htmlFor="confirmPassword">
                   Xác nhận mật khẩu mới
                 </label>
                 <input
                   type="password"
                   id="confirmPassword"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+                  className="w-full px-4 py-2 border dark:bg-base-100 border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
@@ -93,7 +93,7 @@ function PasswordChange() {
 
               <button
                 type="submit"
-                className="btn btn-sm btn-primary w-full"
+                className="btn btn-sm btn-primary w-full text-white"
               >
                 Lưu
               </button>

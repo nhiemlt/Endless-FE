@@ -16,9 +16,21 @@ const OrderService = {
         return response.data;
     },
 
-    // Tạo đơn hàng mới
+    // Tạo đơn hàng mới từ frontend
     createOrder: async (orderModel) => {
-        const response = await axios.post(`${constants.API_BASE_URL}/orders`, orderModel);
+        try {
+            console.log(orderModel);
+            const response = await axios.post(`${constants.API_BASE_URL}/orders`, orderModel);
+            return response.data;
+        } catch (error) {
+            console.error("Error creating order:", error.response?.data || error.message);
+            throw error;
+        }
+    },
+
+    // Tạo đơn hàng mới VNPAY
+    createOrderVNPay: async (orderModel) => {
+        const response = await axios.post(`${constants.API_BASE_URL}/orders/create-order-vnpay`, orderModel);
         return response.data; // Trả về dữ liệu API
     },
 

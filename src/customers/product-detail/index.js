@@ -1,244 +1,238 @@
-import { Link } from 'react-router-dom'
+import { Link } from 'react-router-dom';
 import TitleCard from '../../components/Cards/TitleCard';
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import productVersionService from "../../services/productVersionService";
+import ratingService from "../../services/ratingService";
+import { useLocation } from 'react-router-dom';
+import { showNotification } from "../../features/common/headerSlice";
+import { useDispatch } from "react-redux";
+import CartService from "../../services/CartService";
+import { useNavigate } from 'react-router-dom';
 
 function ProductDetail() {
-  // const { id } = useParams(); // Lấy ID từ URL
-  //   const [product, setProduct] = useState(null);
-  //   const [loading, setLoading] = useState(true);
-  //   const [error, setError] = useState('');
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  //   useEffect(() => {
-  //       const fetchProduct = async () => {
-  //           try {
-  //               const response = await productVersionService.getProductVersionById();;
-  //               setProduct(response.data); // Giả sử response.data chứa thông tin sản phẩm
-  //               setLoading(false);
-  //           } catch (err) {
-  //               setError('Could not fetch product data');
-  //               setLoading(false);
-  //           }
-  //       };
+  const { product } = location.state || {};
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [ratings, setRatings] = useState([]);  // State to store all the ratings
+  const [selectedTab, setSelectedTab] = useState(5); // Default to 5 stars tab
 
-  //       fetchProduct();
-  //   }, [id]);
+  useEffect(() => {
+    if (product && product?.productVersionID) {
+      // Gọi API để lấy đánh giá theo productVersionID
+      ratingService.getRatingsByProductVersionId(product?.productVersionID)
+        .then(data => {
+          // Sắp xếp đánh giá theo ratingDate giảm dần
+          const sortedRatings = data.sort((a, b) => new Date(b.ratingDate) - new Date(a.ratingDate));
+          setRatings(sortedRatings);
+        })
+        .catch(error => {
+          console.error("Error fetching ratings:", error);
+        });
+    }
+  }, [product]);
 
-  //   if (loading) return <div>Loading...</div>;
-  //   if (error) return <div>{error}</div>;
+  // Phân loại các đánh giá theo sao
+  const ratingCategories = [5, 4, 3, 2, 1]; // Thứ tự giảm dần
+  const ratingsByStar = ratingCategories.reduce((acc, stars) => {
+    acc[stars] = ratings.filter(rating => rating.ratingValue === stars);
+    return acc;
+  }, {});
+
+  // Hàm xử lý khi người dùng chọn tab
+  const handleTabClick = (tabNumber) => {
+    setSelectedTab(tabNumber);
+  };
+
+  // Hàm tính số lượng đánh giá cho từng tab sao
+  const getRatingCount = (stars) => {
+    return ratingsByStar[stars] ? ratingsByStar[stars].length : 0;
+  };
+
+  //Hàm thêm sản phẩm vào giỏ hàng
+  const handleAddToCart = async (product) => {
+    const cartModel = {
+      productVersionID: product.productVersionID, // ID phiên bản sản phẩm
+      quantity: 1, // Số lượng mặc định là 1
+    };
+
+    try {
+      const result = await CartService.addToCart(cartModel); // Gọi API thêm sản phẩm vào giỏ hàng
+      dispatch(showNotification({ message: "Sản phẩm đã được thêm vào giỏ hàng.", status: 1 })); // Hiển thị thông báo thành công
+    } catch (error) {
+      dispatch(showNotification({ message: "Lỗi khi thêm vào giỏ hàng.", status: 0 })); // Hiển thị thông báo lỗi
+      console.error("Lỗi khi thêm vào giỏ hàng:", error); // In lỗi nếu có
+    }
+  };
+
+  // Hàm xử lý khi nhấn nút "Mua"
+  const handleBuyNow = (product) => {
+    setSelectedProduct(product); // Lưu sản phẩm vào trạng thái
+    navigate('/purchase', { state: { product } });  // Chuyển hướng và truyền thông tin sản phẩm
+  };
 
   return (
     <TitleCard>
-      <div className="font-sans bg-white">
+      <div className="font-sans bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200">
         <div className="p-4 lg:max-w-7xl max-w-4xl mx-auto">
-          <div className="grid items-start grid-cols-1 lg:grid-cols-5 gap-12 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.3)] p-6 rounded-lg">
-            <div className="lg:col-span-3 w-full lg:sticky top-0 text-center">
 
-              <div className="px-4 py-10 rounded-lg shadow-[0_2px_10px_-3px_rgba(6,81,237,0.3)] relative">
-                <img src="https://readymadeui.com/images/laptop5.webp" alt="product" className="w-3/4 rounded object-cover mx-auto" />
-                <button type="button" className="absolute top-4 right-4">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20px" fill="#ccc" className="mr-1 hover:fill-[#333]" viewBox="0 0 64 64">
-                    <path d="M45.5 4A18.53 18.53 0 0 0 32 9.86 18.5 18.5 0 0 0 0 22.5C0 40.92 29.71 59 31 59.71a2 2 0 0 0 2.06 0C34.29 59 64 40.92 64 22.5A18.52 18.52 0 0 0 45.5 4ZM32 55.64C26.83 52.34 4 36.92 4 22.5a14.5 14.5 0 0 1 26.36-8.33 2 2 0 0 0 3.27 0A14.5 14.5 0 0 1 60 22.5c0 14.41-22.83 29.83-28 33.14Z" data-original="#000000"></path>
-                  </svg>
-                </button>
-              </div>
-
-              <div className="mt-6 flex flex-wrap justify-center gap-6 mx-auto">
-                <div className="w-24 h-20 flex items-center justify-center rounded-lg p-4 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.3)] cursor-pointer">
-                  <img src="https://readymadeui.com/images/laptop2.webp" alt="Product2" className="w-full" />
-                </div>
-                <div className="w-24 h-20 flex items-center justify-center rounded-lg p-4 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.3)] cursor-pointer">
-                  <img src="https://readymadeui.com/images/laptop3.webp" alt="Product2" className="w-full" />
-                </div>
-                <div className="w-24 h-20 flex items-center justify-center rounded-lg p-4 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.3)] cursor-pointer">
-                  <img src="https://readymadeui.com/images/laptop4.webp" alt="Product2" className="w-full" />
-                </div>
-                <div className="w-24 h-20 flex items-center justify-center rounded-lg p-4 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.3)] cursor-pointer">
-                  <img src="https://readymadeui.com/images/laptop5.webp" alt="Product2" className="w-full" />
+          {/* Phần sản phẩm */}
+          <div className="grid items-start grid-cols-1 lg:grid-cols-5 gap-12 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.3)] p-6 rounded-lg dark:bg-base-100">
+            <div className="lg:col-span-2 w-full lg:sticky top-0 text-center">
+              <div className="p-1 rounded-lg shadow-[0_2px_10px_-3px_rgba(6,81,237,0.3)] relative dark:shadow-[0_2px_10px_-3px_rgba(237,237,237,0.3)]">
+                <div className="relative">
+                  <img
+                    src={product?.image || "default-image-url"}
+                    alt={product?.product?.name || "product"}
+                    className="rounded object-cover w-full"
+                  />
+                  <p className="absolute top-2 left-2 bg-red-600 text-white font-semibold text-xs px-2 py-1 rounded-md shadow-md">
+                    - {product?.discountPercentage}%
+                  </p>
                 </div>
               </div>
             </div>
-
-            <div className="lg:col-span-2">
-              <h2 className="text-2xl font-extrabold text-gray-800">Acer Aspire Pro 12 | Laptop</h2>
-
+            <div className="lg:col-span-3">
+              <h2 className="text-2xl font-extrabold text-gray-900 dark:text-white">
+                {product?.product?.name} | {product?.versionName}
+              </h2>
               <div className="flex space-x-2 mt-4">
-                <svg className="w-5 fill-blue-600" viewBox="0 0 14 13" fill="none"
-                  xmlns="http://www.w3.org/2000/svg">
-                  <path
-                    d="M7 0L9.4687 3.60213L13.6574 4.83688L10.9944 8.29787L11.1145 12.6631L7 11.2L2.8855 12.6631L3.00556 8.29787L0.342604 4.83688L4.5313 3.60213L7 0Z" />
-                </svg>
-                <svg className="w-5 fill-blue-600" viewBox="0 0 14 13" fill="none"
-                  xmlns="http://www.w3.org/2000/svg">
-                  <path
-                    d="M7 0L9.4687 3.60213L13.6574 4.83688L10.9944 8.29787L11.1145 12.6631L7 11.2L2.8855 12.6631L3.00556 8.29787L0.342604 4.83688L4.5313 3.60213L7 0Z" />
-                </svg>
-                <svg className="w-5 fill-blue-600" viewBox="0 0 14 13" fill="none"
-                  xmlns="http://www.w3.org/2000/svg">
-                  <path
-                    d="M7 0L9.4687 3.60213L13.6574 4.83688L10.9944 8.29787L11.1145 12.6631L7 11.2L2.8855 12.6631L3.00556 8.29787L0.342604 4.83688L4.5313 3.60213L7 0Z" />
-                </svg>
-                <svg className="w-5 fill-blue-600" viewBox="0 0 14 13" fill="none"
-                  xmlns="http://www.w3.org/2000/svg">
-                  <path
-                    d="M7 0L9.4687 3.60213L13.6574 4.83688L10.9944 8.29787L11.1145 12.6631L7 11.2L2.8855 12.6631L3.00556 8.29787L0.342604 4.83688L4.5313 3.60213L7 0Z" />
-                </svg>
-                <svg className="w-5 fill-[#CED5D8]" viewBox="0 0 14 13" fill="none"
-                  xmlns="http://www.w3.org/2000/svg">
-                  <path
-                    d="M7 0L9.4687 3.60213L13.6574 4.83688L10.9944 8.29787L11.1145 12.6631L7 11.2L2.8855 12.6631L3.00556 8.29787L0.342604 4.83688L4.5313 3.60213L7 0Z" />
-                </svg>
-                <h4 className="text-gray-800 text-base">500 Reviews</h4>
+                {product?.averageRating ? (
+                  <>
+                    <svg
+                      className="w-6 h-6 text-yellow-300"
+                      aria-hidden="true"
+                      fill="currentColor"
+                      viewBox="0 0 22 20"
+                    >
+                      <path d="M20.924 7.625a1.523 1.523 0 0 0-1.238-1.044l-5.051-.734-2.259-4.577a1.534 1.534 0 0 0-2.752 0L7.365 5.847l-5.051.734A1.535 1.535 0 0 0 1.463 9.2l3.656 3.563-.863 5.031a1.532 1.532 0 0 0 2.226 1.616L11 17.033l4.518 2.375a1.534 1.534 0 0 0 2.226-1.617l-.863-5.03L20.537 9.2a1.523 1.523 0 0 0 .387-1.575Z" />
+                    </svg>
+                    <p className="ms-2 text-xl font-bold text-gray-900 dark:text-gray-100">
+                      {product?.averageRating?.toFixed(1)}/5
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-xl font-bold text-gray-800 dark:text-gray-100">
+                    Chưa có đánh giá
+                  </p>
+                )}
               </div>
-
               <div className="flex flex-wrap gap-4 mt-8">
-                <p className="text-gray-800 text-3xl font-bold">$1200</p>
-                <p className="text-gray-400 text-base"><strike>$1500</strike> <span className="text-sm ml-1">Tax included</span></p>
+                <p className="text-red-600 dark:text-red-500 text-2xl font-bold">
+                  {product?.discountPrice?.toLocaleString("vi-VN", {
+                    style: "currency",
+                    currency: "VND",
+                  }) || "Giá giảm"}
+                </p>
+                <p className="text-gray-400 dark:text-gray-500 text-base">
+                  <strike>
+                    {product?.price?.toLocaleString("vi-VN", {
+                      style: "currency",
+                      currency: "VND",
+                    }) || "Giá gốc"}
+                  </strike>
+                </p>
               </div>
-
+              <p className="text-2xl font-extrabold text-gray-900 dark:text-white">
+                {product?.product?.description}
+              </p>
               <div className="mt-8">
-                <h3 className="text-xl font-bold text-gray-800">Choose a Color</h3>
-                <div className="flex flex-wrap gap-3 mt-4">
-                  <button type="button" className="w-10 h-10 bg-black border-2 border-white hover:border-gray-800 rounded-full shrink-0 transition-all"></button>
-                  <button type="button" className="w-10 h-10 bg-gray-300 border-2 border-white hover:border-gray-800 rounded-full shrink-0 transition-all"></button>
-                  <button type="button" className="w-10 h-10 bg-gray-100 border-2 border-white hover:border-gray-800 rounded-full shrink-0 transition-all"></button>
-                  <button type="button" className="w-10 h-10 bg-blue-400 border-2 border-white hover:border-gray-800 rounded-full shrink-0 transition-all"></button>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap gap-4 mt-8">
-                <button type="button" className="min-w-[200px] px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded">Buy now</button>
-                <button type="button" className="min-w-[200px] px-4 py-2.5 border border-blue-600 bg-transparent hover:bg-gray-50 text-gray-800 text-sm font-semibold rounded">Add to cart</button>
+                <button
+                  type="button"
+                  className="flex-1 px-4 py-2.5 border border-yellow-600 dark:bg-yellow-400 bg-transparent dark:hover:bg-yellow-500 text-gray-950 text-sm font-semibold rounded"
+                  onClick={() => handleAddToCart(product)} // Thêm sự kiện onClick để gọi hàm handleAddToCart
+                >
+                  Thêm vào giỏ hàng
+                </button>
               </div>
             </div>
           </div>
 
-          <div className="mt-16 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.3)] p-6">
-            <h3 className="text-xl font-bold text-gray-800">Product information</h3>
-            <ul className="mt-4 space-y-6 text-gray-800">
-              <li className="text-sm">TYPE <span className="ml-4 float-right">LAPTOP</span></li>
-              <li className="text-sm">RAM <span className="ml-4 float-right">16 BG</span></li>
-              <li className="text-sm">SSD <span className="ml-4 float-right">1000 BG</span></li>
-              <li className="text-sm">PROCESSOR TYPE <span className="ml-4 float-right">INTEL CORE I7-12700H</span></li>
-              <li className="text-sm">PROCESSOR SPEED <span className="ml-4 float-right">2.3 - 4.7 GHz</span></li>
-              <li className="text-sm">DISPLAY SIZE INCH <span className="ml-4 float-right">16.0</span></li>
-              <li className="text-sm">DISPLAY SIZE SM <span className="ml-4 float-right">40.64 cm</span></li>
-              <li className="text-sm">DISPLAY TYPE <span className="ml-4 float-right">OLED, TOUCHSCREEN, 120 Hz</span></li>
-              <li className="text-sm">DISPLAY RESOLUTION <span className="ml-4 float-right">2880x1620</span></li>
+
+          {/* Phần thuộc tính */}
+          <div className="mt-16 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.3)] p-6 dark:bg-base-100 dark:text-gray-200">
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">Thông tin chi tiết</h3>
+            <ul className="mt-4 space-y-6 text-gray-800 dark:text-gray-100">
+              {product.versionAttributes.map((attribute, index) => (
+                <li key={index} className="text-sm">
+                  {attribute.attributeName}
+                  <span className="ml-4 float-right">{attribute.attributeValue}</span>
+                </li>
+              ))}
             </ul>
           </div>
 
-          <div className="mt-16 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.3)] p-6">
-            <h3 className="text-xl font-bold text-gray-800">Reviews(10)</h3>
-            <div className="grid md:grid-cols-2 gap-12 mt-4">
-              <div className="space-y-3">
-                <div className="flex items-center">
-                  <p className="text-sm text-gray-800 font-bold">5.0</p>
-                  <svg className="w-5 fill-blue-600 ml-1" viewBox="0 0 14 13" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path
-                      d="M7 0L9.4687 3.60213L13.6574 4.83688L10.9944 8.29787L11.1145 12.6631L7 11.2L2.8855 12.6631L3.00556 8.29787L0.342604 4.83688L4.5313 3.60213L7 0Z" />
-                  </svg>
-                  <div className="bg-gray-400 rounded w-full h-2 ml-3">
-                    <div className="w-2/3 h-full rounded bg-blue-600"></div>
-                  </div>
-                  <p className="text-sm text-gray-800 font-bold ml-3">66%</p>
-                </div>
+          {/* Phần đánh giá */}
+          <div className="mt-16 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.3)] p-6 dark:bg-base-100 dark:text-gray-200">
+            <div className="grid md:grid-cols-1 gap-12 mt-4 dark:text-gray-100 text-gray-800">
 
-                <div className="flex items-center">
-                  <p className="text-sm text-gray-800 font-bold">4.0</p>
-                  <svg className="w-5 fill-blue-600 ml-1" viewBox="0 0 14 13" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path
-                      d="M7 0L9.4687 3.60213L13.6574 4.83688L10.9944 8.29787L11.1145 12.6631L7 11.2L2.8855 12.6631L3.00556 8.29787L0.342604 4.83688L4.5313 3.60213L7 0Z" />
-                  </svg>
-                  <div className="bg-gray-400 rounded w-full h-2 ml-3">
-                    <div className="w-1/3 h-full rounded bg-blue-600"></div>
-                  </div>
-                  <p className="text-sm text-gray-800 font-bold ml-3">33%</p>
-                </div>
+              <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 d-block">
+                Đánh giá ({ratings.length})
+              </h3>
 
-                <div className="flex items-center">
-                  <p className="text-sm text-gray-800 font-bold">3.0</p>
-                  <svg className="w-5 fill-blue-600 ml-1" viewBox="0 0 14 13" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path
-                      d="M7 0L9.4687 3.60213L13.6574 4.83688L10.9944 8.29787L11.1145 12.6631L7 11.2L2.8855 12.6631L3.00556 8.29787L0.342604 4.83688L4.5313 3.60213L7 0Z" />
-                  </svg>
-                  <div className="bg-gray-400 rounded w-full h-2 ml-3">
-                    <div className="w-1/6 h-full rounded bg-blue-600"></div>
-                  </div>
-                  <p className="text-sm text-gray-800 font-bold ml-3">16%</p>
-                </div>
-
-                <div className="flex items-center">
-                  <p className="text-sm text-gray-800 font-bold">2.0</p>
-                  <svg className="w-5 fill-blue-600 ml-1" viewBox="0 0 14 13" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path
-                      d="M7 0L9.4687 3.60213L13.6574 4.83688L10.9944 8.29787L11.1145 12.6631L7 11.2L2.8855 12.6631L3.00556 8.29787L0.342604 4.83688L4.5313 3.60213L7 0Z" />
-                  </svg>
-                  <div className="bg-gray-400 rounded w-full h-2 ml-3">
-                    <div className="w-1/12 h-full rounded bg-blue-600"></div>
-                  </div>
-                  <p className="text-sm text-gray-800 font-bold ml-3">8%</p>
-                </div>
-
-                <div className="flex items-center">
-                  <p className="text-sm text-gray-800 font-bold">1.0</p>
-                  <svg className="w-5 fill-blue-600 ml-1" viewBox="0 0 14 13" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path
-                      d="M7 0L9.4687 3.60213L13.6574 4.83688L10.9944 8.29787L11.1145 12.6631L7 11.2L2.8855 12.6631L3.00556 8.29787L0.342604 4.83688L4.5313 3.60213L7 0Z" />
-                  </svg>
-                  <div className="bg-gray-400 rounded w-full h-2 ml-3">
-                    <div className="w-[6%] h-full rounded bg-blue-600"></div>
-                  </div>
-                  <p className="text-sm text-gray-800 font-bold ml-3">6%</p>
-                </div>
+              {/* Các tab 5 sao, 4 sao, 3 sao, 2 sao, 1 sao */}
+              <div role="tablist" className="tabs tabs-bordered mt-4 w-full">
+                {ratingCategories.map(stars => (
+                  <a
+                    key={stars}
+                    role="tab"
+                    className={`tab ${selectedTab === stars ? 'tab-active' : ''} w-full md:w-auto`}
+                    onClick={() => handleTabClick(stars)}
+                  >
+                    {stars} sao ({getRatingCount(stars)})
+                  </a>
+                ))}
               </div>
 
-              <div>
-                <div className="flex items-start">
-                  <img src="https://readymadeui.com/team-2.webp" className="w-12 h-12 rounded-full border-2 border-white" />
-                  <div className="ml-3">
-                    <h4 className="text-sm font-bold text-gray-800">John Doe</h4>
-                    <div className="flex space-x-1 mt-1">
-                      <svg className="w-4 fill-blue-600" viewBox="0 0 14 13" fill="none"
-                        xmlns="http://www.w3.org/2000/svg">
-                        <path
-                          d="M7 0L9.4687 3.60213L13.6574 4.83688L10.9944 8.29787L11.1145 12.6631L7 11.2L2.8855 12.6631L3.00556 8.29787L0.342604 4.83688L4.5313 3.60213L7 0Z" />
-                      </svg>
-                      <svg className="w-4 fill-blue-600" viewBox="0 0 14 13" fill="none"
-                        xmlns="http://www.w3.org/2000/svg">
-                        <path
-                          d="M7 0L9.4687 3.60213L13.6574 4.83688L10.9944 8.29787L11.1145 12.6631L7 11.2L2.8855 12.6631L3.00556 8.29787L0.342604 4.83688L4.5313 3.60213L7 0Z" />
-                      </svg>
-                      <svg className="w-4 fill-blue-600" viewBox="0 0 14 13" fill="none"
-                        xmlns="http://www.w3.org/2000/svg">
-                        <path
-                          d="M7 0L9.4687 3.60213L13.6574 4.83688L10.9944 8.29787L11.1145 12.6631L7 11.2L2.8855 12.6631L3.00556 8.29787L0.342604 4.83688L4.5313 3.60213L7 0Z" />
-                      </svg>
-                      <svg className="w-4 fill-[#CED5D8]" viewBox="0 0 14 13" fill="none"
-                        xmlns="http://www.w3.org/2000/svg">
-                        <path
-                          d="M7 0L9.4687 3.60213L13.6574 4.83688L10.9944 8.29787L11.1145 12.6631L7 11.2L2.8855 12.6631L3.00556 8.29787L0.342604 4.83688L4.5313 3.60213L7 0Z" />
-                      </svg>
-                      <svg className="w-4 fill-[#CED5D8]" viewBox="0 0 14 13" fill="none"
-                        xmlns="http://www.w3.org/2000/svg">
-                        <path
-                          d="M7 0L9.4687 3.60213L13.6574 4.83688L10.9944 8.29787L11.1145 12.6631L7 11.2L2.8855 12.6631L3.00556 8.29787L0.342604 4.83688L4.5313 3.60213L7 0Z" />
-                      </svg>
-                      <p className="text-xs !ml-2 font-semibold text-gray-800">2 mins ago</p>
+              {/* Hiển thị đánh giá theo tab đã chọn */}
+              <div className="mt-4">
+                {ratingsByStar[selectedTab]?.map((rating, index) => (
+                  <div key={index} className="flex items-start text-gray-800 dark:text-gray-100">
+                    <img src={rating?.avatar} className="w-12 h-12 rounded-full border-2 border-white" />
+                    <div className="ml-3">
+                      <h4 className="text-sm font-bold">{rating?.fullname}</h4>
+                      <div className="flex space-x-1 mt-1">
+                        {[...Array(5)].map((_, i) => (
+                          <svg
+                            key={i}
+                            className={`w-4 ${i < rating?.ratingValue ? 'fill-yellow-500' : 'fill-[#CED5D8]'}`}
+                            viewBox="0 0 14 13"
+                            fill="none"
+                          >
+                            <path d="M7 0L9.4687 3.60213L13.6574 4.83688L10.9944 8.29787L11.1145 12.6631L7 11.2L2.8855 12.6631L3.00556 8.29787L0.342604 4.83688L4.5313 3.60213L7 0Z" />
+                          </svg>
+                        ))}
+                        <p className="text-xs !ml-2 font-semibold text-gray-800 dark:text-gray-100">
+                          {new Date(rating?.ratingDate).toLocaleDateString('en-GB')}
+                        </p>
+                      </div>
+                      {/* Hiển thị ảnh đánh giá người dùng */}
+                      <div className="flex space-x-2 mt-4">
+                        {rating?.pictures && rating?.pictures.length > 0 ? (
+                          rating.pictures.map((pic, index) => (
+                            <img
+                              key={index}
+                              src={`https://firebasestorage.googleapis.com/v0/b/endlesstechstoreecommerce.appspot.com/o/${encodeURIComponent(pic?.picture)}?alt=media`}
+                              alt={`Rating Image ${index + 1}`}
+                              className="w-24 h-24 object-cover rounded"
+                            />
+                          ))
+                        ) : (
+                          <p className="text-sm text-gray-800 dark:text-gray-100">No images available</p>
+                        )}
+                      </div>
+                      <p className="text-sm mt-4 text-gray-800 dark:text-gray-100">{rating?.comment}</p>
                     </div>
-                    <p className="text-sm mt-4 text-gray-800">Lorem ipsum dolor sit amet, consectetur adipisci elit, sed eiusmod tempor incidunt ut labore et dolore magna aliqua.</p>
                   </div>
-                </div>
-
-                <button type="button" className="w-full mt-10 px-4 py-2.5 bg-transparent hover:bg-gray-50 border border-blue-600 text-gray-800 font-bold rounded">Read all reviews</button>
+                ))}
               </div>
             </div>
           </div>
         </div>
       </div>
     </TitleCard>
-  )
+  );
 }
 
-export default ProductDetail
+export default ProductDetail;

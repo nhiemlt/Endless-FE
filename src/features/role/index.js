@@ -145,13 +145,13 @@ function Role() {
   };
 
   return (
-    <TitleCard title="Quản lý quyền" topMargin="mt-2">
+    <TitleCard title="Quản lý vai trò" topMargin="mt-2">
       <div className="flex justify-between mb-4">
         <div className="flex space-x-4">
           <label className="input input-bordered flex items-center gap-2">
             <input
               type="text"
-              placeholder="Tìm kiếm quyền"
+              placeholder="Tìm kiếm vai trò"
               value={searchTerm}
               onChange={handleSearch}
               className=" dark:bg-base-100"
@@ -172,18 +172,18 @@ function Role() {
         </div>
 
         <button className="btn btn-primary" onClick={() => setShowModal(true)}>
-          Tạo quyền mới
+          Tạo vai trò mới
         </button>
       </div>
 
       {loading ? (
-        <p>Đang tải danh sách quyền...</p>
+        <p>Đang tải danh sách vai trò...</p>
       ) : (
         <>
           <table className="table w-full table-xs">
             <thead>
               <tr>
-                <th onClick={() => handleSortChange('roleName')}>Tên quyền</th>
+                <th onClick={() => handleSortChange('roleName')}>Tên vai trò</th>
                 <th className="text-center">Tổng nhân viên</th>
                 <th className="text-center">Đang kích hoạt</th>
                 <th className="text-center">Ngừng kích hoạt</th>
