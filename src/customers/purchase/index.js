@@ -29,6 +29,7 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
   const navigate = useNavigate();
   const selectedItems = location.state?.selectedItems || [];
   const [selectedVoucherDiscount, setSelectedVoucherDiscount] = useState(0);
+  const product = location.state?.product;  // Lấy sản phẩm từ state
 
   const formatCurrency = (value) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
 

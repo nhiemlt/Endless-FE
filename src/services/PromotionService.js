@@ -53,15 +53,16 @@ const PromotionService = {
     },
 
     // Cập nhật khuyến mãi theo ID
-    updatePromotion: async (id, promotionData) => {
+    updatePromotion: async (promotionID, promotionData) => {
         try {
-            const response = await axios.put(`${API_URL}/${id}`, promotionData);
+            const response = await axios.put(`${API_URL}/${promotionID}`, promotionData);
             return response.data;
         } catch (error) {
-            console.error(`Lỗi khi cập nhật khuyến mãi với ID: ${id}`, error);
+            console.error(`Lỗi khi cập nhật khuyến mãi với ID: ${promotionID}`, error);
             throw error;
         }
     },
+
 
     // Xóa khuyến mãi theo ID
     deletePromotion: async (id) => {

@@ -28,7 +28,7 @@ const ProductVersionService = {
             console.error("Error searching product versions:", error);
             throw error;
         }
-    },  
+    },
 
     // Lấy phiên bản sản phẩm theo ID
     getProductVersionById: async (id) => {
@@ -73,6 +73,33 @@ const ProductVersionService = {
             throw error;
         }
     },
+
+    // Lấy top 5 sản phẩm bán chạy nhất theo danh mục
+    getTopSellingProductsByCategory: async (categoryID, page = 0, size = 5) => {
+        try {
+            const response = await axios.get(`${BASE_URL}/top5ByCategory/${categoryID}`, {
+                params: { page, size },
+            });
+            return response.data;
+        } catch (error) {
+            console.error(`Error fetching top-selling products by category ${categoryID}:`, error);
+            throw error;
+        }
+    },
+
+    // Lấy top 5 sản phẩm bán chạy nhất theo thương hiệu
+    getTopSellingProductsByBrand: async (brandID, page = 0, size = 5) => {
+        try {
+            const response = await axios.get(`${BASE_URL}/top5ByBrand/${brandID}`, {
+                params: { page, size },
+            });
+            return response.data;
+        } catch (error) {
+            console.error(`Error fetching top-selling products by brand ${brandID}:`, error);
+            throw error;
+        }
+    },
+
 
     // Tạo phiên bản sản phẩm mới
     createProductVersion: async (productVersionData) => {
