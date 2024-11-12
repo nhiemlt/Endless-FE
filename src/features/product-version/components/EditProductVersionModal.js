@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import ProductService from '../../../services/ProductService';
 import ProductVersionService from '../../../services/productVersionService';
 import AttributeSelectionModal from './AttributeSelectionModal'; // Nhập modal thuộc tính ở đây
 import UploadFileService from '../../../services/UploadFileService';
 import { showNotification } from '../../common/headerSlice';
+import ProductService from '../../../services/ProductService';
 
 const EditProductVersionModal = ({ productVersion, onClose, onProductUpdated }) => {
     const [isAttributeModalOpen, setAttributeModalOpen] = useState(false);
 
+    const [productID, setProductID] = useState('');
     const [versionName, setVersionName] = useState('');
     const [price, setPrice] = useState(0);
     const [purchasePrice, setPurchasePrice] = useState(0);
@@ -16,23 +17,55 @@ const EditProductVersionModal = ({ productVersion, onClose, onProductUpdated }) 
     const [height, setHeight] = useState(0);
     const [length, setLength] = useState(0);
     const [width, setWidth] = useState(0);
-    const [imageUrl, setImageUrl] = useState('');
+    const [image, setImage] = useState('');
     const [previewLogo, setPreviewLogo] = useState(null);
     const [attributes, setAttributes] = useState([]);
     const [error, setError] = useState('');
     const dispatch = useDispatch();
+    const [products, setProducts] = useState([]); // State để lưu danh sách sản phẩm
+
+
+
+    // Gọi API để lấy danh sách sản phẩm
+    useEffect(() => {
+        const fetchProducts = async () => {
+            try {
+                const response = await ProductService.getProducts(); // Giả sử hàm này lấy danh sách sản phẩm
+
+                setProducts(response.content); // Cập nhật state với danh sách sản phẩm
+            } catch (error) {
+                console.error('Lỗi khi lấy danh sách sản phẩm:', error);
+            }
+        };
+
+        fetchProducts();
+    }, []);
 
     useEffect(() => {
         if (productVersion) {
-            setVersionName(productVersion.versionName);
-            setPrice(productVersion.price);
-            setPurchasePrice(productVersion.purchasePrice);
-            setWeight(productVersion.weight);
-            setHeight(productVersion.height);
-            setLength(productVersion.length);
-            setWidth(productVersion.width);
-            setImageUrl(productVersion.image);
-            setAttributes(productVersion.attributes || []);
+
+            console.log("Product Version data:", productVersion); // Kiểm tra dữ liệu đầu vào
+            setProductID(productVersion.product?.productID || '');
+            setVersionName(productVersion.versionName || '');
+            setPrice(productVersion.price || 0);
+            setPurchasePrice(productVersion.purchasePrice || 0);
+            setWeight(productVersion.weight || 0);
+            setHeight(productVersion.height || 0);
+            setLength(productVersion.length || 0);
+            setWidth(productVersion.width || 0);
+            setImage(productVersion.image || '');
+            // setAttributes(productVersion.attributes || []);
+
+            setAttributes(
+                productVersion.versionAttributes?.map(attr => ({
+                    attributeName: attr.attributeName,
+                    attributeValue: attr.attributeValue,
+                    attributeValueID: attr.attributeValueID,
+                    isChecked: true // hoặc false nếu mặc định là chưa chọn
+                })) || []
+            );
+            // Cập nhật ảnh xem trước nếu có ảnh từ productVersion
+            setPreviewLogo(productVersion.image || '');
         }
     }, [productVersion]);
 
@@ -45,7 +78,7 @@ const EditProductVersionModal = ({ productVersion, onClose, onProductUpdated }) 
                 try {
                     const uploadTask = UploadFileService.uploadProductImage(file);
                     const downloadURL = await uploadTask;
-                    setImageUrl(downloadURL);
+                    setImage(downloadURL);
                     setPreviewLogo(URL.createObjectURL(file));
                 } catch (error) {
                     dispatch(showNotification({ message: 'Lỗi khi tải ảnh lên.', status: 0 }));
@@ -57,8 +90,12 @@ const EditProductVersionModal = ({ productVersion, onClose, onProductUpdated }) 
             }
         }
     };
+    const openAttributeModal = () => {
+        setAttributeModalOpen(true);
+    };
 
     const handleAddAttribute = (newAttribute) => {
+        // console.log("Adding new attribute:", newAttribute); // Kiểm tra dữ liệu thuộc tính thêm mới
         const existingAttribute = attributes.find(
             (attr) => attr.attributeName === newAttribute.attributeName
         );
@@ -80,33 +117,27 @@ const EditProductVersionModal = ({ productVersion, onClose, onProductUpdated }) 
 
     const resetImage = () => {
         setPreviewLogo(null);
-        setImageUrl('');
+        setImage('');
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Kiểm tra tên phiên bản có trùng không
-        const existingVersion = await ProductVersionService.checkVersionName(versionName);
-        if (existingVersion) {
-            setError('Tên phiên bản đã tồn tại.');
-            return;
-        }
 
         const selectedAttributes = attributes.filter((attr) => attr.isChecked);
         const selectedAttributeValueID = selectedAttributes.map(attr => attr.attributeValueID);
 
-        if (selectedAttributes.length === 0) {
-            setError('Vui lòng chọn ít nhất một thuộc tính');
-            return;
-        }
+        // if (selectedAttributes.length === 0) {
+        //     setError('Vui lòng chọn ít nhất một thuộc tính');
+        //     return;
+        // }
 
         // Upload ảnh nếu có thay đổi
         if (previewLogo) {
             try {
                 const downloadURL = await UploadFileService.uploadProductImage(previewLogo);
-                setImageUrl(downloadURL);
-                dispatch(showNotification({ message: 'Tải ảnh lên thành công!', status: 1 }));
+                setImage(downloadURL);
+                // dispatch(showNotification({ message: 'Tải ảnh lên thành công!', status: 1 }));
             } catch (error) {
                 dispatch(showNotification({ message: 'Lỗi khi tải ảnh lên.', status: 0 }));
                 resetImage();
@@ -115,6 +146,7 @@ const EditProductVersionModal = ({ productVersion, onClose, onProductUpdated }) 
         }
 
         const updatedProductVersionData = {
+            productID, // Thêm productID vào đây
             versionName,
             price: parseFloat(price),
             purchasePrice: parseFloat(purchasePrice),
@@ -123,18 +155,30 @@ const EditProductVersionModal = ({ productVersion, onClose, onProductUpdated }) 
             length: parseFloat(length),
             width: parseFloat(width),
             attributeValueID: selectedAttributeValueID,
-            image: imageUrl,
+            image: image,
         };
+        console.log("Updated data to submit:", updatedProductVersionData); // Xác nhận dữ liệu
 
         try {
             const result = await ProductVersionService.updateProductVersion(productVersion.productVersionID, updatedProductVersionData);
             dispatch(showNotification({ message: 'Cập nhật phiên bản sản phẩm thành công!', status: 1 }));
-            if (onProductUpdated) onProductUpdated();
+            // Truyền kết quả cập nhật về component cha
+            if (onProductUpdated) onProductUpdated(result); // truyền `result` thay vì không có tham số
             onClose();
         } catch (error) {
-            dispatch(showNotification({ message: 'Cập nhật phiên bản sản phẩm thất bại!', status: 0 }));
+            if (error.response && error.response.data && error.response.data.message === 'Phiên bản sản phẩm với tên này đã tồn tại') {
+                dispatch(showNotification({ message: 'Tên phiên bản sản phẩm đã tồn tại, vui lòng chọn tên khác.', status: 0 }));
+            } else {
+                dispatch(showNotification({ message: 'Cập nhật phiên bản sản phẩm thất bại!', status: 0 }));
+            }
+            // dispatch(showNotification({ message: 'Cập nhật phiên bản sản phẩm thất bại!', status: 0 }));
+            // setError('Có lỗi xảy ra khi cập nhật phiên bản sản phẩm.');
+            // console.error("Error updating product version:", error.response?.data || error.message);
             setError('Có lỗi xảy ra khi cập nhật phiên bản sản phẩm.');
+
         }
+        console.log(productVersion.productVersionID);
+
     };
 
     return (
@@ -142,21 +186,24 @@ const EditProductVersionModal = ({ productVersion, onClose, onProductUpdated }) 
             <div className="fixed inset-0 bg-black bg-opacity-50 z-40"></div>
             <dialog className="modal modal-open" role="dialog">
                 <div className="modal-box w-11/12 max-w-4xl">
-                    <h3 className="font-bold text-lg">Thêm Phiên Bản Sản Phẩm</h3>
+                    <h3 className="font-bold text-lg">Chỉnh Sửa Phiên Bản Sản Phẩm</h3>
                     <form className="mt-4" onSubmit={handleSubmit}>
                         <div className="grid grid-cols-2 gap-4">
+
                             <select
                                 className="select select-bordered"
                                 required
+                                value={productID} // Gán value để chọn đúng sản phẩm
+                                onChange={(e) => setProductID(e.target.value)} // Thêm sự kiện để cập nhật state
                                 placeholder="Chọn Sản Phẩm"
-                            // value={selectedProduct}  // selectedProduct sẽ là ID của sản phẩm
-                            // onChange={(e) => setSelectedProduct(e.target.value)}  // setSelectedProduct cập nhật giá trị ID của sản phẩm
                             >
                                 <option value="">Chọn Sản Phẩm</option>
-
+                                {products.map((product, index) => (
+                                    <option key={product.productID || index} value={product.productID}>
+                                        {product.name}
+                                    </option>
+                                ))}
                             </select>
-
-
 
 
                             <input
@@ -167,7 +214,6 @@ const EditProductVersionModal = ({ productVersion, onClose, onProductUpdated }) 
                                 onChange={(e) => setVersionName(e.target.value)}
                                 required
                             />
-
                             <input
                                 type="number"
                                 placeholder="Giá Gốc"
@@ -181,9 +227,7 @@ const EditProductVersionModal = ({ productVersion, onClose, onProductUpdated }) 
                                         dispatch(showNotification({ message: 'Giá gốc phải lớn hơn hoặc bằng 0 và không vượt quá 1 tỷ', status: 0 }));
 
                                     }
-                                }}
-                                required
-                            />
+                                }} required />
 
                             <input
                                 type="number"
@@ -198,8 +242,7 @@ const EditProductVersionModal = ({ productVersion, onClose, onProductUpdated }) 
                                         dispatch(showNotification({ message: 'Giá bán phải lớn hơn hoặc bằng 0 và không vượt quá 1 tỷ', status: 0 }));
                                     }
                                 }}
-                                required
-                            />
+                                required />
 
                             <input
                                 type="number"
@@ -214,8 +257,7 @@ const EditProductVersionModal = ({ productVersion, onClose, onProductUpdated }) 
                                         dispatch(showNotification({ message: 'Trọng lượng phải lớn hơn hoặc bằng 0 và không vượt quá 1 tỷ', status: 0 }));
                                     }
                                 }}
-                                required
-                            />
+                                required />
 
                             <input
                                 type="number"
@@ -230,8 +272,7 @@ const EditProductVersionModal = ({ productVersion, onClose, onProductUpdated }) 
                                         dispatch(showNotification({ message: 'Chiều cao phải lớn hơn hoặc bằng 0 và không vượt quá 1 tỷ', status: 0 }));
                                     }
                                 }}
-                                required
-                            />
+                                required />
 
                             <input
                                 type="number"
@@ -246,8 +287,7 @@ const EditProductVersionModal = ({ productVersion, onClose, onProductUpdated }) 
                                         dispatch(showNotification({ message: 'Chiều dài phải lớn hơn hoặc bằng 0 và không vượt quá 1 tỷ', status: 0 }));
                                     }
                                 }}
-                                required
-                            />
+                                required />
 
                             <input
                                 type="number"
@@ -262,10 +302,8 @@ const EditProductVersionModal = ({ productVersion, onClose, onProductUpdated }) 
                                         dispatch(showNotification({ message: 'Chiều rộng phải lớn hơn hoặc bằng 0 và không vượt quá 1 tỷ', status: 0 }));
                                     }
                                 }}
-                                required
-                            />
-
-
+                                required />
+                            {/* Hình ảnh */}
                             <div className="mb-4">
                                 <input id="logoInput" type="file" onChange={handleImageChange} className="hidden" />
                                 <div className="h-40 flex justify-center items-center rounded-lg bg-cover cursor-pointer" onClick={() => document.getElementById('logoInput').click()}>
@@ -277,6 +315,7 @@ const EditProductVersionModal = ({ productVersion, onClose, onProductUpdated }) 
                                 </div>
                             </div>
 
+                            {/* Chọn thuộc tính */}
                             <div className="mb-4">
                                 <h4 className="font-bold">Chọn Thuộc Tính:</h4>
                                 <div className="grid grid-cols-2 gap-4">
@@ -285,7 +324,14 @@ const EditProductVersionModal = ({ productVersion, onClose, onProductUpdated }) 
                                             <input
                                                 type="checkbox"
                                                 checked={attr.isChecked}
-                                                // onChange={() => handleCheckboxChange(index)}
+                                                onChange={() => {
+                                                    const updatedAttributes = [...attributes];
+                                                    updatedAttributes[index] = {
+                                                        ...updatedAttributes[index],
+                                                        isChecked: !updatedAttributes[index].isChecked,
+                                                    };
+                                                    setAttributes(updatedAttributes);
+                                                }}
                                                 className="mr-2"
                                             />
                                             <span>{`${attr.attributeName}: ${attr.attributeValue}`}</span>
@@ -294,23 +340,26 @@ const EditProductVersionModal = ({ productVersion, onClose, onProductUpdated }) 
                                 </div>
                                 {error && <p className="text-red-500">{error}</p>}
                             </div>
+
                         </div>
 
                         <div className="modal-action mt-4">
                             <button type="button" className="btn btn-outline btn-sm btn-primary" onClick={() => setAttributeModalOpen(true)}>
                                 Thêm thuộc tính
                             </button>
-                            <button type="submit" className="btn btn-outline btn-sm btn-primary">Thêm</button>
+                            <button type="submit" className="btn btn-outline btn-sm btn-primary">Cập nhật</button>
                             <button type="button" className="btn btn-outline btn-sm btn-secondary" onClick={onClose}>Đóng</button>
                         </div>
                     </form>
                 </div>
             </dialog>
 
-            {/* Modal thuộc tính */}
             {isAttributeModalOpen && (
                 <AttributeSelectionModal
-                    attributes={attributes} onAddAttribute={handleAddAttribute} onClose={() => setAttributeModalOpen(false)} />
+                    isOpen={isAttributeModalOpen}
+                    onClose={() => setAttributeModalOpen(false)}
+                    onAddAttribute={handleAddAttribute}
+                />
             )}
         </>
     );
