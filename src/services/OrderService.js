@@ -2,6 +2,15 @@ import axios from 'axios';
 import constants from '../utils/globalConstantUtil';
 
 const OrderService = {
+
+    // Lấy tất cả đơn hàng của người dùng hiện tại
+    getAllOrderByUserLogin: async (searchText) => {
+        const response = await axios.get(`${constants.API_BASE_URL}/orders/user`, {
+            params: { searchText },
+        });
+        return response.data; // Trả về dữ liệu API
+    },
+
     // Lấy tất cả đơn hàng với các tham số tìm kiếm
     getAllOrders: async (searchText, startDate, endDate, page, size) => {
         const response = await axios.get(`${constants.API_BASE_URL}/orders`, {

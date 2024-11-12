@@ -20,11 +20,12 @@ function Product() {
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
   const [filterData, setFilterData] = useState({
+    priceMin: '',
+    priceMax: '',
     categories: [],
     brands: [],
-    priceMin: '',
-    priceMax: ''
   });
+
 
   // Gọi API lấy danh sách sản phẩm với phân trang và bộ lọc
   useEffect(() => {
@@ -53,7 +54,7 @@ function Product() {
   const fetchCategories = async () => {
     try {
       const response = await CategoryService.getCategories({});
-      setCategories(response.content); // Giả sử API trả về { content: [...], totalPages: ... }
+      setCategories(response.content);
     } catch (error) {
       console.error('Error fetching categories:', error);
     }
@@ -77,48 +78,54 @@ function Product() {
     fetchBrands();
   }, []);
 
+
+  // Hàm gọi API lọc sản phẩm
+  const fetchFilteredProducts = async (filterData) => {
+    try {
+      const filteredData = await productVersionService.filterProductVersions(filterData);
+      // Lưu kết quả lọc vào state
+      setProducts(filteredData);
+    } catch (error) {
+      console.error("Error fetching filtered products:", error);
+    }
+  };
+
   useEffect(() => {
-    const fetchFilteredProducts = async () => {
-      try {
-        const filteredData = await productVersionService.filterProductVersions(filterData);
-        // Xử lý kết quả lọc, ví dụ gán vào state
-        console.log(filteredData);
-      } catch (error) {
-        console.error("Error fetching filtered products:", error);
-      }
-    };
-
-    fetchFilteredProducts();
-  }, [filterData]);
+    console.log("Current filter data:", filterData);  // Kiểm tra dữ liệu lọc
+    fetchFilteredProducts(filterData);                // Gọi API lọc khi `filterData` thay đổi
+}, [filterData]);
 
 
-  const handleCategoryChange = (categoryId) => {
-    setFilterData((prevState) => {
-      // Kiểm tra nếu categoryId đã có trong danh sách categories thì bỏ chọn nó, nếu chưa có thì thêm nó vào
-      const newCategories = prevState.categories.includes(categoryId)
-        ? prevState.categories.filter(id => id !== categoryId)
-        : [...prevState.categories, categoryId];
+  // Thêm console.log để kiểm tra khi cập nhật giá trị
+const handlePriceChange = (e, field) => {
+  setFilterData((prev) => {
+      const newData = { ...prev, [field]: e.target.value };
+      console.log("Updated price filter data:", newData);
+      return newData;
+  });
+};
 
-      // Trả về một object mới để cập nhật state
-      return { ...prevState, categories: newCategories };
-    });
-  };
+const handleCategoryChange = (categoryID) => {
+  setFilterData((prev) => {
+      const newCategories = prev.categories.includes(categoryID)
+          ? prev.categories.filter((id) => id !== categoryID)
+          : [...prev.categories, categoryID];
+      const newData = { ...prev, categories: newCategories };
+      console.log("Updated category filter data:", newData);
+      return newData;
+  });
+};
 
-  const handleBrandChange = (brandId) => {
-    setFilterData((prevState) => {
-      const newBrands = prevState.brands.includes(brandId)
-        ? prevState.brands.filter(id => id !== brandId)
-        : [...prevState.brands, brandId];
-      return { ...prevState, brands: newBrands };
-    });
-  };
-
-  const handlePriceChange = (e, field) => {
-    setFilterData((prevState) => ({
-      ...prevState,
-      [field]: e.target.value,
-    }));
-  };
+const handleBrandChange = (brandID) => {
+  setFilterData((prev) => {
+      const newBrands = prev.brands.includes(brandID)
+          ? prev.brands.filter((id) => id !== brandID)
+          : [...prev.brands, brandID];
+      const newData = { ...prev, brands: newBrands };
+      console.log("Updated brand filter data:", newData);
+      return newData;
+  });
+};
 
 
   //Hàm định dạng tiền 
@@ -162,8 +169,8 @@ function Product() {
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
               className="grow h-10 text-xs dark:bg-base-100"
-              placeholder="Tìm kiếm" 
-            
+              placeholder="Tìm kiếm"
+
             />
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -182,7 +189,7 @@ function Product() {
 
         {/* Dropdown Sort By */}
         <div>
-          <label htmlFor="SortBy" className="block text-xs font-medium dark:text-white text-gray-900 mt-2"><b>Sort By</b></label>
+          <label htmlFor="SortBy" className="block text-xs font-medium dark:text-white text-gray-900 mt-5"><b>Sắp xếp</b></label>
           <select id="SortBy" value={`${sortBy}, ${direction}`} onChange={(e) => {
             const [field, dir] = e.target.value.split(', ');
             setSortBy(field);
@@ -194,8 +201,6 @@ function Product() {
             <option value="price, DESC">Tiền - Giảm dần</option>
           </select>
         </div>
-
-        <hr />
 
         {/* Phần lọc khoảng giá */}
         <div className="flex items-center gap-2 mt-5">
@@ -229,19 +234,18 @@ function Product() {
               <div className="border-t border-gray-200 dark:bg-base-100 bg-white">
                 <ul className="space-y-1 border-t border-gray-200 p-4">
                   {categories.map((category) => (
-                    <li key={category.id}>
+                    <li key={category.categoryID}>
                       <label className="inline-flex items-center gap-2">
                         <input
                           type="checkbox"
-                          checked={filterData.categories.includes(category.id)} // Kiểm tra xem checkbox có trong danh sách categories đã chọn không
-                          onChange={() => handleCategoryChange(category.id)} // Khi chọn hoặc bỏ chọn, gọi hàm handleCategoryChange
+                          checked={filterData.categories.includes(category.categoryID)} // Kiểm tra xem category có được chọn không
+                          onChange={() => handleCategoryChange(category.categoryID)} // Gọi hàm handleCategoryChange khi checkbox thay đổi
                         />
                         <span className="text-sm font-medium dark:text-white text-gray-900">{category.name}</span>
                       </label>
                     </li>
                   ))}
-
-                </ul>
+                </ul> 
               </div>
             </details>
           </div>
@@ -256,13 +260,13 @@ function Product() {
               <div className="border-t border-gray-200 dark:bg-base-100 bg-white">
                 <ul className="space-y-1 border-t border-gray-200 p-4">
                   {brands.map((brand) => (
-                    <li key={brand.id}>
+                    <li key={brand.brandID}>
                       <label className="inline-flex items-center gap-2">
                         <input
                           type="checkbox"
-                          value={brand.id}
-                          checked={filterData.brands.includes(brand.id)} // Kiểm tra xem checkbox có trong danh sách brands đã chọn không
-                          onChange={() => handleBrandChange(brand.id)} // Khi chọn hoặc bỏ chọn, gọi hàm handleBrandChange
+                          value={brand.brandID}
+                          checked={filterData.brands.includes(brand.brandID)} // Kiểm tra xem checkbox có trong danh sách brands đã chọn không
+                          onChange={() => handleBrandChange(brand.brandID)} // Khi chọn hoặc bỏ chọn, gọi hàm handleBrandChange
                         />
                         <span className="text-sm font-medium dark:text-white text-gray-900">{brand.brandName}</span>
                       </label>
@@ -278,11 +282,13 @@ function Product() {
 
       {/* Phần hiển thị sản phẩm */}
       <div className="flex-1 p-4">
+      {products.length > 0 ? (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
           {products.map((product) => (
             <div
               key={product.productVersionID}
-              className="group relative block overflow-hidden">
+              className="group relative block overflow-hidden"
+            >
               <img
                 src={product.image}
                 className="h-30 w-full object-cover transition duration-500 group-hover:scale-105"
@@ -296,7 +302,6 @@ function Product() {
                 <p className="mt-1 text-sm text-gray-900 h-20">
                   <b>{product.product.name} | {product.versionName}</b>
                 </p>
-
 
                 {/* Hiển thị đánh giá */}
                 <div className="flex items-center mt-2">
@@ -362,6 +367,9 @@ function Product() {
             </div>
           ))}
         </div>
+      ) : (
+        <p className="text-center text-gray-600">Không có sản phẩm tương ứng</p>
+      )}
         {/* Phân trang */}
         <div className="mt-4 flex justify-center">
           <div className="join grid grid-cols-2">

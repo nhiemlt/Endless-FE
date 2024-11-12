@@ -4,20 +4,20 @@ import {
   TruckIcon,
   ClockIcon,
   CurrencyDollarIcon,
+  ClipboardDocumentCheckIcon,
+  ShieldCheckIcon,
 } from "@heroicons/react/24/solid";
 import OrderService from "../../services/OrderService";
-import UserService from "../../services/UserService";
 
 function PurchaseHistory() {
   const [orders, setOrders] = useState([]);
   const [filteredOrders, setFilteredOrders] = useState([]);
-  const [loggedInUserId, setLoggedInUserId] = useState(null);
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [activeTab, setActiveTab] = useState("Tất cả");
   const [searchText, setSearchText] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
-  const [size, setSize] = useState(10);
+  const [size, setSize] = useState(5);
   const [totalPages, setTotalPages] = useState(0);
 
   const orderStatuses = [
@@ -28,36 +28,30 @@ function PurchaseHistory() {
     "Đã xác nhận",
     "Đang giao hàng",
     "Đã giao hàng",
-    "Đã hủy", // Thêm trạng thái "Đã hủy" vào đây
+    "Đã hủy",
   ];
 
   useEffect(() => {
-    const fetchUserAndOrders = async () => {
+    const fetchOrders = async () => {
       try {
-        const currentUser = await UserService.getCurrentUser();
-        setLoggedInUserId(currentUser.userID);
-
-        const fetchedOrders = await OrderService.getAllOrders(
-          currentUser.userID,
+        const fetchedOrders = await OrderService.getAllOrderByUserLogin(
+          null,
           searchText,
           null,
           currentPage,
           size
         );
 
-        const filteredOrders = fetchedOrders.data.content.filter(
-          (order) => order.customer.userID === currentUser.userID
-        );
-
-        setOrders(filteredOrders);
+        // Set both orders and filtered orders
+        setOrders(fetchedOrders.data.content);
         setTotalPages(fetchedOrders.data.totalPages);
-        setFilteredOrders(filteredOrders);
+        setFilteredOrders(fetchedOrders.data.content);
       } catch (error) {
         console.error("Lỗi khi lấy lịch sử mua hàng:", error);
       }
     };
 
-    fetchUserAndOrders();
+    fetchOrders();
   }, [searchText, currentPage, size]);
 
   useEffect(() => {
@@ -96,10 +90,6 @@ function PurchaseHistory() {
   const closeModal = () => {
     setModalIsOpen(false);
     setSelectedOrder(null);
-  };
-
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
   };
 
   const renderPagination = () => {
@@ -146,7 +136,9 @@ function PurchaseHistory() {
             <button
               key={page}
               onClick={() => handlePageChange(page)}
-              className={`join-item btn ${currentPage === page ? "btn-primary" : ""}`}
+              className={`join-item btn ${
+                currentPage === page ? "btn-primary" : ""
+              }`}
             >
               {page + 1}
             </button>
@@ -164,9 +156,43 @@ function PurchaseHistory() {
     );
   };
 
-  function formatMoney(amount) {
-    return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-  }
+  const handlePageChange = (page) => {
+    if (page >= 0 && page < totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const formatMoney = (value) => {
+    if (value === undefined || value === null) {
+      return "0";
+    }
+    return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " đ";
+  };
+
+  const handleCancelOrder = async (orderId) => {
+    try {
+      await OrderService.cancelOrder(orderId);
+      setSelectedOrder((prev) => ({ ...prev, status: "Đã hủy" }));
+      alert("Order canceled successfully");
+    } catch (error) {
+      console.error("Failed to cancel order:", error);
+    }
+  };
+
+  const handleMarkAsDelivered = async (orderId) => {
+    try {
+      const updatedOrder = await OrderService.markOrderAsDelivered(orderId);
+      setOrders((prevOrders) =>
+        prevOrders.map((order) =>
+          order.orderID === orderId
+            ? { ...order, status: "Đã giao hàng" }
+            : order
+        )
+      );
+    } catch (error) {
+      console.error("Failed to mark order as delivered:", error);
+    }
+  };
 
   return (
     <div className="bg-base-200 min-h-screen py-12 px-8">
@@ -177,7 +203,9 @@ function PurchaseHistory() {
         {orderStatuses.map((status) => (
           <a
             key={status}
-            className={`tab tab-lifted ${activeTab === status ? "tab-active" : ""}`}
+            className={`tab tab-lifted ${
+              activeTab === status ? "tab-active" : ""
+            }`}
             onClick={() => setActiveTab(status)}
           >
             {status}
@@ -214,7 +242,7 @@ function PurchaseHistory() {
                       : order.status === "Đã giao hàng"
                       ? "bg-green-300 text-green-800"
                       : order.status === "Đã hủy"
-                      ? "bg-red-300 text-red-800" // Màu sắc cho trạng thái "Đã hủy"
+                      ? "bg-red-300 text-red-800"
                       : "bg-gray-300 text-gray-800"
                   }`}
                 >
@@ -230,7 +258,9 @@ function PurchaseHistory() {
                 />
 
                 <div className="flex flex-col justify-between flex-1">
-                  <h2 className="text-lg font-semibold">{order.orderDetails[0].productName}</h2>
+                  <h2 className="text-lg font-semibold">
+                    {order.orderDetails[0].productName}
+                  </h2>
                   <p className="text-sm text-gray-600 dark:text-gray-300">
                     {order.orderDetails[0].productVersionName}
                   </p>
@@ -240,13 +270,23 @@ function PurchaseHistory() {
                       Số lượng: {order.orderDetails[0].quantity}
                     </p>
 
-                    <div className="flex items-center space-x-2">
-                      <p className="text-sm text-gray-400 dark:text-gray-500 line-through">
-                        {formatMoney(order.orderDetails[0].price)} đ
-                      </p>
-                      <p className="text-lg font-semibold text-gray-800 dark:text-white">
-                        {formatMoney(order.orderDetails[0].discountPrice)} đ
-                      </p>
+                    <div className="flex justify-between items-center space-x-2 mt-4">
+                      {order.orderDetails[0].discountPrice &&
+                      order.orderDetails[0].discountPrice !==
+                        order.orderDetails[0].price ? (
+                        <>
+                          <p className="text-sm text-gray-400 dark:text-gray-500 line-through">
+                            {formatMoney(order.orderDetails[0].price)}
+                          </p>
+                          <p className="text-lg font-semibold text-gray-800 dark:text-white">
+                            {formatMoney(order.orderDetails[0].discountPrice)}
+                          </p>
+                        </>
+                      ) : (
+                        <p className="text-lg font-semibold text-gray-800 dark:text-white">
+                          {formatMoney(order.orderDetails[0].discountPrice)}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -255,8 +295,34 @@ function PurchaseHistory() {
               <div className="flex justify-between items-center mt-4">
                 <span className="text-lg font-semibold">Tổng tiền:</span>
                 <span className="text-lg font-bold text-gray-900 dark:text-white">
-                  {formatMoney(order.totalMoney)} đ
+                  {formatMoney(order.totalMoney)}
                 </span>
+              </div>
+
+              <div className="flex justify-between items-center mt-4">
+                {(order.status === "Chờ xác nhận" ||
+                  order.status === "Chờ thanh toán") && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleCancelOrder(order.orderID);
+                    }}
+                    className="btn btn-error w-auto text-sm"
+                  >
+                    Hủy Đơn Hàng
+                  </button>
+                )}
+                {order.status === "Đang giao hàng" && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleMarkAsDelivered(order.orderID);
+                    }}
+                    className="btn btn-success w-auto text-sm"
+                  >
+                    Đã nhận hàng
+                  </button>
+                )}
               </div>
             </div>
           ))
@@ -276,7 +342,7 @@ function PurchaseHistory() {
               Thông Tin Hóa Đơn
             </h2>
 
-            {/* Dòng chữ mã hóa đơn */}
+            {/* Order ID display */}
             <p className="text-sm text-center text-gray-600 dark:text-gray-300 mb-4">
               Mã hóa đơn:{" "}
               <span className="font-semibold">{selectedOrder.orderID}</span>
@@ -298,7 +364,7 @@ function PurchaseHistory() {
                     : "step-inactive text-gray-400 dark:text-gray-500"
                 }`}
               >
-                <ClockIcon className="w-6 h-6 mb-2" />
+                <ClockIcon className="w-10 h-10 mb-2" />
                 <span className="text-sm text-center text-gray-900 dark:text-white">
                   Chờ xác nhận
                 </span>
@@ -318,7 +384,7 @@ function PurchaseHistory() {
                     : "step-inactive text-gray-400 dark:text-gray-500"
                 }`}
               >
-                <CurrencyDollarIcon className="w-6 h-6 mb-2" />
+                <CurrencyDollarIcon className="w-10 h-10 mb-2" />
                 <span className="text-sm text-center text-gray-900 dark:text-white">
                   Chờ thanh toán
                 </span>
@@ -337,7 +403,7 @@ function PurchaseHistory() {
                     : "step-inactive text-gray-400 dark:text-gray-500"
                 }`}
               >
-                <CheckCircleIcon className="w-6 h-6 mb-2" />
+                <ClipboardDocumentCheckIcon className="w-10 h-10 mb-2" />
                 <span className="text-sm text-center text-gray-900 dark:text-white">
                   Đã thanh toán
                 </span>
@@ -353,7 +419,7 @@ function PurchaseHistory() {
                     : "step-inactive text-gray-400 dark:text-gray-500"
                 }`}
               >
-                <CheckCircleIcon className="w-6 h-6 mb-2" />
+                <ShieldCheckIcon className="w-10 h-10 mb-2" />
                 <span className="text-sm text-center text-gray-900 dark:text-white">
                   Đã xác nhận
                 </span>
@@ -369,7 +435,7 @@ function PurchaseHistory() {
                     : "step-inactive text-gray-400 dark:text-gray-500"
                 }`}
               >
-                <TruckIcon className="w-6 h-6 mb-2" />
+                <TruckIcon className="w-10 h-10 mb-2" />
                 <span className="text-sm text-center text-gray-900 dark:text-white">
                   Đang giao hàng
                 </span>
@@ -383,7 +449,7 @@ function PurchaseHistory() {
                     : "step-inactive text-gray-400 dark:text-gray-500"
                 }`}
               >
-                <CheckCircleIcon className="w-6 h-6 mb-2" />
+                <CheckCircleIcon className="w-10 h-10 mb-2" />
                 <span className="text-sm text-center text-gray-900 dark:text-white">
                   Đã giao hàng
                 </span>
@@ -404,8 +470,21 @@ function PurchaseHistory() {
                       {item.productVersionName}
                     </p>
                     <p className="text-sm text-gray-600 dark:text-gray-300">
-                      Số lượng: {item.quantity} | Giá: {formatMoney(item.price)}{" "}
-                      đ
+                      Số lượng: {item.quantity} | Giá:{" "}
+                      {item.discountPrice ? (
+                        <>
+                          <span className="line-through text-gray-500">
+                            {formatMoney(item.price)}
+                          </span>{" "}
+                          <span className="font-semibold text-red-600">
+                            {formatMoney(item.discountPrice)}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="font-semibold">
+                          {formatMoney(item.price)}
+                        </span>
+                      )}
                     </p>
                   </div>
                 </li>
@@ -422,36 +501,33 @@ function PurchaseHistory() {
               </p>
             </div>
 
-            {/* Thông tin thanh toán */}
             <div className="mt-6 space-y-4">
               <h3 className="text-xl font-semibold">Thông tin thanh toán:</h3>
-
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <p className="text-lg font-semibold">Tổng tiền:</p>
                   <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {formatMoney(selectedOrder.totalProductPrice)} đ
+                    {formatMoney(selectedOrder.totalProductPrice)}
                   </p>
                 </div>
-
                 <div className="flex justify-between">
                   <p className="text-lg font-semibold">Phí vận chuyển:</p>
                   <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {formatMoney(selectedOrder.shipFee)} đ
+                    {formatMoney(selectedOrder.shipFee)}
                   </p>
                 </div>
-
-                <div className="flex justify-between">
-                  <p className="text-lg font-semibold">Giảm giá voucher:</p>
-                  <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                    -{formatMoney(selectedOrder.voucherDiscount || 0)} đ
-                  </p>
-                </div>
-
+                {selectedOrder.voucherDiscount > 0 && (
+                  <div className="flex justify-between">
+                    <p className="text-lg font-semibold">Giảm giá voucher:</p>
+                    <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                      -{formatMoney(selectedOrder.voucherDiscount)}
+                    </p>
+                  </div>
+                )}
                 <div className="flex justify-between border-t pt-4">
                   <p className="text-lg font-semibold">Tổng thanh toán:</p>
                   <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {formatMoney(selectedOrder.totalMoney)} đ
+                    {formatMoney(selectedOrder.totalMoney)}
                   </p>
                 </div>
               </div>
@@ -459,7 +535,7 @@ function PurchaseHistory() {
 
             <button
               onClick={closeModal}
-              className="btn w-full bg-gray-800 text-white hover:bg-gray-700 py-2 rounded-lg dark:bg-gray-600 dark:text-gray-300 dark:hover:bg-gray-500"
+              className="btn w-full bg-gray-800 text-white hover:bg-gray-700 py-2 rounded-lg dark:bg-gray-600 dark:text-gray-300 dark:hover:bg-gray-500 mt-4"
             >
               Đóng
             </button>
