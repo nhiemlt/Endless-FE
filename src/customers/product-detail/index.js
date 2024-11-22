@@ -50,6 +50,11 @@ function ProductDetail() {
     return ratingsByStar[stars] ? ratingsByStar[stars].length : 0;
   };
 
+  // Hàm để lấy tất cả các đánh giá
+  const getAllRatings = () => {
+    return ratings;
+  };
+
   //Hàm thêm sản phẩm vào giỏ hàng
   const handleAddToCart = async (product) => {
     const cartModel = {
@@ -64,12 +69,6 @@ function ProductDetail() {
       dispatch(showNotification({ message: "Lỗi khi thêm vào giỏ hàng.", status: 0 })); // Hiển thị thông báo lỗi
       console.error("Lỗi khi thêm vào giỏ hàng:", error); // In lỗi nếu có
     }
-  };
-
-  // Hàm xử lý khi nhấn nút "Mua"
-  const handleBuyNow = (product) => {
-    setSelectedProduct(product); // Lưu sản phẩm vào trạng thái
-    navigate('/purchase', { state: { product } });  // Chuyển hướng và truyền thông tin sản phẩm
   };
 
   return (
@@ -87,9 +86,12 @@ function ProductDetail() {
                     alt={product?.product?.name || "product"}
                     className="rounded object-cover w-full"
                   />
-                  <p className="absolute top-2 left-2 bg-red-600 text-white font-semibold text-xs px-2 py-1 rounded-md shadow-md">
-                    - {product?.discountPercentage}%
-                  </p>
+                  {/* Chỉ hiển thị giảm giá nếu product.discountPercentage > 0 */}
+                  {product.discountPercentage > 0 && (
+                    <p className="absolute top-2 left-2 bg-red-600 text-white font-semibold text-xs px-2 py-1 rounded-md shadow-md">
+                      - {product.discountPercentage}%
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -119,20 +121,34 @@ function ProductDetail() {
                 )}
               </div>
               <div className="flex flex-wrap gap-4 mt-8">
-                <p className="text-red-600 dark:text-red-500 text-2xl font-bold">
-                  {product?.discountPrice?.toLocaleString("vi-VN", {
-                    style: "currency",
-                    currency: "VND",
-                  }) || "Giá giảm"}
-                </p>
-                <p className="text-gray-400 dark:text-gray-500 text-base">
-                  <strike>
-                    {product?.price?.toLocaleString("vi-VN", {
+                {/* Kiểm tra nếu giá gốc và giá giảm bằng nhau */}
+                {product?.price === product?.discountPrice ? (
+                  // Nếu bằng nhau, chỉ hiển thị giá giảm
+                  <p className="text-red-600 dark:text-red-500 text-2xl font-bold">
+                    {product?.discountPrice?.toLocaleString("vi-VN", {
                       style: "currency",
                       currency: "VND",
-                    }) || "Giá gốc"}
-                  </strike>
-                </p>
+                    }) || "Giá giảm"}
+                  </p>
+                ) : (
+                  // Nếu khác nhau, hiển thị cả giá gốc và giá giảm
+                  <>
+                    <p className="text-red-600 dark:text-red-500 text-2xl font-bold">
+                      {product?.discountPrice?.toLocaleString("vi-VN", {
+                        style: "currency",
+                        currency: "VND",
+                      }) || "Giá giảm"}
+                    </p>
+                    <p className="text-gray-400 dark:text-gray-500 text-base">
+                      <strike>
+                        {product?.price?.toLocaleString("vi-VN", {
+                          style: "currency",
+                          currency: "VND",
+                        }) || "Giá gốc"}
+                      </strike>
+                    </p>
+                  </>
+                )}
               </div>
               <p className="text-2xl font-extrabold text-gray-900 dark:text-white">
                 {product?.product?.description}
@@ -148,7 +164,6 @@ function ProductDetail() {
               </div>
             </div>
           </div>
-
 
           {/* Phần thuộc tính */}
           <div className="mt-16 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.3)] p-6 dark:bg-base-100 dark:text-gray-200">
@@ -171,13 +186,20 @@ function ProductDetail() {
                 Đánh giá ({ratings.length})
               </h3>
 
-              {/* Các tab 5 sao, 4 sao, 3 sao, 2 sao, 1 sao */}
+              {/* Các tab 5 sao, 4 sao, 3 sao, 2 sao, 1 sao và "Tất cả" */}
               <div role="tablist" className="tabs tabs-bordered mt-4 w-full">
+                <a
+                  role="tab"
+                  className={`tab ${selectedTab === 'all' ? 'tab-active text-red-600' : ''} w-full md:w-auto`}
+                  onClick={() => handleTabClick('all')}
+                >
+                  Tất cả ({ratings.length})
+                </a>
                 {ratingCategories.map(stars => (
                   <a
                     key={stars}
                     role="tab"
-                    className={`tab ${selectedTab === stars ? 'tab-active' : ''} w-full md:w-auto`}
+                    className={`tab ${selectedTab === stars ? 'tab-active text-red-600' : ''} w-full md:w-auto`}
                     onClick={() => handleTabClick(stars)}
                   >
                     {stars} sao ({getRatingCount(stars)})
@@ -187,7 +209,7 @@ function ProductDetail() {
 
               {/* Hiển thị đánh giá theo tab đã chọn */}
               <div className="mt-4">
-                {ratingsByStar[selectedTab]?.map((rating, index) => (
+                {(selectedTab === 'all' ? getAllRatings() : ratingsByStar[selectedTab])?.map((rating, index) => (
                   <div key={index} className="flex items-start text-gray-800 dark:text-gray-100">
                     <img src={rating?.avatar} className="w-12 h-12 rounded-full border-2 border-white" />
                     <div className="ml-3">

@@ -347,11 +347,14 @@ function Home() {
                       onClick={() => handleImageClick(product)}
                       alt={product.product.name}
                     />
-                    <p className="absolute top-2 left-2 bg-red-600 text-white font-semibold text-xs px-2 py-1 rounded-md shadow-md">
-                      - {product.discountPercentage}%
-                    </p>
+                    {/* Chỉ hiển thị giảm giá nếu product.discountPercentage > 0 */}
+                    {product.discountPercentage > 0 && (
+                      <p className="absolute top-2 left-2 bg-red-600 text-white font-semibold text-xs px-2 py-1 rounded-md shadow-md">
+                        - {product.discountPercentage}%
+                      </p>
+                    )}
                     <div className="relative bg-blue-50 p-4">
-                      <p className="mt-1 text-sm text-gray-900 h-20">
+                      <p className="mt-1 text-sm text-gray-900 h-8 overflow-hidden text-ellipsis whitespace-nowrap transform scale-95">
                         <b>{product.product.name} | {product.versionName}</b>
                       </p>
                       <div className="flex items-center mt-2">
@@ -375,25 +378,40 @@ function Home() {
                           </p>
                         )}
                       </div>
-                      <span className="mt-1 text-xs text-gray-500">
-                        <s>{formatCurrency(product.price)}</s>
-                      </span>{" "}
-                      <span
-                        className="mt-1 text-sm text-red-600"
-                        style={{
-                          animation: "blink 1s linear infinite",
-                        }}
-                      >
-                        <b>{formatCurrency(product.discountPrice)}</b>
-                        <br />
-                      </span>
+
+                      {/* Kiểm tra giá để hiển thị giá và hiệu ứng */}
+                      {formatCurrency(product.price) === formatCurrency(product.discountPrice) ? (
+                        <span
+                          className="mt-1 text-sm text-red-600"
+                          style={{
+                            animation: "blink 1s linear infinite",
+                          }}
+                        >
+                          <b>{formatCurrency(product.price)}</b>
+                        </span>
+                      ) : (
+                        <>
+                          <span className="mt-1 text-xs text-gray-500">
+                            <s>{formatCurrency(product.price)}</s>
+                          </span>{" "}
+                          <span
+                            className="mt-1 text-sm text-red-600"
+                            style={{
+                              animation: "blink 1s linear infinite",
+                            }}
+                          >
+                            <b>{formatCurrency(product.discountPrice)}</b>
+                            <br />
+                          </span>
+                        </>
+                      )}
 
                       <style>
                         {`@keyframes blink {
-                        0%, 100% { opacity: 1; }
-                        50% { opacity: 0; }}`}
+                  0%, 100% { opacity: 1; }
+                  50% { opacity: 0; }}`}
                       </style>
-
+                      <br />
                       <span className="mt-1 text-xs text-gray-400">Đã bán: {product.quantitySold} | </span>
                       <span className="mt-1 text-xs text-gray-400">
                         Tồn kho:{" "}
@@ -422,6 +440,7 @@ function Home() {
             </div>
           </div>
         </section>
+
 
       </main>
     </div>

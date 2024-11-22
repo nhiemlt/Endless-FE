@@ -6,6 +6,7 @@ import ProfileService from '../../../services/profileService';
 import GHNService from '../../../services/GHNService';
 import UserAddressService from "../../../services/userAddressService";
 import UploadFileService from "../../../services/UploadFileService";
+import roleService from "../../../services/roleService";
 import TrashIcon from '@heroicons/react/24/outline/TrashIcon';
 
 function ProfileSettings() {
@@ -112,11 +113,11 @@ function ProfileSettings() {
             dispatch(showNotification({ message: `Cập nhật thông tin thất bại: ${error.message}`, status: 0 }));
             console.error("Lỗi khi cập nhật thông tin người dùng:", error);
         }
-        
+
         window.location.reload(); // Reload trang để hiển thị thông tin mới
-        
-        
-    };  
+
+
+    };
 
 
 
@@ -286,6 +287,26 @@ function ProfileSettings() {
         }
     };
 
+    const [roles, setRoles] = useState([]);
+
+    const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+
+    useEffect(() => {
+        const fetchUserRoles = async () => {
+            try {
+                if (userInfo && userInfo.roleId) {
+                    const userRoles = await roleService.getUsersByRole(userInfo.roleId);
+                    setRoles(userRoles.map(role => role.name));
+                    console.log(userRoles)
+                }
+            } catch (error) {
+                console.error("Lỗi khi lấy vai trò người dùng:", error);
+            }
+        };
+
+        fetchUserRoles();
+    }, [userInfo]);
+
     return (
         <TitleCard title="Thông tin cá nhân">
             {/* Tabs */}
@@ -335,6 +356,9 @@ function ProfileSettings() {
                                     </div>
                                 </div>
                             </div>
+                            <p className="text-center mt-2">
+                                {roles.length > 0 ? roles.join(' | ') : 'Chưa có vai trò'}
+                            </p>
                         </div>
                         <div className="flex gap-2 justify-center w-full">
                             <div className="w-full mb-4">
