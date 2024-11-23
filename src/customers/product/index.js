@@ -12,7 +12,7 @@ function Product() {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [page, setPage] = useState(0);
-  const [size, setSize] = useState(10);
+  const [size, setSize] = useState(8);
   const [totalPages, setTotalPages] = useState(0);
   const [sortBy, setSortBy] = useState('versionName');
   const [direction, setDirection] = useState('ASC');
@@ -33,6 +33,7 @@ function Product() {
       try {
         const data = await productVersionService.getAllProductVersions(page, size, sortBy, direction, keyword);
         setProducts(data.content);
+        setTotalPages(data.totalPages); // Cập nhật totalPages từ phản hồi API
       } catch (error) {
         console.error("Error fetching products:", error);
       }
@@ -93,39 +94,39 @@ function Product() {
   useEffect(() => {
     console.log("Current filter data:", filterData);  // Kiểm tra dữ liệu lọc
     fetchFilteredProducts(filterData);                // Gọi API lọc khi `filterData` thay đổi
-}, [filterData]);
+  }, [filterData]);
 
 
   // Thêm console.log để kiểm tra khi cập nhật giá trị
-const handlePriceChange = (e, field) => {
-  setFilterData((prev) => {
+  const handlePriceChange = (e, field) => {
+    setFilterData((prev) => {
       const newData = { ...prev, [field]: e.target.value };
       console.log("Updated price filter data:", newData);
       return newData;
-  });
-};
+    });
+  };
 
-const handleCategoryChange = (categoryID) => {
-  setFilterData((prev) => {
+  const handleCategoryChange = (categoryID) => {
+    setFilterData((prev) => {
       const newCategories = prev.categories.includes(categoryID)
-          ? prev.categories.filter((id) => id !== categoryID)
-          : [...prev.categories, categoryID];
+        ? prev.categories.filter((id) => id !== categoryID)
+        : [...prev.categories, categoryID];
       const newData = { ...prev, categories: newCategories };
       console.log("Updated category filter data:", newData);
       return newData;
-  });
-};
+    });
+  };
 
-const handleBrandChange = (brandID) => {
-  setFilterData((prev) => {
+  const handleBrandChange = (brandID) => {
+    setFilterData((prev) => {
       const newBrands = prev.brands.includes(brandID)
-          ? prev.brands.filter((id) => id !== brandID)
-          : [...prev.brands, brandID];
+        ? prev.brands.filter((id) => id !== brandID)
+        : [...prev.brands, brandID];
       const newData = { ...prev, brands: newBrands };
       console.log("Updated brand filter data:", newData);
       return newData;
-  });
-};
+    });
+  };
 
 
   //Hàm định dạng tiền 
@@ -245,7 +246,7 @@ const handleBrandChange = (brandID) => {
                       </label>
                     </li>
                   ))}
-                </ul> 
+                </ul>
               </div>
             </details>
           </div>
@@ -282,94 +283,117 @@ const handleBrandChange = (brandID) => {
 
       {/* Phần hiển thị sản phẩm */}
       <div className="flex-1 p-4">
-      {products.length > 0 ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
-          {products.map((product) => (
-            <div
-              key={product.productVersionID}
-              className="group relative block overflow-hidden"
-            >
-              <img
-                src={product.image}
-                className="h-30 w-full object-cover transition duration-500 group-hover:scale-105"
-                onClick={() => handleImageClick(product)}
-                alt={product.product.name}
-              />
-              <p className="absolute top-2 left-2 bg-red-600 text-white font-semibold text-xs px-2 py-1 rounded-md shadow-md">
-                - {product.discountPercentage}%
-              </p>
-              <div className="relative border border-gray-100 bg-white p-4">
-                <p className="mt-1 text-sm text-gray-900 h-20">
-                  <b>{product.product.name} | {product.versionName}</b>
-                </p>
-
-                {/* Hiển thị đánh giá */}
-                <div className="flex items-center mt-2">
-                  {product.averageRating ? (
-                    <>
-                      <svg
-                        className="w-4 h-4 text-yellow-300"
-                        aria-hidden="true"
-                        fill="currentColor"
-                        viewBox="0 0 22 20"
-                      >
-                        <path d="M20.924 7.625a1.523 1.523 0 0 0-1.238-1.044l-5.051-.734-2.259-4.577a1.534 1.534 0 0 0-2.752 0L7.365 5.847l-5.051.734A1.535 1.535 0 0 0 1.463 9.2l3.656 3.563-.863 5.031a1.532 1.532 0 0 0 2.226 1.616L11 17.033l4.518 2.375a1.534 1.534 0 0 0 2.226-1.617l-.863-5.03L20.537 9.2a1.523 1.523 0 0 0 .387-1.575Z" />
-                      </svg>
-                      <p className="ms-2 text-sm font-bold text-gray-900 text-dark">
-                        {product.averageRating.toFixed(1)}/5
-                      </p>
-                    </>
-                  ) : (
-                    <p className="text-sm font-bold text-gray-800 text-dark">
-                      Chưa có đánh giá
+        {products.length > 0 ? (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {products.map((product, index) =>
+              index < 8 ? (
+                <div
+                  key={product.productVersionID}
+                  className="group relative block overflow-hidden"
+                >
+                  <img
+                    src={product.image}
+                    className="h-30 w-full object-cover transition duration-500 group-hover:scale-105"
+                    onClick={() => handleImageClick(product)}
+                    alt={product.product.name}
+                  />
+                  {/* Chỉ hiển thị giảm giá nếu product.discountPercentage > 0 */}
+                  {product.discountPercentage > 0 && (
+                    <p className="absolute top-2 left-2 bg-red-600 text-white font-semibold text-xs px-2 py-1 rounded-md shadow-md">
+                      - {product.discountPercentage}%
                     </p>
                   )}
+                  <div className="relative border border-gray-100 bg-white p-4">
+                    <p className="mt-1 text-sm text-gray-900 h-8 overflow-hidden text-ellipsis whitespace-nowrap transform scale-95">
+                      <b>{product.product.name} | {product.versionName}</b>
+                    </p>
+                    {/* Hiển thị đánh giá */}
+                    <div className="flex items-center mt-2">
+                      {product.averageRating ? (
+                        <>
+                          <svg
+                            className="w-4 h-4 text-yellow-300"
+                            aria-hidden="true"
+                            fill="currentColor"
+                            viewBox="0 0 22 20"
+                          >
+                            <path d="M20.924 7.625a1.523 1.523 0 0 0-1.238-1.044l-5.051-.734-2.259-4.577a1.534 1.534 0 0 0-2.752 0L7.365 5.847l-5.051.734A1.535 1.535 0 0 0 1.463 9.2l3.656 3.563-.863 5.031a1.532 1.532 0 0 0 2.226 1.616L11 17.033l4.518 2.375a1.534 1.534 0 0 0 2.226-1.617l-.863-5.03L20.537 9.2a1.523 1.523 0 0 0 .387-1.575Z" />
+                          </svg>
+                          <p className="ms-2 text-sm font-bold text-gray-900 text-dark">
+                            {product.averageRating.toFixed(1)}/5
+                          </p>
+                        </>
+                      ) : (
+                        <p className="text-sm font-bold text-gray-800 text-dark">
+                          Chưa có đánh giá
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Kiểm tra giá để hiển thị giá và hiệu ứng */}
+                    {formatCurrency(product.price) === formatCurrency(product.discountPrice) ? (
+                      <span
+                        className="mt-1 text-sm text-red-600"
+                        style={{
+                          animation: "blink 1s linear infinite",
+                        }}
+                      >
+                        <b>{formatCurrency(product.price)}</b>
+                      </span>
+                    ) : (
+                      <>
+                        <span className="mt-1 text-xs text-gray-500">
+                          <s>{formatCurrency(product.price)}</s>
+                        </span>{" "}
+                        <span
+                          className="mt-1 text-sm text-red-600"
+                          style={{
+                            animation: "blink 1s linear infinite",
+                          }}
+                        >
+                          <b>{formatCurrency(product.discountPrice)}</b>
+                          <br />
+                        </span>
+                      </>
+                    )}
+
+                    <style>
+                      {`
+                          @keyframes blink {
+                            0%, 100% { opacity: 1; }
+                            50% { opacity: 0; }
+                          }
+                      `}
+                    </style>
+
+                    <br />
+                    <span className="mt-1 text-xs text-gray-400">Đã bán: {product.quantitySold} | </span>
+                    <span className="mt-1 text-xs text-gray-400">
+                      Tồn kho:{" "}
+                      <span className={product.quantityAvailable < 10 ? "text-red-600" : "text-gray-400"}>
+                        {product.quantityAvailable}
+                      </span>
+                    </span>
+
+                    <form
+                      className="mt-4"
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        handleAddToCart(product);
+                      }}
+                    >
+                      <button type="submit" className="w-full rounded btn btn-warning p-2 text-xs">
+                        Thêm vào giỏ hàng
+                      </button>
+                    </form>
+                  </div>
                 </div>
-                <span className="mt-1 text-xs text-gray-500">
-                  <s>{formatCurrency(product.price)}</s>
-                </span>{" "}
-                <span
-                  className="mt-1 text-sm text-red-600"
-                  style={{
-                    animation: "blink 1s linear infinite",
-                  }}
-                >
-                  <b>{formatCurrency(product.discountPrice)}</b>
-                  <br />
-                </span>
-
-                <style>
-                  {`@keyframes blink {
-                   0%, 100% { opacity: 1; }
-                    50% { opacity: 0; }}`}
-                </style>
-
-                <span className="mt-1 text-xs text-gray-400">Đã bán: {product.quantitySold} | </span>
-                <span className="mt-1 text-xs text-gray-400">
-                  Tồn kho:{" "}
-                  <span className={product.quantityAvailable < 10 ? "text-red-600" : "text-gray-400"}>
-                    {product.quantityAvailable}
-                  </span>
-                </span>
-
-                <form
-                  className="mt-4"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    handleAddToCart(product);
-                  }}
-                >
-                  <button type="submit" className="w-full rounded btn btn-warning p-2 text-xs">
-                    Thêm vào giỏ hàng
-                  </button>
-                </form>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <p className="text-center text-gray-600">Không có sản phẩm tương ứng</p>
-      )}
+              ) : null
+            )}
+          </div>
+        ) : (
+          <p className="text-center text-gray-600">Không có sản phẩm tương ứng</p>
+        )}
         {/* Phân trang */}
         <div className="mt-4 flex justify-center">
           <div className="join grid grid-cols-2">

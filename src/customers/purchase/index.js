@@ -5,6 +5,7 @@ import ProfileService from "../../services/profileService";
 import OrderService from "../../services/OrderService";
 import UserVoucherService from "../../services/userVoucherService";
 import GHNService from "../../services/GHNService";
+import CreateNewAddress from './components/CreateNewAddress';
 import { useLocation } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import { showNotification } from "../../features/common/headerSlice";
@@ -17,6 +18,7 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
   const [userAddresses, setUserAddresses] = useState([]);
   const [userInfo, setUserInfo] = useState(null);
   const [selectedAddress, setSelectedAddress] = useState('');
+  const [selectedAddressId, setSelectedAddressId] = useState('');
   const [vouchers, setVouchers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [shippingFee, setShippingFee] = useState(null);
@@ -30,6 +32,7 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
   const selectedItems = location.state?.selectedItems || [];
   const [selectedVoucherDiscount, setSelectedVoucherDiscount] = useState(0);
   const product = location.state?.product;  // Lấy sản phẩm từ state
+  const [selectedAddressDetails, setSelectedAddressDetails] = useState(null); // Thông tin chi tiết của địa chỉ đã chọn
 
   const formatCurrency = (value) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
 
@@ -167,13 +170,13 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
         // Gọi API để tạo đơn hàng
         const response = await OrderService.createOrder(orderModel);
         console.log("Order created:", response);
-        navigate('/products');
+        navigate('/home');
         dispatch(showNotification({ message: "Đặt hàng thành công, đơn hàng đang chờ xác nhận.", status: 1 })); // Hiển thị thông báo
       } catch (error) {
         console.error("Error creating order:", error);
         dispatch(showNotification({ message: "Không thể tạo đơn hàng, vui lòng thử lại.", status: 0 })); // Hiển thị thông báo lỗi
       }
-    } else if (paymentMethod === 'vnpay') {
+    } else if (paymentMethod === 'zalopay') {
       try {
         // Tạo đối tượng orderModel theo cấu trúc OrderModel
         const orderModel = {
@@ -190,10 +193,34 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
           insuranceValue: 0,
           serviceTypeID: 2,
         };
-        // Gọi API để tạo đơn hàng
-        const response = await OrderService.createOrderVNPay(orderModel);
-        navigate('/pay');
-        dispatch(showNotification({ message: "Đặt hàng thành công, đơn hàng đang chờ thanh toán.", status: 1 })); // Hiển thị thông báo
+        try {
+          // Tạo đơn hàng qua API
+          const response = await OrderService.createOrderzalopay(orderModel);
+
+          if (response.success) {
+            // Lấy order_id từ phản hồi
+            const orderId = response.data.orderID;
+
+            // Gọi API tạo thanh toán ZaloPay
+            const zaloPaymentData = await OrderService.createPayment(orderId);
+
+            if (zaloPaymentData.returncode === 1 && zaloPaymentData.orderurl) {
+              // Hiển thị thông báo trước khi chuyển hướng
+              dispatch(showNotification({ message: "Chuyển hướng đến ZaloPay...", status: 1 }));
+
+              // Chuyển hướng sang URL thanh toán của ZaloPay
+              window.location.href = zaloPaymentData.orderurl;
+            } else {
+              // Hiển thị lỗi nếu không có URL
+              dispatch(showNotification({ message: zaloPaymentData.returnmessage || "Không tìm thấy URL thanh toán ZaloPay.", status: 0 }));
+            }
+          } else {
+            dispatch(showNotification({ message: response.message || "Lỗi khi tạo đơn hàng.", status: 0 }));
+          }
+        } catch (error) {
+          console.error("Đã xảy ra lỗi:", error);
+          dispatch(showNotification({ message: "Đã xảy ra lỗi, vui lòng thử lại sau.", status: 0 }));
+        }
       } catch (error) {
         console.error("Error creating order:", error);
         dispatch(showNotification({ message: "Không thể tạo đơn hàng, vui lòng thử lại.", status: 0 })); // Hiển thị thông báo lỗi
@@ -201,12 +228,23 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
     }
   };
 
+  // Hàm xử lý khi thay đổi địa chỉ
+  const handleChangeAddress = (e) => {
+    const wardCode = e.target.value;
+    setSelectedAddressId(wardCode); // Cập nhật ID địa chỉ đã chọn
 
-  const handleChangeAddress = (event) => {
-    const selectedOption = event.target.selectedOptions[0];
-    setDistrictId(selectedOption.getAttribute('data-district-id'));
-    setWardCode(selectedOption.value);
+    // Tìm địa chỉ đã chọn trong danh sách
+    const selectedAddress = userAddresses.find(address => address.wardCode === wardCode);
+    setSelectedAddressDetails(selectedAddress); // Cập nhật thông tin địa chỉ đã chọn
   };
+
+  useEffect(() => {
+    if (userAddresses.length > 0) {
+      // Nếu có ít nhất 1 địa chỉ, chọn địa chỉ đầu tiên làm mặc định
+      setSelectedAddressId(userAddresses[0].wardCode);
+      setSelectedAddressDetails(userAddresses[0]);
+    }
+  }, [userAddresses]);
 
   const calculateDiscountAmount = () => {
     const totalPrice = calculateTotalOriginalPrice();
@@ -236,7 +274,24 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
   };
 
 
+  const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+  // Mở Modal
+  const handleOpenModal = () => setIsAddressModalOpen(true);
 
+  // Đóng Modal
+  const handleCloseModal = () => setIsAddressModalOpen(false);
+
+  const handleAddNewAddress = (newAddress) => {
+    // Thêm địa chỉ mới vào đầu danh sách
+    setUserAddresses([newAddress, ...userAddresses]);
+
+    // Cập nhật giá trị mặc định của select với địa chỉ mới
+    setSelectedAddressId(newAddress.wardCode); // Hoặc một giá trị xác định khác của địa chỉ mới
+  };
+
+  // const handleChangeAddress = (e) => {
+  //   setSelectedAddress(e.target.value); // Cập nhật địa chỉ đã chọn
+  // };
   return (
     <TitleCard>
       <section className="bg-white antialiased dark:bg-gray-900">
@@ -345,23 +400,34 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
                   <label className="mb-2 block text-sm font-medium text-gray-900 dark:text-white">
                     Địa chỉ
                   </label>
-                  <select
-                    id="address-selector"
-                    className="select select-bordered w-full max-w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
-                    onChange={handleChangeAddress}
-                  >
-                    {userAddresses.map((address, index) => (
-                      <option
-                        key={index}
-                        value={address.wardCode}
-                        data-district-id={address.districtID}
-                      >
-                        {address.detailAddress}, {address.wardName}, {address.districtName}, {address.provinceName}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="flex items-center gap-2">
+                    <select
+                      id="address-selector"
+                      className="select select-bordered w-full max-w-full flex-1 rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+                      value={selectedAddressId}  // Giá trị mặc định
+                      onChange={handleChangeAddress}
+                    >
+                      {userAddresses.map((address, index) => (
+                        <option key={index} value={address.wardCode}>
+                          {address.detailAddress}, {address.wardName}, {address.districtName}, {address.provinceName}
+                        </option>
+                      ))}
+                    </select>
+                    {/* Nút Thêm Địa Chỉ */}
+                    <button onClick={handleOpenModal} className="btn btn-primary">
+                      Thêm địa chỉ
+                    </button>
+
+                    {/* Hiển thị Modal Thêm Địa Chỉ */}
+                    <CreateNewAddress
+                      isModalOpen={isAddressModalOpen}
+                      onCancel={handleCloseModal}
+                      onAddNewAddress={handleAddNewAddress}
+                    />
+                  </div>
                 </div>
               </div>
+
               <hr />
 
               <div className="w-full">
@@ -398,18 +464,18 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
                           aria-describedby="credit-card-text"
                           type="radio"
                           name="payment-method"
-                          value="vnpay" // Thêm giá trị cho phương thức VNPAY
+                          value="zalopay" // Thêm giá trị cho phương thức zalopay
                           className="h-4 w-4 border-gray-300 bg-white text-primary-600 focus:ring-2 focus:ring-primary-600 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
                           onChange={handlePaymentMethodChange}
-                          checked={paymentMethod === 'vnpay'} // Kiểm tra xem có được chọn không
+                          checked={paymentMethod === 'zalopay'} // Kiểm tra xem có được chọn không
                         />
                       </div>
                       <div className="ms-4 text-sm">
-                        <label htmlFor="credit-card" className="font-medium leading-none text-gray-900 dark:text-white">Thanh toán VNPAY</label>
+                        <label htmlFor="credit-card" className="font-medium leading-none text-gray-900 dark:text-white">Thanh toán zalopay</label>
                         <img
                           id="credit-card-text"
                           className="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400"
-                          src="./logo-vnpay-payment.png"
+                          src="./logo-zalopay-payment.png"
                           style={{ width: '100px', height: 'auto' }}
                         />
                       </div>
@@ -446,7 +512,7 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
           </div>
         </form>
       </section>
-    </TitleCard>
+    </TitleCard >
   );
 };
 
