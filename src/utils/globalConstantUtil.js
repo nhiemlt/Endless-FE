@@ -1,5 +1,5 @@
 module.exports = Object.freeze({
-    API_BASE_URL: "http://endlesstechstore.id.vn:8080",
+    API_BASE_URL: "http://localhost:8080",
     GHN_API_BASE_URL: "https://online-gateway.ghn.vn",
     GHN_API_TOKEN: "7bb9af15-8fb6-11ef-a205-de063ca823db",
     SHOP_ID: "5404381",
