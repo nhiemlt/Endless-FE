@@ -1,22 +1,14 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import CustomerService from "../../../services/CustomerService";
 import { showNotification } from "../../common/headerSlice";
-import GHNService from "../../../services/GHNService";
-import UserAddressService from "../../../services/userAddressService";
+import UploadFileService from "../../../services/UploadFileService";
 
-const AddCustomerModal = ({ showModal, closeModal }) => {
+const AddCustomerModal = ({ showModal, closeModal, fetchCustomers }) => {
   const dispatch = useDispatch();
-  const [customerName, setCustomerName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [address, setAddress] = useState("");
+  const [avatarFile, setAvatarFile] = useState(null); // Lưu file ảnh
+  const [avatarPreview, setAvatarPreview] = useState(""); // Hiển thị preview
   const [avatar, setAvatar] = useState(null);
-  const [avatarPreview, setAvatarPreview] = useState(null);
-  const [provinceIDs, setProvinces] = useState([]);
-  const [districtIDs, setDistricts] = useState([]);
-  const [wardCodes, setWards] = useState([]);
-  const [addresses, setAddresses] = useState([]);
 
   const [customerData, setCustomerData] = useState({
     username: "",
@@ -25,127 +17,35 @@ const AddCustomerModal = ({ showModal, closeModal }) => {
     email: "",
   });
 
-  const [newAddress, setNewAddress] = useState({
-    detailAddress: "",
-    provinceID: "",
-    districtID: "",
-    wardCode: "",
-  });
-
-  useEffect(() => {
-    const fetchProvinces = async () => {
-      try {
-        const data = await GHNService.getProvinces();
-        const sortedProvinces = data.data.sort((a, b) =>
-          a.ProvinceName.localeCompare(b.ProvinceName)
-        );
-        setProvinces(sortedProvinces);
-      } catch (error) {
-        console.error("Lỗi khi tìm Id tỉnh: ", error);
-      }
-    };
-
-    fetchProvinces();
-  }, []);
-
-  const handleProvinceChange = async (provinceID, provinceName) => {
-    setNewAddress((prevData) => ({
-      ...prevData,
-      provinceID: provinceID,
-      provinceName: provinceName,
-    }));
-    try {
-      const districtIDData = await GHNService.getDistrictsByProvince(
-        provinceID
-      );
-      const sortedDistricts = districtIDData.data.sort((a, b) =>
-        a.DistrictName.localeCompare(b.DistrictName)
-      );
-      setDistricts(sortedDistricts);
-      resetDistrictAndWard();
-    } catch (error) {
-      console.error("Lỗi khi tìm Id quận/huyện:", error);
-    }
-  };
-
-  const handleDistrictChange = async (districtID, districtName) => {
-    setNewAddress((prevData) => ({
-      ...prevData,
-      districtID: districtID,
-      districtName: districtName,
-    }));
-
-    try {
-      const wardCodeData = await GHNService.getWardsByDistrict(districtID);
-      const sortedWards = wardCodeData.data.sort((a, b) =>
-        a.WardName.localeCompare(b.WardName)
-      );
-      setWards(sortedWards);
-      resetWard();
-    } catch (error) {
-      console.error("Lỗi khi tìm Id phường/xã:", error);
-    }
-  };
-
-  const resetDistrictAndWard = () => {
-    setNewAddress((prevData) => ({ ...prevData, districtID: "" }));
-    setWards([]);
-  };
-
-  const resetWard = () => {
-    setNewAddress((prevData) => ({ ...prevData, wardCode: "" }));
-  };
-
   const handleAvatarChange = (event) => {
     const file = event.target.files[0];
     if (file) {
       setAvatar(file);
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setAvatarPreview(reader.result);
-      };
+      reader.onloadend = () => setAvatarPreview(reader.result);
       reader.readAsDataURL(file);
     }
   };
 
-  const handleNewAddressChange = (e) => {
-    const { name, value } = e.target;
-    setNewAddress((prev) => ({ ...prev, [name]: value }));
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setAvatarFile(file);
+      setAvatarPreview(URL.createObjectURL(file)); // Hiển thị preview
+    }
   };
 
-  // Hàm xử lý thêm địa chỉ mới
-  const handleAddNewAddress = async (userID) => {
-    if (!newAddress?.detailAddress) {
+  const handleAddCustomer = async (e) => {
+    e.preventDefault();
+
+    if (
+      !customerData.name.trim() ||
+      !customerData.email.trim() ||
+      !customerData.phone.trim()
+    ) {
       dispatch(
         showNotification({
-          message: "Vui lòng điền địa chỉ chi tiết.",
-          status: 0,
-        })
-      );
-      return;
-    }
-    if (!newAddress?.provinceID) {
-      dispatch(
-        showNotification({
-          message: "Vui lòng chọn tỉnh.",
-          status: 0,
-        })
-      );
-      return;
-    }
-    if (!newAddress?.districtID) {
-      dispatch(
-        showNotification({
-          message: "Vui lòng chọn quận/huyện.",
-          status: 0,
-        })
-      );
-      return;
-    }
-    if (!newAddress?.wardCode) {
-      dispatch(
-        showNotification({
-          message: "Vui lòng chọn phường/xã.",
+          message: "Vui lòng điền đầy đủ thông tin",
           status: 0,
         })
       );
@@ -153,53 +53,37 @@ const AddCustomerModal = ({ showModal, closeModal }) => {
     }
 
     try {
-      // Thêm địa chỉ vào bảng `userAddress` với userID được truyền từ `handleSubmit`
-      await UserAddressService.addUserAddressCurrent({
-        ...newAddress,
-        userID, // Lưu ý truyền ID của người dùng vào địa chỉ
-      });
+      // Upload ảnh nếu có
+      let avatarUrl = customerData.avatar; // URL ảnh (nếu có)
+      if (avatarFile) {
+        avatarUrl = await UploadFileService.uploadUserImage(avatarFile);
+      }
+
+      // Chuẩn bị dữ liệu khách hàng mới
+      const newCustomer = { ...customerData, avatar: avatarUrl };
+
+      // Gửi dữ liệu khách hàng đến API để lưu vào cơ sở dữ liệu
+      await CustomerService.addCustomer(newCustomer); // Cần implement CustomerService
+
+      // Hiển thị thông báo thành công
       dispatch(
-        showNotification({ message: "Thêm địa chỉ thành công", status: 1 })
+        showNotification({ message: "Thêm khách hàng thành công", status: 1 })
       );
-      // Reset thông tin địa chỉ
-      setNewAddress({
-        detailAddress: "",
-        wardCode: "",
-        districtID: "",
-        provinceID: "",
+
+      // Reset trạng thái modal
+      setCustomerData({
+        name: "",
+        email: "",
+        phone: "",
+        address: "",
+        avatar: "",
       });
-      fetchAddresses();
+      setAvatarFile(null);
+      setAvatarPreview("");
     } catch (error) {
-      console.error(
-        "Không thể thêm địa chỉ mới:",
-        error.response ? error.response.data : error.message
-      );
+      console.error("Lỗi khi thêm khách hàng:", error);
       dispatch(
-        showNotification({
-          message: `Thêm địa chỉ thất bại: ${
-            error.response?.data?.message || "Lỗi không xác định"
-          }`,
-          status: 0,
-        })
-      );
-    }
-  };
-
-  useEffect(() => {
-    fetchAddresses();
-  }, []);
-
-  const fetchAddresses = async () => {
-    try {
-      const userAddresses = await UserAddressService.fetchUserAddresses();
-      setAddresses(userAddresses);
-    } catch (err) {
-      console.error("Lỗi tìm địa chỉ:", err);
-      dispatch(
-        showNotification({
-          message: "Không thể lấy danh sách địa chỉ.",
-          status: 0,
-        })
+        showNotification({ message: "Thêm khách hàng thất bại", status: 0 })
       );
     }
   };
@@ -208,33 +92,21 @@ const AddCustomerModal = ({ showModal, closeModal }) => {
     event.preventDefault();
 
     // Kiểm tra thông tin khách hàng
-    if (!customerData.username) {
+    if (
+      !customerData.username ||
+      !customerData.fullname ||
+      !customerData.email ||
+      !customerData.phone
+    ) {
       dispatch(
         showNotification({
-          message: "Vui lòng điền tên người dùng.",
+          message: "Vui lòng điền đầy đủ thông tin.",
           status: 0,
         })
       );
       return;
     }
-    if (!customerData.fullname) {
-      dispatch(
-        showNotification({
-          message: "Vui lòng điền họ và tên.",
-          status: 0,
-        })
-      );
-      return;
-    }
-    if (!customerData.email) {
-      dispatch(
-        showNotification({
-          message: "Vui lòng điền email.",
-          status: 0,
-        })
-      );
-      return;
-    }
+
     if (!/\S+@\S+\.\S+/.test(customerData.email)) {
       dispatch(
         showNotification({
@@ -244,42 +116,48 @@ const AddCustomerModal = ({ showModal, closeModal }) => {
       );
       return;
     }
-    if (!customerData.phone) {
-      dispatch(
-        showNotification({
-          message: "Vui lòng điền số điện thoại.",
-          status: 0,
-        })
-      );
-      return;
-    }
 
     try {
-      // 1. Thêm người dùng vào bảng `user`
-      const createdUser = await CustomerService.createCustomer(customerData);
+      // Tạo FormData để gửi dữ liệu bao gồm ảnh
+      const formData = new FormData();
+      formData.append("username", customerData.username);
+      formData.append("fullname", customerData.fullname);
+      formData.append("phone", customerData.phone);
+      formData.append("email", customerData.email);
+      if (avatar) formData.append("avatar", avatar);
 
+      // Gửi yêu cầu tạo khách hàng
+      const createdUser = await CustomerService.createCustomer(formData);
+
+      // Thông báo thêm khách hàng thành công
       dispatch(
-        showNotification({ message: "Thêm người dùng thành công", status: 1 })
+        showNotification({
+          message: "Thêm khách hàng thành công.",
+          status: 1,
+        })
       );
 
-      // 2. Nếu người dùng đã được thêm, gọi hàm thêm địa chỉ
-      await handleAddNewAddress(createdUser.data.userID); // Truyền ID người dùng mới vào hàm thêm địa chỉ
+      // Cập nhật danh sách khách hàng sau khi thêm mới mà không cần load lại trang
+      fetchCustomers();
 
-      // Reset thông tin người dùng sau khi thêm
+      // Reset form
       setCustomerData({
         username: "",
         fullname: "",
-        email: "",
         phone: "",
+        email: "",
       });
+      setAvatar(null);
+      setAvatarPreview(null);
+      closeModal();
     } catch (error) {
       console.error(
-        "Không thể thêm người dùng mới:",
+        "Không thể thêm khách hàng:",
         error.response ? error.response.data : error.message
       );
       dispatch(
         showNotification({
-          message: `Thêm người dùng thất bại: ${
+          message: `Thêm khách hàng thất bại: ${
             error.response?.data?.message || "Lỗi không xác định"
           }`,
           status: 0,
@@ -301,7 +179,9 @@ const AddCustomerModal = ({ showModal, closeModal }) => {
                 <div
                   className="mx-auto flex justify-center w-[141px] h-[141px] bg-blue-300/20 rounded-full cursor-pointer"
                   style={{
-                    backgroundImage: `url(${avatarPreview || avatar})`,
+                    backgroundImage: `url(${
+                      avatarPreview || "default-avatar.png"
+                    })`,
                     backgroundSize: "cover",
                   }}
                   onClick={() =>
@@ -378,83 +258,6 @@ const AddCustomerModal = ({ showModal, closeModal }) => {
             placeholder="Số điện thoại"
             className="input input-bordered w-full mb-4"
           />
-
-          <h3 className="font-bold mt-4">Thông Tin Địa Chỉ</h3>
-
-          <div className="flex gap-4 mb-4">
-            <select
-              name="provinceID"
-              className="p-2 border-2 rounded-lg flex-1"
-              value={newAddress.provinceID}
-              onChange={(e) =>
-                handleProvinceChange(
-                  e.target.value,
-                  e.target.options[e.target.selectedIndex].text
-                )
-              }
-            >
-              <option value="">Chọn tỉnh/thành phố</option>
-              {provinceIDs.length > 0 ? (
-                provinceIDs.map((provinceID) => (
-                  <option
-                    key={provinceID.ProvinceID}
-                    value={provinceID.ProvinceID}
-                  >
-                    {provinceID.ProvinceName}
-                  </option>
-                ))
-              ) : (
-                <option value="">Không có tỉnh nào</option>
-              )}
-            </select>
-
-            <select
-              name="districtID"
-              className="p-2 border-2 rounded-lg flex-1"
-              value={newAddress.districtID}
-              onChange={(e) =>
-                handleDistrictChange(
-                  e.target.value,
-                  e.target.options[e.target.selectedIndex].text
-                )
-              }
-              disabled={!newAddress.provinceID}
-            >
-              <option value="">Chọn quận/huyện</option>
-              {districtIDs.map((districtID) => (
-                <option
-                  key={districtID.DistrictID}
-                  value={districtID.DistrictID}
-                >
-                  {districtID.DistrictName}
-                </option>
-              ))}
-            </select>
-
-            <select
-              name="wardCode"
-              className="p-2 border-2 rounded-lg flex-1"
-              value={newAddress.wardCode}
-              onChange={handleNewAddressChange}
-              disabled={!newAddress.districtID}
-            >
-              <option value="">Chọn phường/xã</option>
-              {wardCodes.map((wardCode) => (
-                <option key={wardCode.WardCode} value={wardCode.WardCode}>
-                  {wardCode.WardName}
-                </option>
-              ))}
-            </select>
-
-            <input
-              type="text"
-              name="detailAddress"
-              placeholder="Địa chỉ chi tiết"
-              className="p-2 border-2 rounded-lg flex-1"
-              value={newAddress.detailAddress}
-              onChange={handleNewAddressChange}
-            />
-          </div>
 
           <div className="modal-action">
             <button type="submit" className="btn btn-primary">

@@ -25,21 +25,22 @@ function Customer() {
   const [sortDir, setSortDir] = useState("asc");
   const [searchTerm, setSearchTerm] = useState("");
   const [customerIdToDelete, setCustomerIdToDelete] = useState(null);
+  const [isFetching, setIsFetching] = useState(false);
 
   const fetchCustomers = async () => {
-    setLoading(true);
+    setIsFetching(true);
     try {
       const data = await CustomerService.getAllCustomers(
         currentPage,
         size,
         searchTerm
       );
-      console.log("Fetched customers data:", data);
       setCustomers(data.content);
       setTotalPages(data.totalPages);
     } catch (error) {
       console.error("Error fetching customers:", error);
     } finally {
+      setIsFetching(false);
       setLoading(false);
     }
   };
@@ -48,11 +49,34 @@ function Customer() {
     fetchCustomers();
   }, [currentPage, size, sortBy, sortDir, searchTerm]);
 
-  // Sử dụng debounce cho tìm kiếm
   const debouncedSearch = debounce((event) => {
     setSearchTerm(event.target.value);
     setCurrentPage(0);
   }, 300);
+
+  const handleToggleStatus = async (customerId) => {
+    setLoading(true);
+    try {
+      await CustomerService.toggleCustomerStatus(customerId);
+      fetchCustomers(); // Cập nhật lại danh sách sau khi thay đổi
+      dispatch(
+        showNotification({
+          message: "Cập nhật trạng thái thành công!",
+          status: 1,
+        })
+      );
+    } catch (error) {
+      console.error("Error toggling account status:", error);
+      dispatch(
+        showNotification({
+          message: "Cập nhật trạng thái thất bại.",
+          status: 0,
+        })
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
@@ -110,10 +134,14 @@ function Customer() {
       try {
         await CustomerService.deleteCustomer(customerIdToDelete);
         fetchCustomers();
-        dispatch(showNotification({ message: "Xóa khách hàng thành công!", status: 1 }));
+        dispatch(
+          showNotification({ message: "Xóa khách hàng thành công!", status: 1 })
+        );
       } catch (error) {
         console.error("Error deleting customer:", error);
-        dispatch(showNotification({ message: "Xóa khách hàng thất bại.", status: 0 }));
+        dispatch(
+          showNotification({ message: "Xóa khách hàng thất bại.", status: 0 })
+        );
       }
       setCustomerIdToDelete(null);
       setShowDeleteModal(false);
@@ -216,7 +244,11 @@ function Customer() {
       </div>
 
       {loading ? (
-        <p>Đang tải danh sách khách hàng...</p>
+        <div className="relative w-full h-64">
+          <div className="absolute inset-0 bg-opacity-50 bg-gray-100 flex justify-center items-center z-10">
+            <div className="loader" />
+          </div>
+        </div>
       ) : (
         <>
           <table className="table w-full table-xs">
@@ -228,6 +260,7 @@ function Customer() {
                 </th>
                 <th className="text-center">Số điện thoại</th>
                 <th className="text-center">Email</th>
+                <th className="text-center">Trạng thái</th>
                 <th className="text-center">Hành động</th>
               </tr>
             </thead>
@@ -244,6 +277,16 @@ function Customer() {
                   <td>{customer.fullname}</td>
                   <td className="text-center">{customer.phone}</td>
                   <td className="text-center">{customer.email}</td>
+                  <td className="text-center">
+                    <button
+                      className={`btn btn-sm ${
+                        customer.active ? "btn-success" : "btn-warning"
+                      }`}
+                      onClick={() => handleToggleStatus(customer.id, customer.status)}
+                    >
+                      {customer.active ? "Active" : "Inactive"}
+                    </button>
+                  </td>
                   <td className="text-center">
                     <button
                       className="btn btn-sm btn-outline btn-primary"
