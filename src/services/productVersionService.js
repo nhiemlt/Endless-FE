@@ -123,7 +123,6 @@ const ProductVersionService = {
         }
     },
 
-    // Cập nhật trạng thái của phiên bản sản phẩm
     // Cập nhật trạng thái phiên bản sản phẩm
     updateProductVersionStatus: async (id, status) => {
         try {
