@@ -2,49 +2,92 @@ import axios from "axios";
 import constants from "../utils/globalConstantUtil";
 
 const CustomerService = {
-  // Lấy danh sách khách hàng với phân trang, tìm kiếm theo keyword và sắp xếp
-  getAllCustomers: async (page = 0, size = 10, keyword = "", sortBy = "fullName", direction = "asc") => {
-    const response = await axios.get(`${constants.API_BASE_URL}/api/customers`, {
-      params: { page, size, keyword, sortBy, direction },
-    });
+  
+  getAllCustomers: async (
+    page = 0,
+    size = 10,
+    keyword = "",
+    sortBy = "fullName",
+    direction = "asc"
+  ) => {
+    const response = await axios.get(
+      `${constants.API_BASE_URL}/api/customers`,
+      {
+        params: { page, size, keyword, sortBy, direction },
+      }
+    );
     return response.data;
   },
 
-  // Lấy thông tin khách hàng theo ID
-  getCustomerById: async (customerId) => {
-    const response = await axios.get(`${constants.API_BASE_URL}/api/customers/${customerId}`);
+  getCustomerById: async (userId) => {
+    const response = await axios.get(
+      `${constants.API_BASE_URL}/api/customers/${userId}`
+    );
     return response.data;
   },
 
-  // Tạo mới khách hàng
-  createCustomer: async (customerData) => {
-    const response = await axios.post(`${constants.API_BASE_URL}/api/customers`, customerData);
+  addCustomer: async (customerData) => {
+    try {
+      // Gửi dữ liệu khách hàng đến API
+      const response = await axios.post(`${constants.API_BASE_URL}/api/customers`, customerData);
+      return response.data;
+    } catch (error) {
+      console.error("Không thể thêm khách hàng:", error);
+      throw error;
+    }
+  },
+
+  updateCustomer: async (userId, customerData) => {
+    const response = await axios.put(
+      `${constants.API_BASE_URL}/api/customers/${userId}`,
+      customerData
+    );
     return response.data;
   },
 
-  // Cập nhật thông tin khách hàng
-  updateCustomer: async (customerId, customerData) => {
-    const response = await axios.put(`${constants.API_BASE_URL}/api/customers/${customerId}`, customerData);
+  deleteCustomer: async (userId) => {
+    const response = await axios.delete(
+      `${constants.API_BASE_URL}/api/customers/${userId}`
+    );
     return response.data;
   },
 
-  // Xóa khách hàng
-  deleteCustomer: async (customerId) => {
-    const response = await axios.delete(`${constants.API_BASE_URL}/api/customers/${customerId}`);
+  toggleCustomerStatus: async (userId) => {
+    const response = await axios.patch(
+      `${constants.API_BASE_URL}/api/customers/${userId}/status`
+    );
     return response.data;
   },
 
-  // Kiểm tra số điện thoại có đúng định dạng không
-  validatePhoneNumber: (phone) => {
-    const phoneRegex = /^(\+?84|0)[0-9]{9}$/;
-    return phoneRegex.test(phone);
+  getAllUserAddresses: async (userId) => {
+    const response = await axios.get(
+      `${constants.API_BASE_URL}/api/customers/${userId}/addresses`
+    );
+    return response.data;
   },
 
-  // Kiểm tra email có đúng định dạng không
-  validateEmail: (email) => {
-    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-    return emailRegex.test(email);
+  addAddress: async (userId, addressData) => {
+    const response = await axios.post(
+      `${constants.API_BASE_URL}/api/customers/${userId}/addresses`,
+      addressData
+    );
+    return response.data;
   },
+
+  removeAddress: async (userId, addressId) => {
+    const response = await axios.delete(
+      `${constants.API_BASE_URL}/api/customers/${userId}/addresses/${addressId}`
+    );
+    return response.data;
+  },
+
+  resetPassword: async (userId) => {
+    const response = await axios.post(
+      `${constants.API_BASE_URL}/api/customers/${userId}/reset-password`
+    );
+    return response.data;
+  },
+
 };
 
 export default CustomerService;

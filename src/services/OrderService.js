@@ -38,9 +38,20 @@ const OrderService = {
     },
 
     // Tạo đơn hàng mới VNPAY
-    createOrderVNPay: async (orderModel) => {
+    createOrderzalopay: async (orderModel) => {
         const response = await axios.post(`${constants.API_BASE_URL}/orders/create-order-vnpay`, orderModel);
         return response.data; // Trả về dữ liệu API
+    },
+
+    // Tạo đơn hàng thanh toán (gọi API tạo thanh toán ZaloPay)
+    createPayment: async (orderId) => {
+        try {
+            const response = await axios.post(`${constants.API_BASE_URL}/api/payment/create/${orderId}`);
+            return response.data; // Trả về dữ liệu từ API
+        } catch (error) {
+            console.error("Lỗi khi tạo thanh toán ZaloPay:", error);
+            throw error; // Ném lại lỗi để xử lý ở nơi gọi
+        }
     },
 
     // Lấy thông tin đơn hàng theo ID

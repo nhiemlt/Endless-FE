@@ -24,22 +24,23 @@ function Customer() {
   const [sortBy, setSortBy] = useState("fullname");
   const [sortDir, setSortDir] = useState("asc");
   const [searchTerm, setSearchTerm] = useState("");
-  const [customerIdToDelete, setCustomerIdToDelete] = useState(null);
+  const [userIdToDelete, setUserIdToDelete] = useState(null);
+  const [isFetching, setIsFetching] = useState(false);
 
   const fetchCustomers = async () => {
-    setLoading(true);
+    setIsFetching(true);
     try {
       const data = await CustomerService.getAllCustomers(
         currentPage,
         size,
         searchTerm
       );
-      console.log("Fetched customers data:", data);
       setCustomers(data.content);
       setTotalPages(data.totalPages);
     } catch (error) {
       console.error("Error fetching customers:", error);
     } finally {
+      setIsFetching(false);
       setLoading(false);
     }
   };
@@ -48,11 +49,34 @@ function Customer() {
     fetchCustomers();
   }, [currentPage, size, sortBy, sortDir, searchTerm]);
 
-  // Sử dụng debounce cho tìm kiếm
   const debouncedSearch = debounce((event) => {
     setSearchTerm(event.target.value);
     setCurrentPage(0);
   }, 300);
+
+  const handleToggleStatus = async (userId) => {
+    setLoading(true);
+    try {
+      await CustomerService.toggleCustomerStatus(userId);
+      fetchCustomers(); // Cập nhật lại danh sách sau khi thay đổi
+      dispatch(
+        showNotification({
+          message: "Cập nhật trạng thái thành công!",
+          status: 1,
+        })
+      );
+    } catch (error) {
+      console.error("Error toggling account status:", error);
+      dispatch(
+        showNotification({
+          message: "Cập nhật trạng thái thất bại.",
+          status: 0,
+        })
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
@@ -66,8 +90,8 @@ function Customer() {
     setCurrentPage(0);
   };
 
-  const handleUpdateModalOpen = async (customerId) => {
-    if (!customerId) {
+  const handleUpdateModalOpen = (customer) => {
+    if (!customer) {
       dispatch(
         showNotification({
           message: "Không thể tìm thấy khách hàng.",
@@ -76,46 +100,36 @@ function Customer() {
       );
       return;
     }
-
-    setLoading(true);
-    try {
-      const customer = await CustomerService.getCustomerById(customerId);
-      setCustomerDetails(customer);
-      setShowUpdateModal(true);
-    } catch (error) {
-      console.error("Error fetching customer details:", error);
-      dispatch(
-        showNotification({
-          message: "Không thể lấy thông tin khách hàng.",
-          status: 0,
-        })
-      );
-    } finally {
-      setLoading(false);
-    }
+    setCustomerDetails(customer);
+    setShowUpdateModal(true);
   };
+
 
   const handleUpdateModalClose = () => {
     setShowUpdateModal(false);
     setCustomerDetails(null);
   };
 
-  const handleDeleteCustomer = (customerId) => {
-    setCustomerIdToDelete(customerId);
+  const handleDeleteCustomer = (userId) => {
+    setUserIdToDelete(userId);
     setShowDeleteModal(true);
   };
 
   const confirmDeleteCustomer = async () => {
-    if (customerIdToDelete) {
+    if (userIdToDelete) {
       try {
-        await CustomerService.deleteCustomer(customerIdToDelete);
+        await CustomerService.deleteCustomer(userIdToDelete);
         fetchCustomers();
-        dispatch(showNotification({ message: "Xóa khách hàng thành công!", status: 1 }));
+        dispatch(
+          showNotification({ message: "Xóa khách hàng thành công!", status: 1 })
+        );
       } catch (error) {
         console.error("Error deleting customer:", error);
-        dispatch(showNotification({ message: "Xóa khách hàng thất bại.", status: 0 }));
+        dispatch(
+          showNotification({ message: "Xóa khách hàng thất bại.", status: 0 })
+        );
       }
-      setCustomerIdToDelete(null);
+      setUserIdToDelete(null);
       setShowDeleteModal(false);
     }
   };
@@ -164,9 +178,8 @@ function Customer() {
             <button
               key={page}
               onClick={() => handlePageChange(page)}
-              className={`join-item btn ${
-                currentPage === page ? "btn-primary" : ""
-              }`}
+              className={`join-item btn ${currentPage === page ? "btn-primary" : ""
+                }`}
             >
               {page + 1}
             </button>
@@ -184,108 +197,121 @@ function Customer() {
     );
   };
 
-  return (
-    <TitleCard title="Quản lý khách hàng" topMargin="mt-2">
-      <div className="flex justify-between mb-4">
-        <div className="flex space-x-4">
-          <label className="input input-bordered flex items-center gap-2">
-            <input
-              type="text"
-              placeholder="Tìm kiếm khách hàng"
-              onChange={debouncedSearch}
-              className="dark:bg-base-100"
+  return (<TitleCard title="Quản lý khách hàng" topMargin="mt-2">
+    <div className="flex justify-between mb-4 flex-wrap">
+      <div className="flex space-x-4 mb-4 sm:mb-0">
+        <label className="input input-bordered flex items-center gap-2 w-full sm:w-auto">
+          <input
+            type="text"
+            placeholder="Tìm kiếm khách hàng"
+            onChange={debouncedSearch}
+            className="dark:bg-base-100 w-full sm:w-64"
+          />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 16 16"
+            fill="currentColor"
+            className="h-4 w-4 opacity-70"
+          >
+            <path
+              fillRule="evenodd"
+              d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
+              clipRule="evenodd"
             />
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 16 16"
-              fill="currentColor"
-              className="h-4 w-4 opacity-70"
-            >
-              <path
-                fillRule="evenodd"
-                d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </label>
-        </div>
-
-        <button className="btn btn-primary" onClick={() => setShowModal(true)}>
-          Tạo khách hàng mới
-        </button>
+          </svg>
+        </label>
       </div>
 
-      {loading ? (
-        <p>Đang tải danh sách khách hàng...</p>
-      ) : (
-        <>
-          <table className="table w-full table-xs">
-            <thead>
-              <tr>
-                <th>Avatar</th>
-                <th onClick={() => handleSortChange("fullname")}>
-                  Tên khách hàng
-                </th>
-                <th className="text-center">Số điện thoại</th>
-                <th className="text-center">Email</th>
-                <th className="text-center">Hành động</th>
+      <button className="btn btn-primary sm:w-auto w-full" onClick={() => setShowModal(true)}>
+        Tạo khách hàng mới
+      </button>
+    </div>
+
+    {loading ? (
+      <div className="relative w-full h-64">
+        <div className="absolute inset-0 bg-opacity-50 bg-gray-100 flex justify-center items-center z-10">
+          <div className="loader" />
+        </div>
+      </div>
+    ) : (
+      <>
+        <table className="table w-full table-xs sm:table-md">
+          <thead>
+            <tr>
+              <th>Avatar</th>
+              <th onClick={() => handleSortChange("fullname")}>
+                Tên khách hàng
+              </th>
+              <th className="text-center">Số điện thoại</th>
+              <th className="text-center">Email</th>
+              <th className="text-center">Kích hoạt</th>
+              <th className="text-center">Hành động</th>
+            </tr>
+          </thead>
+          <tbody>
+            {customers.map((customer, index) => (
+              <tr key={customer.userId || index}>
+                <td>
+                  <img
+                    src={customer.avatar || "default-avatar.png"}
+                    alt="Avatar"
+                    className="w-16 h-16 rounded-full"
+                  />
+                </td>
+                <td>{customer.fullname}</td>
+                <td className="text-center">{customer.phone}</td>
+                <td className="text-center">{customer.email}</td>
+                <td className="text-center">
+                  <input
+                    type="checkbox"
+                    className="toggle toggle-success"
+                    checked={customer.active}
+                    onChange={() => handleToggleStatus(customer.userID)}
+                  />
+                </td>
+                <td className="text-center">
+                  <button
+                    className="btn btn-sm btn-outline btn-primary"
+                    onClick={() => handleUpdateModalOpen(customer)}
+                  >
+                    <PencilIcon className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                  <button
+                    className="btn btn-sm btn-outline btn-error"
+                    onClick={() => handleDeleteCustomer(customer.userID)}
+                  >
+                    <TrashIcon className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {customers.map((customer, index) => (
-                <tr key={customer.customerId || index}>
-                  <td>
-                    <img
-                      src={customer.avatar || "default-avatar.png"}
-                      alt="Avatar"
-                      className="w-16 h-16 rounded-full"
-                    />
-                  </td>
-                  <td>{customer.fullname}</td>
-                  <td className="text-center">{customer.phone}</td>
-                  <td className="text-center">{customer.email}</td>
-                  <td className="text-center">
-                    <button
-                      className="btn btn-sm btn-outline btn-primary"
-                      onClick={() => handleUpdateModalOpen(customer.customerId)}
-                    >
-                      <PencilIcon className="h-4 w-4" aria-hidden="true" />
-                    </button>
-                    <button
-                      className="btn btn-sm btn-outline btn-error"
-                      onClick={() => handleDeleteCustomer(customer.customerId)}
-                    >
-                      <TrashIcon className="h-4 w-4" aria-hidden="true" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+            ))}
+          </tbody>
+        </table>
 
-          {renderPagination()}
-        </>
-      )}
+        {renderPagination()}
+      </>
+    )}
 
-      <AddCustomerModal
-        showModal={showModal}
-        closeModal={() => setShowModal(false)}
-        onCustomerCreated={fetchCustomers}
-      />
+    <AddCustomerModal
+      showModal={showModal}
+      closeModal={() => setShowModal(false)}
+      fetchCustomers={fetchCustomers}
+    />
 
-      <UpdateCustomerModal
-        showModal={showUpdateModal}
-        closeModal={handleUpdateModalClose}
-        customer={customerDetails}
-        onCustomerUpdated={fetchCustomers}
-      />
+    <UpdateCustomerModal
+      showModal={showUpdateModal}
+      closeModal={handleUpdateModalClose}
+      customer={customerDetails}
+      fetchCustomers={fetchCustomers}
+    />
 
-      <ConfirmDeleteModal
-        showModal={showDeleteModal}
-        closeModal={() => setShowDeleteModal(false)}
-        onConfirm={confirmDeleteCustomer}
-      />
-    </TitleCard>
+    <ConfirmDeleteModal
+      showModal={showDeleteModal}
+      closeModal={() => setShowDeleteModal(false)}
+      onConfirm={confirmDeleteCustomer}
+      fetchCustomers={fetchCustomers}
+    />
+  </TitleCard>
   );
 }
 

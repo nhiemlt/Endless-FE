@@ -91,7 +91,6 @@ function Transactions() {
     // Hàm xử lý xem chi tiết đơn hàng
     const handleViewDetails = (order) => {
         setSelectedOrder(order);
-        console.log(order);
         setIsModalOpen(true);
     };
 
@@ -159,7 +158,6 @@ function Transactions() {
             }
         });
     };
-
     return (
         <>
             <TitleCard
@@ -329,7 +327,7 @@ function Transactions() {
                                 <p className="text-gray-800 dark:text-gray-200"><strong>Số điện thoại:</strong> {selectedOrder.orderPhone || 'Chưa cập nhật'}</p>
                             </div>
                             <div className="p-4 bg-white shadow rounded dark:bg-gray-700">
-                                <p className="text-gray-800 dark:text-gray-200"><strong>Phí sản phẩm:</strong> {selectedOrder?.totalProductPrice || 'Không sử dụng'}</p>
+                                <p className="text-gray-800 dark:text-gray-200"><strong>Phí sản phẩm:</strong> {selectedOrder?.totalProductPrice.toLocaleString() || 'Không sử dụng'} VND</p>
                                 <p className="text-gray-800 dark:text-gray-200"><strong>Phí giao hàng:</strong> {selectedOrder?.shipFee?.toLocaleString()} VND</p>
                             </div>
                             <div className="p-4 bg-white shadow rounded dark:bg-gray-700">
@@ -337,11 +335,11 @@ function Transactions() {
                                 <p className="text-gray-800 dark:text-gray-200"><strong>Số tiền giảm:</strong> {selectedOrder?.voucherDiscount?.toLocaleString()} VND</p>
                             </div>
                             <div className="p-4 bg-white shadow rounded dark:bg-gray-700">
-                                <p className="text-gray-800 dark:text-gray-200"><strong>Tổng số tiền:</strong> {selectedOrder?.money} VND</p>
-                                <p className="text-gray-800 dark:text-gray-200"><strong>Thành tiền:</strong> {selectedOrder?.totalMoney} VND</p>
+                                <p className="text-gray-800 dark:text-gray-200"><strong>Tổng số tiền:</strong> {selectedOrder?.money.toLocaleString()} VND</p>
+                                <p className="text-gray-800 dark:text-gray-200"><strong>Thành tiền:</strong> {selectedOrder?.totalMoney.toLocaleString()} VND</p>
                             </div>
                         </div>
-                        <p className="mb-2 text-gray-800 dark:text-gray-200"><strong>Địa chỉ giao hàng:</strong> {selectedOrder.shippingAddress || 'Chưa cập nhật'}</p>
+                        <p className="mb-2 text-gray-800 dark:text-gray-200"><strong>Địa chỉ giao hàng:</strong> {selectedOrder.orderAddress || 'Chưa cập nhật'}</p>
                         <table className="table-auto w-full mt-4">
                             <thead>
                                 <tr className="bg-gray-100 dark:bg-gray-700">
