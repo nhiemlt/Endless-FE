@@ -5,38 +5,39 @@ import constants from '../utils/globalConstantUtil'; // Import constants
 const API_URL = `${constants.API_BASE_URL}/api/promotions`; // Thay đổi URL bằng constants
 
 const PromotionService = {
-    // Lấy danh sách khuyến mãi (với hỗ trợ lọc và phân trang)
-    getAllPromotions: async (filters = {}, page = 0, size = 10) => {
+    // Lấy danh sách khuyến mãi (với hỗ trợ tìm kiếm, phân trang, và sắp xếp)
+    getAllPromotions: async (filters = {}, page = 0, size = 10, sortBy = 'createDate', direction = 'asc') => {
         try {
-            const { name, startDate, endDate } = filters;
+            const { keyword } = filters; // Lấy keyword từ bộ lọc (nếu có)
 
             // Tạo các tham số để gửi đến backend
             const params = {
-                name: name || '',          // Nếu không có name thì truyền rỗng
-                startDate: startDate || '', // Nếu không có startDate thì truyền rỗng
-                endDate: endDate || '',    // Tương tự với endDate
-                page: page || 0,           // Mặc định trang là 0
-                size: size || 10,          // Mặc định kích thước trang là 10
+                keyword: keyword || '',      // Từ khóa tìm kiếm (nếu không có thì rỗng)
+                page: page || 0,            // Trang hiện tại (mặc định là 0)
+                size: size || 10,           // Số lượng bản ghi mỗi trang (mặc định là 10)
+                sortBy: sortBy || 'createDate', // Tiêu chí sắp xếp (mặc định theo createDate)
+                direction: direction || 'asc', // Hướng sắp xếp (mặc định là asc)
             };
 
             // Gọi API với các tham số đã cấu hình
             const response = await axios.get(API_URL, {
-                params: params,  // Truyền tham số vào trong params
+                params: params, // Truyền tham số vào trong params
             });
-            return response.data;
+
+            return response.data; // Trả về dữ liệu từ API
         } catch (error) {
             console.error("Lỗi khi lấy danh sách khuyến mãi:", error);
-            throw error;
+            throw error; // Ném lỗi để xử lý ở cấp cao hơn
         }
     },
 
     // Lấy thông tin khuyến mãi theo ID
-    getPromotionById: async (id) => {
+    getPromotionById: async (promotionID) => {
         try {
-            const response = await axios.get(`${API_URL}/${id}`);
+            const response = await axios.get(`${API_URL}/${promotionID}`);
             return response.data;
         } catch (error) {
-            console.error(`Lỗi khi lấy khuyến mãi với ID: ${id}`, error);
+            console.error(`Lỗi khi lấy khuyến mãi với ID: ${promotionID}`, error);
             throw error;
         }
     },
@@ -63,6 +64,16 @@ const PromotionService = {
         }
     },
 
+    // Toggle trạng thái active của khuyến mãi
+    togglePromotionActive: async (promotionID) => {
+        try {
+            const response = await axios.patch(`${API_URL}/${promotionID}/toggle`);
+            return response.data;
+        } catch (error) {
+            console.error(`Lỗi khi thay đổi trạng thái active của khuyến mãi với ID: ${promotionID}`, error);
+            throw error;
+        }
+    },
 
     // Xóa khuyến mãi theo ID
     deletePromotion: async (id) => {

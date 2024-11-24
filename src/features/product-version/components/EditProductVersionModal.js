@@ -308,9 +308,13 @@ const EditProductVersionModal = ({ productVersion, onClose, onProductUpdated }) 
                                 <input id="logoInput" type="file" onChange={handleImageChange} className="hidden" />
                                 <div className="h-40 flex justify-center items-center rounded-lg bg-cover cursor-pointer" onClick={() => document.getElementById('logoInput').click()}>
                                     {previewLogo ? (
-                                        <img src={previewLogo} alt="Preview" className="h-full object-cover rounded-lg" />
+                                        <img src={previewLogo} alt="Tải ảnh thất bại" className="h-full object-cover rounded-lg" />
                                     ) : (
-                                        <span className="text-gray-400 opacity-75">Chọn ảnh</span>
+                                        <span className="text-gray-400 opacity-75"> <img
+                                            className="w-24"
+                                            src="https://icons.veryicon.com/png/o/miscellaneous/user-interface-flat-multicolor/5725-select-image.png"
+                                            alt="Tải lên hình ảnh"
+                                        /></span>
                                     )}
                                 </div>
                             </div>

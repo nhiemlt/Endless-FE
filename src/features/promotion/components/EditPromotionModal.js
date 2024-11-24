@@ -1,182 +1,303 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch } from 'react-redux';
 import { showNotification } from '../../common/headerSlice';
+import productVersionService from '../../../services/productVersionService';
 import PromotionService from '../../../services/PromotionService';
 import UploadFileService from '../../../services/UploadFileService';
-import MinusIcon from '@heroicons/react/24/outline/MinusIcon';
-import PlusIcon from '@heroicons/react/24/outline/PlusIcon';
+import moment from 'moment';
 
-const EditPromotionModal = ({ isOpen, onClose, editPromotion, onPromotionUpdate }) => {
+const EditPromotionModal = ({ isOpen, onClose, onPromotionUpdated, promotion }) => {
+    const [productsByBrand, setProductsByBrand] = useState({});
+    const [activeBrand, setActiveBrand] = useState('');
+    const [selectedProducts, setSelectedProducts] = useState([]);
+    const [previewPoster, setPreviewPoster] = useState(null);
+    const [promotionPoster, setPromotionPoster] = useState(null);
     const [promotionName, setPromotionName] = useState('');
+    const [percentDiscount, setPercentDiscount] = useState('');
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
-    const [poster, setPoster] = useState('');
-    const [previewPoster, setPreviewPoster] = useState('');
-    const [promotionDetails, setPromotionDetails] = useState([]); // State để chứa danh sách promotionDetails
     const dispatch = useDispatch();
+    const dialogRef = useRef(null);
 
-    useEffect(() => {
-        if (isOpen && editPromotion) {
-            setPromotionName(editPromotion.name);
-            const formatDateForInput = (dateString) => {
-                const [day, month, year] = dateString.split('-');
-                return `${year}-${month}-${day}`;
-            };
-            setStartDate(editPromotion.startDate ? formatDateForInput(editPromotion.startDate) : '');
-            setEndDate(editPromotion.endDate ? formatDateForInput(editPromotion.endDate) : '');
-            setPoster(editPromotion.poster);
-            setPreviewPoster(editPromotion.poster);
-            setPromotionDetails(editPromotion.promotionDetails || []); // Đặt danh sách promotionDetails
-        }
-    }, [isOpen, editPromotion]);
+    // Reset form khi đóng modal
+    const resetForm = () => {
+        setProductsByBrand({});
+        setActiveBrand('');
+        setSelectedProducts([]);
+        setPreviewPoster(null);
+        setPromotionPoster(null);
+        setPromotionName('');
+        setPercentDiscount('');
+        setStartDate('');
+        setEndDate('');
+    };
 
-    const handleImageChange = async (e) => {
-        const file = e.target.files[0];
-        const validImageTypes = ['image/jpeg', 'image/png', 'image/gif'];
-        if (file && validImageTypes.includes(file.type)) {
-            const uploadUrl = await UploadFileService.uploadPromotionImage(file, poster);
-            setPoster(uploadUrl);
-            setPreviewPoster(URL.createObjectURL(file));
-        } else {
-            dispatch(showNotification({ message: 'Định dạng tệp không hợp lệ!', status: 0 }));
-            setPoster(editPromotion.poster);
-            setPreviewPoster(editPromotion.poster);
+    // Lấy danh sách sản phẩm từ API
+    const fetchProducts = async () => {
+        try {
+            const response = await productVersionService.getAllProductVersions();
+            const productVersions = Array.isArray(response.content) ? response.content : [];
+            const groupedProducts = productVersions.reduce((acc, product) => {
+                const brandName = product?.product.brandName || 'Khác';
+                if (!acc[brandName]) acc[brandName] = [];
+                acc[brandName].push(product);
+                return acc;
+            }, {});
+            setProductsByBrand(groupedProducts);
+            setActiveBrand(Object.keys(groupedProducts)[0] || '');
+        } catch (error) {
+            console.error("Lỗi khi lấy danh sách sản phẩm:", error);
+            dispatch(showNotification({ message: 'Lỗi khi lấy danh sách sản phẩm!', status: 0 }));
         }
     };
 
-    const handleUpdatePromotion = async () => {
-        if (!editPromotion.promotionID) {
-            dispatch(showNotification({ message: 'ID khuyến mãi không hợp lệ!', status: 0 }));
+    // Lấy dữ liệu khuyến mãi hiện tại khi modal mở
+    useEffect(() => {
+        if (!isOpen || !promotion) return;
+        fetchProducts();
+
+        // Cập nhật form với dữ liệu khuyến mãi
+        setPromotionName(promotion.name);
+        setPercentDiscount(promotion.percentDiscount);
+        setStartDate(moment(promotion.startDate).local().format("YYYY-MM-DDTHH:mm"));
+        setEndDate(moment(promotion.endDate).local().format("YYYY-MM-DDTHH:mm"));
+
+        // Cập nhật selectedProducts từ promotionproducts
+        if (promotion?.promotionproducts) {
+            const selectedIds = promotion.promotionproducts.map(item => item.productVersionID?.productVersionID);
+            setSelectedProducts(selectedIds); // Đồng bộ danh sách sản phẩm
+            console.log("Selected products", selectedIds);
+        }
+
+
+        setPreviewPoster(promotion.poster || null);
+        console.log("Poster:", promotion.poster);
+
+
+        console.log("Promotion", promotion)
+    }, [isOpen, promotion]);
+
+    const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        return date.toISOString().slice(0, 16);  // Chuyển đổi thành 'yyyy-MM-ddThh:mm'
+    };
+
+    const handleImageChange = (e) => {
+        const file = e.target.files[0];
+        const validImageTypes = ['image/jpeg', 'image/png', 'image/gif'];
+
+        if (file && validImageTypes.includes(file.type)) {
+            setPromotionPoster(file);
+            setPreviewPoster(URL.createObjectURL(file));
+        } else {
+            dispatch(showNotification({ message: 'Định dạng tệp không hợp lệ! Vui lòng chọn hình ảnh (JPEG, PNG, GIF) và sẽ sử dụng ảnh cũ.', status: 0 }));
+            resetImage();
+        }
+    };
+
+    const resetImage = () => {
+        setPromotionPoster(null);
+        setPreviewPoster(null);
+    };
+
+    const handleUpdatePromotion = async (e) => {
+        e.preventDefault();
+
+        // Kiểm tra thông tin khuyến mãi
+        if (!promotionName || !percentDiscount || !startDate || !endDate || selectedProducts.length === 0) {
+            dispatch(showNotification({ message: 'Vui lòng điền đầy đủ thông tin!', status: 0 }));
             return;
         }
 
-        const updatedPromotion = {
-            ...editPromotion,
-            name: promotionName,
-            startDate: startDate,
-            endDate: endDate,
-            poster: poster,
-            promotionDetails: promotionDetails, // Cập nhật danh sách promotionDetails
-        };
-
         try {
-            const response = await PromotionService.updatePromotion(editPromotion.promotionID, updatedPromotion);
-            dispatch(showNotification({ message: 'Cập nhật khuyến mãi thành công!', status: 1 }));
-            onPromotionUpdate(response);
+            let uploadedImageUrl = null;
+
+            // Kiểm tra và tải lên hình ảnh khuyến mãi, nếu có
+            if (promotionPoster) {
+                uploadedImageUrl = await UploadFileService.uploadPromotionImage(promotionPoster);
+            } else if (promotion.poster) {
+                // Nếu không có hình ảnh mới, sử dụng hình ảnh cũ
+                uploadedImageUrl = promotion.poster;
+            }
+
+            // Chuyển đổi startDate và endDate sang dạng UTC
+            const startInstant = new Date(startDate).toISOString();
+            const endInstant = new Date(endDate).toISOString();
+
+            // Chuẩn bị dữ liệu khuyến mãi
+            const promotionData = {
+                name: promotionName,
+                percentDiscount: parseFloat(percentDiscount),
+                startDate: startInstant,
+                endDate: endInstant,
+                productVersionIds: selectedProducts,
+                poster: uploadedImageUrl || null,
+            };
+
+            // Gửi yêu cầu cập nhật khuyến mãi
+            const response = await PromotionService.updatePromotion(promotion.promotionID, promotionData);
+
+            dispatch(showNotification({ message: 'Khuyến mãi được cập nhật thành công!', status: 1 }));
+
+            // Cập nhật lại danh sách khuyến mãi và đóng modal
+            onPromotionUpdated(response);
+            resetForm();
             onClose();
         } catch (error) {
-            dispatch(showNotification({ message: 'Cập nhật khuyến mãi thất bại!', status: 0 }));
+            if (error.response && error.response.data) {
+                // Xử lý lỗi trả về từ backend (ví dụ: lỗi dữ liệu không hợp lệ, sản phẩm không tồn tại...)
+                dispatch(showNotification({ message: `Lỗi: ${error.response.data}`, status: 0 }));
+            } else {
+                // Xử lý các lỗi khác (lỗi hệ thống, kết nối mạng, v.v...)
+                dispatch(showNotification({ message: 'Lỗi khi cập nhật khuyến mãi!', status: 0 }));
+            }
+            console.error('Lỗi khi cập nhật khuyến mãi:', error);
         }
     };
 
-    const handleAddDiscount = () => {
-        // Thêm một đối tượng promotionDetail mới vào danh sách
-        setPromotionDetails([...promotionDetails, { percentDiscount: '' }]);
+    const handleTabClick = (e, brandName) => {
+        e.preventDefault();
+        setActiveBrand(brandName);
     };
 
-    const handleRemoveDiscount = (index) => {
-        // Kiểm tra xem index có hợp lệ không
-        if (index >= 0 && index < promotionDetails.length) {
-            const updatedDetails = [...promotionDetails];
-            updatedDetails.splice(index, 1); // Loại bỏ phần tử tại vị trí index
-            setPromotionDetails(updatedDetails); // Cập nhật lại state
+    const handleCheckboxChange = (productVersionID) => {
+        if (selectedProducts.includes(productVersionID)) {
+            setSelectedProducts(selectedProducts.filter(id => id !== productVersionID));
         } else {
-            console.error('Invalid index:', index); // Kiểm tra nếu index không hợp lệ
+            setSelectedProducts([...selectedProducts, productVersionID]);
         }
     };
 
 
-    const handleDiscountChange = (index, value) => {
-        // Cập nhật giá trị percentDiscount của promotionDetail tại vị trí index
-        const updatedDetails = [...promotionDetails];
-        updatedDetails[index].percentDiscount = value;
-        setPromotionDetails(updatedDetails);
+
+    const handleSelectAll = () => {
+        if (!activeBrand || !productsByBrand[activeBrand]) return;
+        const brandProductIds = productsByBrand[activeBrand].map((product) => product.productVersionID);
+        const allSelected = brandProductIds.every((id) => selectedProducts.includes(id));
+        setSelectedProducts((prev) =>
+            allSelected ? prev.filter((id) => !brandProductIds.includes(id)) : [...new Set([...prev, ...brandProductIds])]
+        );
     };
 
-    return (
-        <div className={`modal ${isOpen ? 'modal-open' : ''}`}>
-            <div className="modal-box">
-                <h2 className="text-xl mb-4">Cập nhật Khuyến Mãi</h2>
-                <div className="form-control mb-4">
-                    <label className="label">Tên Khuyến Mãi</label>
-                    <input
-                        type="text"
-                        value={promotionName}
-                        onChange={(e) => setPromotionName(e.target.value)}
-                        className="input input-bordered"
-                        placeholder="Nhập tên khuyến mãi"
-                    />
-                </div>
+    const renderProductsCheckboxes = () => {
+        if (!activeBrand || !productsByBrand[activeBrand]) return null;
+        console.log("Selected products:", selectedProducts);  // Log giá trị selectedProducts
+        return productsByBrand[activeBrand].map((product, index) => (
+            <label key={`${product.productVersionID}-${index}`} className="flex items-center space-x-2">
+                <input
+                    type="checkbox"
+                    checked={selectedProducts.includes(product.productVersionID)} // Kiểm tra xem sản phẩm đã được chọn chưa
+                    onChange={() => handleCheckboxChange(product.productVersionID)} // Khi thay đổi trạng thái checkbox
+                />
+                <span>{product.product?.name + " " + product?.versionName}</span>
+            </label>
+        ));
 
-                <div className="flex space-x-4 mb-4">
-                    <div className="form-control w-full">
-                        <label className="label">Ngày Bắt Đầu</label>
-                        <input
-                            type="date"
-                            value={startDate}
-                            onChange={(e) => setStartDate(e.target.value)}
-                            className="input input-bordered"
-                        />
-                    </div>
+    };
 
-                    <div className="form-control w-full">
-                        <label className="label">Ngày Kết Thúc</label>
-                        <input
-                            type="date"
-                            value={endDate}
-                            onChange={(e) => setEndDate(e.target.value)}
-                            className="input input-bordered"
-                        />
-                    </div>
-                </div>
 
-                <div className="mb-4">
-                    <input id="posterInput" type="file" onChange={handleImageChange} className="hidden" />
-                    <div className="h-40 flex justify-center items-center rounded-lg bg-cover cursor-pointer" onClick={() => document.getElementById('posterInput').click()}>
-                        {previewPoster ? (
-                            <img src={previewPoster} alt="Preview" className="h-full object-cover rounded-lg" />
-                        ) : (
-                            <span className="text-gray-400 opacity-75">Chọn poster</span>
-                        )}
-                    </div>
-                </div>
+    const renderTabs = () => {
+        return Object.keys(productsByBrand).map((brandName, index) => (
+            <button
+                key={index}
+                className={`tab ${activeBrand === brandName ? 'tab-active' : ''}`}
+                onClick={(e) => handleTabClick(e, brandName)}
+            >
+                {brandName}
+            </button>
+        ));
+    };
 
-                <div className="mb-4">
-                    <h4 className="font-bold">Giảm giá (%)</h4>
-                    <div className="grid grid-cols-2 gap-4">
-                        {promotionDetails.map((detail, index) => (
-                            <div key={index} className="flex items-center">
+    return isOpen ? (
+        <>
+            <div className="fixed inset-0 bg-black bg-opacity-50 z-40"></div>
+            <dialog ref={dialogRef} className="modal" open>
+                <div className="modal-box max-w-3xl">
+                    <h3 className="font-bold text-lg">Chỉnh Sửa Khuyến Mãi</h3>
+                    <form onSubmit={handleUpdatePromotion} className="mt-4">
+                        <div className="flex space-x-4 mb-4">
+                            <div className="form-control w-full">
+                                <label className="label">Tên Khuyến Mãi</label>
                                 <input
-                                    type="number"
-                                    value={detail.percentDiscount}
-                                    onChange={(e) => handleDiscountChange(index, e.target.value)}
-                                    placeholder={`Giảm giá ${index + 1} (%)`}
+                                    type="text"
                                     className="input input-bordered w-full"
-                                />
-                                <span className="ml-2">%</span>
-                                <MinusIcon
-                                    className="w-8 h-8 cursor-pointer text-error ml-2"
-                                    onClick={() => handleRemoveDiscount(index)}
+                                    value={promotionName}
+                                    onChange={(e) => setPromotionName(e.target.value)}
+                                    required
                                 />
                             </div>
-                        ))}
-
-                    </div>
-                    <div className="flex justify-end p-2">
-                        <PlusIcon
-                            className="w-8 h-8 text-primary"
-                            onClick={handleAddDiscount}
-                        />
-                    </div>
+                            <div className="form-control w-full">
+                                <label className="label">Phần trăm khuyến mãi</label>
+                                <input
+                                    type="number"
+                                    className="input input-bordered w-full"
+                                    value={percentDiscount}
+                                    onChange={(e) => setPercentDiscount(e.target.value)}
+                                    required
+                                />
+                            </div>
+                        </div>
+                        <div className="flex space-x-4 mb-4">
+                            <div className="form-control w-full">
+                                <label className="label">Ngày bắt đầu</label>
+                                <input
+                                    type="datetime-local"
+                                    className="input input-bordered w-full"
+                                    value={startDate}
+                                    onChange={(e) => setStartDate(e.target.value)}
+                                />
+                            </div>
+                            <div className="form-control w-full">
+                                <label className="label">Ngày kết thúc</label>
+                                <input
+                                    type="datetime-local"
+                                    className="input input-bordered w-full"
+                                    value={endDate}
+                                    onChange={(e) => setEndDate(e.target.value)}
+                                />
+                            </div>
+                        </div>
+                        <div className="mb-4">
+                            <input
+                                id="posterInput"
+                                type="file"
+                                className="hidden"
+                                onChange={handleImageChange}
+                            />
+                            <div
+                                className="h-40 flex justify-center items-center rounded-lg bg-cover cursor-pointer"
+                                onClick={() => document.getElementById('posterInput').click()}
+                            >
+                                {previewPoster ? (
+                                    <img src={previewPoster} alt="Xem trước" className="h-full object-cover rounded-lg" />
+                                ) : (
+                                    <span className="text-gray-400 opacity-75">
+                                        <img
+                                            className="w-24"
+                                            src="https://icons.veryicon.com/png/o/miscellaneous/user-interface-flat-multicolor/5725-select-image.png"
+                                            alt="Tải lên hình ảnh"
+                                        />
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                        <div className="mb-4">
+                            <div className="tabs tabs-boxed">
+                                {renderTabs()}
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {renderProductsCheckboxes()}
+                            </div>
+                        </div>
+                        <div className="modal-action">
+                            <button type="button" className="btn" onClick={onClose}>Hủy</button>
+                            <button type="submit" className="btn btn-primary">Cập nhật</button>
+                        </div>
+                    </form>
                 </div>
-
-                <div className="modal-action">
-                    <button onClick={onClose} className="btn btn-outline">Hủy</button>
-                    <button onClick={handleUpdatePromotion} className="btn btn-primary">Cập Nhật</button>
-                </div>
-            </div>
-        </div>
-    );
+            </dialog>
+        </>
+    ) : null;
 };
 
 export default EditPromotionModal;
