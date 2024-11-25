@@ -143,7 +143,7 @@ function ProductPage() {
               <th>Danh mục</th>
               <th>Thương hiệu</th>
               <th>Mô tả</th>
-              <th>Thao tác</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
@@ -178,22 +178,34 @@ function ProductPage() {
 
       {/* Điều hướng phân trang */}
       <div className="join mt-4 flex justify-center w-full">
-        <button className="join-item btn btn-sm btn-primary" onClick={handlePrevPage} disabled={currentPage === 0}>
+        <button
+          onClick={handlePrevPage}
+          className="join-item btn"
+          disabled={currentPage === 0}
+        >
           Trước
         </button>
+
         {Array.from({ length: totalPages }, (_, index) => (
           <button
             key={index}
-            onClick={() => setCurrentPage(index)}
-            className={`join-item btn btn-sm btn-primary ${currentPage === index ? "btn-active" : ""}`}
+            onClick={() => setCurrentPage(index)} // Sử dụng setCurrentPage để cập nhật trang
+            className={`join-item btn ${currentPage === index ? 'btn-primary' : ''}`} // Thêm class 'btn-primary' nếu đang ở trang hiện tại
           >
             {index + 1}
           </button>
         ))}
-        <button className="join-item btn btn-sm btn-primary" onClick={handleNextPage} disabled={currentPage >= totalPages - 1}>
+
+        <button
+          onClick={handleNextPage}
+          className="join-item btn"
+          disabled={currentPage === totalPages - 1}
+        >
           Tiếp
         </button>
       </div>
+
+
 
       {isAddModalOpen && (
         <AddProductModal

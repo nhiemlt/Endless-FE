@@ -55,9 +55,10 @@ const EditProductModal = ({ product, categories, brands, onClose, onProductUpdat
                     <h3 className="font-bold text-lg">Cập nhật sản phẩm</h3>
                     <form className="mt-4" onSubmit={handleSubmit}>
                         <div className="grid grid-cols-1 gap-4">
+                            <label>Tên sản phẩm</label>
                             <input
                                 type="text"
-                                placeholder="Tên sản phẩm"
+                                placeholder="Nhập tên sản phẩm..."
                                 value={productName}
                                 onChange={(e) => setProductName(e.target.value)}
                                 className="input input-bordered w-full"
@@ -91,11 +92,10 @@ const EditProductModal = ({ product, categories, brands, onClose, onProductUpdat
                                         </option>
                                     ))}
                                 </select>
-
-
                             </div>
+                            <label>Mô tả</label>
                             <textarea
-                                placeholder="Mô tả"
+                                placeholder="Nhập mô tả sản phẩm"
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}
                                 className="textarea textarea-bordered w-full"
