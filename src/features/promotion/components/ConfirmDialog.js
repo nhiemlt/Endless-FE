@@ -1,7 +1,9 @@
 // components/ConfirmDialog.js
 import React from 'react';
 
-const ConfirmDialog = ({ message, onConfirm, onCancel }) => {
+const ConfirmDialog = ({ isOpen, message, onConfirm, onCancel }) => {
+    if (!isOpen) return null; // Không hiển thị nếu trạng thái không mở
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50">
             <div className="bg-white p-5 rounded shadow-lg">
@@ -14,5 +16,6 @@ const ConfirmDialog = ({ message, onConfirm, onCancel }) => {
         </div>
     );
 };
+
 
 export default ConfirmDialog;
