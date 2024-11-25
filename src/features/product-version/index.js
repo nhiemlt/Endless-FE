@@ -204,7 +204,7 @@ function ProductVersionPage() {
 
 
   return (
-    <TitleCard title="Manage Product Versions" topMargin="mt-6">
+    <TitleCard title="Quản lý phiên bản sản phẩm" topMargin="mt-6">
       <div className="space-y-4">
         <div className="flex flex-col md:flex-row justify-between items-center w-full mb-4">
           <div className="flex justify-start items-center space-x-2 mb-2 mr-2 md:mb-0">
@@ -229,16 +229,16 @@ function ProductVersionPage() {
           <table className="table table-xs w-full">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Product</th>
-                <th>Version Name</th>
+                <th>STT</th>
+                <th>Sản phẩm</th>
+                <th>Tên phiên bản</th>
                 <th>Thuộc tính</th>
-                <th>Cost Price</th>
-                <th>Price</th>
+                <th>Giá gốc</th>
+                <th>Giá bán</th>
                 <th>Kích thước</th>
-                <th>Status</th>
-                <th>Image</th>
-                <th>Actions</th>
+                <th>Trạng thái</th>
+                <th>Hình ảnh</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -333,29 +333,32 @@ function ProductVersionPage() {
         {/* Điều hướng phân trang */}
         <div className="join mt-4 flex justify-center w-full">
           <button
-            className="join-item btn btn-sm btn-primary"
             onClick={handlePrevPage}
+            className="join-item btn"
             disabled={currentPage === 0}
           >
             Trước
           </button>
+
           {Array.from({ length: totalPages }, (_, index) => (
             <button
               key={index}
-              onClick={() => setCurrentPage(index)}
-              className={`join-item btn btn-sm btn-primary ${currentPage === index ? "btn-active" : ""}`}
+              onClick={() => setCurrentPage(index)} // Chuyển trang khi nhấn
+              className={`join-item btn ${currentPage === index ? 'btn-primary' : ''}`} // Thêm 'btn-primary' cho trang hiện tại
             >
               {index + 1}
             </button>
           ))}
+
           <button
-            className="join-item btn btn-sm btn-primary"
             onClick={handleNextPage}
-            disabled={currentPage >= totalPages - 1}
+            className="join-item btn"
+            disabled={currentPage === totalPages - 1}
           >
             Tiếp
           </button>
         </div>
+
 
       </div>
       {isAddModalOpen && (
