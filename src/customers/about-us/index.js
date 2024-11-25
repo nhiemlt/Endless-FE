@@ -13,7 +13,7 @@ function AboutUs() {
           <div className="flex flex-col md:flex-row gap-8">
             <div className="flex-1">
               <img
-                src="path_to_your_image"
+                src="images/team.jpg"
                 alt="Hình ảnh minh họa"
                 className="rounded-lg shadow-lg"
               />
@@ -26,16 +26,28 @@ function AboutUs() {
               </p>
               <ul className="mt-4 space-y-4">
                 <li className="flex items-center">
-                  <span className="text-blue-600 dark:text-blue-400 mr-2">✔️</span>
-                  <span className="text-gray-600 dark:text-gray-300">Sản phẩm chất lượng cao</span>
+                  <span className="text-blue-600 dark:text-blue-400 mr-2">
+                    ✔️
+                  </span>
+                  <span className="text-gray-600 dark:text-gray-300">
+                    Sản phẩm chất lượng cao
+                  </span>
                 </li>
                 <li className="flex items-center">
-                  <span className="text-blue-600 dark:text-blue-400 mr-2">✔️</span>
-                  <span className="text-gray-600 dark:text-gray-300">Dịch vụ khách hàng tận tâm</span>
+                  <span className="text-blue-600 dark:text-blue-400 mr-2">
+                    ✔️
+                  </span>
+                  <span className="text-gray-600 dark:text-gray-300">
+                    Dịch vụ khách hàng tận tâm
+                  </span>
                 </li>
                 <li className="flex items-center">
-                  <span className="text-blue-600 dark:text-blue-400 mr-2">✔️</span>
-                  <span className="text-gray-600 dark:text-gray-300">Nỗ lực đáp ứng nhu cầu khách hàng</span>
+                  <span className="text-blue-600 dark:text-blue-400 mr-2">
+                    ✔️
+                  </span>
+                  <span className="text-gray-600 dark:text-gray-300">
+                    Nỗ lực đáp ứng nhu cầu khách hàng
+                  </span>
                 </li>
               </ul>
               <button className="btn btn-primary bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 mt-4">
@@ -52,34 +64,33 @@ function AboutUs() {
           Đội Ngũ Của Chúng Tôi
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {[ 
+          {[
             {
               name: "Lý Tính Nhiệm",
               role: "Nhóm trưởng",
-              image: "path_to_image_1",
+              image: "/images/nhiem.jpg",
               description:
-                "Lý Tính Nhiệm là người đứng đầu đội ngũ, với 30 năm kinh nghiệm trong ngành. Anh ấy là người đưa ra các chiến lược phát triển và dẫn dắt đội ngũ đạt được những thành tựu lớn.",
+                "Lãnh đạo đội ngũ với chiến lược và tầm nhìn phát triển.",
             },
             {
               name: "Nguyễn Minh Nhu",
               role: "Thành viên",
-              image: "path_to_image_2",
+              image: "/images/nhu.jpg",
               description:
-                "Nguyễn Minh Nhu chuyên về phát triển sản phẩm và luôn tìm kiếm các giải pháp sáng tạo. Cô ấy đã đóng góp nhiều vào việc cải tiến quy trình sản xuất và nâng cao chất lượng sản phẩm.",
+                "Chuyên gia sáng tạo trong phát triển sản phẩm và cải tiến.",
             },
             {
               name: "Võ Thị Thảo Nguyên",
               role: "Thành viên",
-              image: "path_to_image_3",
-              description:
-                "Võ Thị Thảo Nguyên phụ trách các hoạt động sáng tạo và đưa ra các ý tưởng đột phá cho đội ngũ. Cô ấy luôn đưa ra các giải pháp táo bạo để nâng cao hiệu quả công việc.",
+              image: "/images/nguyen.jpg",
+              description: "Đưa ra các ý tưởng đột phá và giải pháp hiệu quả.",
             },
             {
               name: "Nguyễn Hoàng Phúc",
               role: "Thành viên",
-              image: "path_to_image_4",
+              image: "/images/phuc.png",
               description:
-                "Nguyễn Hoàng Phúc là một thành viên nhiệt huyết, luôn sẵn sàng làm việc chăm chỉ để hoàn thành nhiệm vụ. Dù ít nói nhưng những đóng góp của anh ấy luôn được đánh giá cao.",
+                "Thành viên nhiệt huyết, luôn hoàn thành nhiệm vụ xuất sắc.",
             },
           ].map((member, index) => (
             <div
@@ -92,9 +103,15 @@ function AboutUs() {
                 className="rounded-full w-32 h-32 mx-auto mb-4"
               />
               <div className="text-center mt-4">
-                <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">{member.name}</h3>
-                <p className="text-gray-600 dark:text-gray-300">{member.role}</p>
-                <p className="text-gray-500 dark:text-gray-400">{member.description}</p>
+                <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
+                  {member.name}
+                </h3>
+                <p className="text-gray-600 dark:text-gray-300">
+                  {member.role}
+                </p>
+                <p className="text-gray-500 dark:text-gray-400 text-sm mt-2">
+                  {member.description}
+                </p>
               </div>
             </div>
           ))}
@@ -129,7 +146,8 @@ function AboutUs() {
               </div>
               <p className="text-gray-600 ml-8 dark:text-gray-300">
                 Năm 2021, sau khi tốt nghiệp phổ thông, chúng tôi đã bước vào
-                một hành trình mới, đánh dấu một cột mốc quan trọng trong sự nghiệp.
+                một hành trình mới, đánh dấu một cột mốc quan trọng trong sự
+                nghiệp.
               </p>
             </div>
             <div className="ml-4">
@@ -141,7 +159,8 @@ function AboutUs() {
               </div>
               <p className="text-gray-600 ml-8 dark:text-gray-300">
                 Đến năm 2024, chúng tôi đã có mặt trên toàn cầu, mang giải pháp
-                đến với khách hàng trên khắp thế giới và đã đạt được những thành tựu lớn.
+                đến với khách hàng trên khắp thế giới và đã đạt được những thành
+                tựu lớn.
               </p>
             </div>
           </div>

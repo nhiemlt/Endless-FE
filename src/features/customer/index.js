@@ -58,7 +58,7 @@ function Customer() {
     setLoading(true);
     try {
       await CustomerService.toggleCustomerStatus(userId);
-      fetchCustomers(); // Cập nhật lại danh sách sau khi thay đổi
+      fetchCustomers();
       dispatch(
         showNotification({
           message: "Cập nhật trạng thái thành công!",
@@ -103,7 +103,6 @@ function Customer() {
     setCustomerDetails(customer);
     setShowUpdateModal(true);
   };
-
 
   const handleUpdateModalClose = () => {
     setShowUpdateModal(false);
@@ -178,8 +177,9 @@ function Customer() {
             <button
               key={page}
               onClick={() => handlePageChange(page)}
-              className={`join-item btn ${currentPage === page ? "btn-primary" : ""
-                }`}
+              className={`join-item btn ${
+                currentPage === page ? "btn-primary" : ""
+              }`}
             >
               {page + 1}
             </button>
@@ -197,121 +197,127 @@ function Customer() {
     );
   };
 
-  return (<TitleCard title="Quản lý khách hàng" topMargin="mt-2">
-    <div className="flex justify-between mb-4 flex-wrap">
-      <div className="flex space-x-4 mb-4 sm:mb-0">
-        <label className="input input-bordered flex items-center gap-2 w-full sm:w-auto">
-          <input
-            type="text"
-            placeholder="Tìm kiếm khách hàng"
-            onChange={debouncedSearch}
-            className="dark:bg-base-100 w-full sm:w-64"
-          />
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 16 16"
-            fill="currentColor"
-            className="h-4 w-4 opacity-70"
-          >
-            <path
-              fillRule="evenodd"
-              d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
-              clipRule="evenodd"
+  return (
+    <TitleCard title="Quản lý khách hàng" topMargin="mt-2">
+      <div className="flex justify-between mb-4 flex-wrap">
+        <div className="flex space-x-4 mb-4 sm:mb-0">
+          <label className="input input-bordered flex items-center gap-2 w-full sm:w-auto">
+            <input
+              type="text"
+              placeholder="Tìm kiếm khách hàng"
+              onChange={debouncedSearch}
+              className="dark:bg-base-100 w-full sm:w-64"
             />
-          </svg>
-        </label>
-      </div>
-
-      <button className="btn btn-primary sm:w-auto w-full" onClick={() => setShowModal(true)}>
-        Tạo khách hàng mới
-      </button>
-    </div>
-
-    {loading ? (
-      <div className="relative w-full h-64">
-        <div className="absolute inset-0 bg-opacity-50 bg-gray-100 flex justify-center items-center z-10">
-          <div className="loader" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 16 16"
+              fill="currentColor"
+              className="h-4 w-4 opacity-70"
+            >
+              <path
+                fillRule="evenodd"
+                d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </label>
         </div>
+
+        <button
+          className="btn btn-primary sm:w-auto w-full"
+          onClick={() => setShowModal(true)}
+        >
+          Tạo khách hàng mới
+        </button>
       </div>
-    ) : (
-      <>
-        <table className="table w-full table-xs sm:table-md">
-          <thead>
-            <tr>
-              <th>Avatar</th>
-              <th onClick={() => handleSortChange("fullname")}>
-                Tên khách hàng
-              </th>
-              <th className="text-center">Số điện thoại</th>
-              <th className="text-center">Email</th>
-              <th className="text-center">Kích hoạt</th>
-              <th className="text-center">Hành động</th>
-            </tr>
-          </thead>
-          <tbody>
-            {customers.map((customer, index) => (
-              <tr key={customer.userId || index}>
-                <td>
-                  <img
-                    src={customer.avatar || "default-avatar.png"}
-                    alt="Avatar"
-                    className="w-16 h-16 rounded-full"
-                  />
-                </td>
-                <td>{customer.fullname}</td>
-                <td className="text-center">{customer.phone}</td>
-                <td className="text-center">{customer.email}</td>
-                <td className="text-center">
-                  <input
-                    type="checkbox"
-                    className="toggle toggle-success"
-                    checked={customer.active}
-                    onChange={() => handleToggleStatus(customer.userID)}
-                  />
-                </td>
-                <td className="text-center">
-                  <button
-                    className="btn btn-sm btn-outline btn-primary"
-                    onClick={() => handleUpdateModalOpen(customer)}
-                  >
-                    <PencilIcon className="h-4 w-4" aria-hidden="true" />
-                  </button>
-                  <button
-                    className="btn btn-sm btn-outline btn-error"
-                    onClick={() => handleDeleteCustomer(customer.userID)}
-                  >
-                    <TrashIcon className="h-4 w-4" aria-hidden="true" />
-                  </button>
-                </td>
+
+      {loading ? (
+        <div className="relative w-full h-64">
+          <div className="absolute inset-0 bg-opacity-50 bg-gray-100 flex justify-center items-center z-10">
+            <div className="loader" />
+          </div>
+        </div>
+      ) : (
+        <>
+          <table className="table w-full table-xs sm:table-md">
+            <thead>
+              <tr>
+                <th>Avatar</th>
+                <th onClick={() => handleSortChange("fullname")}>
+                  Tên khách hàng
+                </th>
+                <th className="text-center">Số điện thoại</th>
+                <th className="text-center">Email</th>
+                <th className="text-center">Kích hoạt</th>
+                <th className="text-center">Hành động</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {customers.map((customer, index) => (
+                <tr key={customer.userId || index}>
+                  <td>
+                    <img
+                      src={customer.avatar || "default-avatar.png"}
+                      alt="Avatar"
+                      className="w-16 h-16 rounded-full"
+                    />
+                  </td>
+                  <td>{customer.fullname}</td>
+                  <td className="text-center">{customer.phone}</td>
+                  <td className="text-center">{customer.email}</td>
+                  <td className="text-center">
+                    <input
+                      type="checkbox"
+                      className="toggle toggle-success"
+                      checked={customer.active}
+                      onChange={() => handleToggleStatus(customer.userID)}
+                    />
+                  </td>
+                  <td className="text-center">
+                    <div className="flex justify-center space-x-2">
+                      <button
+                        className="btn btn-sm btn-outline btn-primary"
+                        onClick={() => handleUpdateModalOpen(customer)}
+                      >
+                        <PencilIcon className="h-4 w-4" aria-hidden="true" />
+                      </button>
+                      <button
+                        className="btn btn-sm btn-outline btn-error"
+                        onClick={() => handleDeleteCustomer(customer.userID)}
+                      >
+                        <TrashIcon className="h-4 w-4" aria-hidden="true" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
 
-        {renderPagination()}
-      </>
-    )}
+          {renderPagination()}
+        </>
+      )}
 
-    <AddCustomerModal
-      showModal={showModal}
-      closeModal={() => setShowModal(false)}
-      fetchCustomers={fetchCustomers}
-    />
+      <AddCustomerModal
+        showModal={showModal}
+        closeModal={() => setShowModal(false)}
+        fetchCustomers={fetchCustomers}
+      />
 
-    <UpdateCustomerModal
-      showModal={showUpdateModal}
-      closeModal={handleUpdateModalClose}
-      customer={customerDetails}
-      fetchCustomers={fetchCustomers}
-    />
+      <UpdateCustomerModal
+        showModal={showUpdateModal}
+        closeModal={handleUpdateModalClose}
+        customer={customerDetails}
+        fetchCustomers={fetchCustomers}
+      />
 
-    <ConfirmDeleteModal
-      showModal={showDeleteModal}
-      closeModal={() => setShowDeleteModal(false)}
-      onConfirm={confirmDeleteCustomer}
-      fetchCustomers={fetchCustomers}
-    />
-  </TitleCard>
+      <ConfirmDeleteModal
+        showModal={showDeleteModal}
+        closeModal={() => setShowDeleteModal(false)}
+        onConfirm={confirmDeleteCustomer}
+        fetchCustomers={fetchCustomers}
+      />
+    </TitleCard>
   );
 }
 
