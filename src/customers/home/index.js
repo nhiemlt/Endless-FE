@@ -373,7 +373,7 @@ function Home() {
                             </p>
                           </>
                         ) : (
-                          <p className="text-sm font-bold text-gray-800 text-dark">
+                          <p className="text-sm text-gray-800 text-dark">
                             Chưa có đánh giá
                           </p>
                         )}
