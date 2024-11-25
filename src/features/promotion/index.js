@@ -12,6 +12,7 @@ import AddPromotionModal from './components/AddPromotionModal';  // Modal thêm 
 import EditPromotionModal from './components/EditPromotionModal';  // Modal cập nhật Promotion
 
 import ConfirmDialogStatus from './components/ConfirmDialogStatus';  // Import ConfirmDialog
+import ConfirmDialog from './components/ConfirmDialog';  // Import ConfirmDialog
 
 function PromotionList() {
   const [isPromotionModalOpen, setIsPromotionModalOpen] = useState(false);
@@ -27,43 +28,42 @@ function PromotionList() {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const dispatch = useDispatch();
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [promotionToDelete, setPromotionToDelete] = useState(null);
-  // Khai báo state cho promotions và setEditPromotion
   const [promotions, setPromotions] = useState([]);
   const [editPromotion, setEditPromotion] = useState(null);
-
   const [selectedPromotion, setSelectedPromotion] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [selectedPromotionForToggle, setSelectedPromotionForToggle] = useState(null);
+
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
+
+  const dispatch = useDispatch();
+
+
+
   const openConfirmDialog = (promotion) => {
     setSelectedPromotionForToggle(promotion);
-    setIsConfirmDialogOpen(true);
+    setIsStatusDialogOpen(true);
   };
+
   const handleConfirmToggle = async () => {
     if (!selectedPromotionForToggle) return;
 
     try {
       await toggleActiveStatus(selectedPromotionForToggle.promotionID, selectedPromotionForToggle.active);
-      dispatch(showNotification({ message: "Cập nhật trạng thái thành công", type: "success" }));
     } catch (error) {
-      dispatch(showNotification({ message: "Lỗi khi cập nhật trạng thái", type: "error" }));
+      dispatch(showNotification({ message: "Lỗi khi cập nhật trạng thái", status: 0 }));
     } finally {
-      setIsConfirmDialogOpen(false);
+      setIsStatusDialogOpen(false);
       setSelectedPromotionForToggle(null);
     }
   };
 
 
-  console.log('Edit Promotion:', editPromotion); // Kiểm tra giá trị promotion khi mở modal
-  // console.log("Promotion ID trong component cha:", promotionID);
 
-  console.log(promotions);
-  // Hàm tải khuyến mãi
   const loadPromotions = async () => {
     setIsLoading(true); // Hiển thị trạng thái đang tải
     try {
@@ -102,10 +102,7 @@ function PromotionList() {
     setIsEditModalOpen(true);     // Mở modal chỉnh sửa
   };
 
-  const handleDeleteClick = (promotionID) => {
-    setPromotionToDelete(promotionID);  // Lưu ID khuyến mãi cần xóa
-    setDialogOpen(true);  // Mở dialog xác nhận
-  };
+
 
   const handlePrevPage = () => {
     if (currentPage > 0) {
@@ -125,11 +122,17 @@ function PromotionList() {
   };
   const toggleActiveStatus = async (promotionID, currentStatus) => {
     try {
+      // Hiển thị thông báo đang xử lý
+      dispatch(showNotification({ message: "Đang thay đổi trạng thái...", type: "info" }));
+
       await PromotionService.togglePromotionActive(promotionID);
-      loadPromotions(); // Tải lại dữ liệu sau khi thay đổi trạng thái
+
+      // Cập nhật lại dữ liệu sau khi BE xử lý
+      loadPromotions();
+      dispatch(showNotification({ message: "Thay đổi trạng thái thành công!", status: 1 }));
     } catch (error) {
       console.error("Lỗi khi thay đổi trạng thái:", error);
-      dispatch(showNotification({ message: "Thay đổi trạng thái thất bại", type: "error" }));
+      dispatch(showNotification({ message: "Thay đổi trạng thái thất bại", status: 0 }));
     }
   };
 
@@ -143,6 +146,29 @@ function PromotionList() {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedPromotion(null);
+  };
+
+  const handleDeleteClick = (promotionID) => {
+    setPromotionToDelete(promotionID);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      await PromotionService.deletePromotion(promotionToDelete);
+      dispatch(showNotification({ message: "Xóa thành công!", status: 1 }));
+      loadPromotions();
+    } catch (error) {
+      dispatch(showNotification({ message: "Xóa thất bại!", status: 0 }));
+    } finally {
+      setIsDeleteDialogOpen(false);
+      setPromotionToDelete(null);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setIsDeleteDialogOpen(false);
+    setPromotionToDelete(null);
   };
 
 
@@ -330,12 +356,18 @@ function PromotionList() {
         />
       )}
 
-
       <ConfirmDialogStatus
         isOpen={isConfirmDialogOpen}
         onClose={() => setIsConfirmDialogOpen(false)}
         onConfirm={handleConfirmToggle}
         message={`Bạn có chắc chắn muốn ${selectedPromotionForToggle?.active ? "tắt" : "bật"} trạng thái khuyến mãi này?`}
+      />
+
+      <ConfirmDialog
+        isOpen={isDeleteDialogOpen}
+        message="Bạn có chắc chắn muốn xóa khuyến mãi này?"
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
       />
 
 

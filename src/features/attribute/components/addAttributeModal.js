@@ -5,8 +5,6 @@ import attributeService from '../../../services/attributeService';
 import MinusIcon from '@heroicons/react/24/outline/MinusIcon';
 import PlusIcon from '@heroicons/react/24/outline/PlusIcon';
 
-
-
 const AddAttributeModal = ({ onClose, onAttributeAdded }) => {
     const [attributeName, setAttributeName] = useState('');
     const [values, setValues] = useState(['']); // Bắt đầu với một giá trị trống
@@ -48,7 +46,6 @@ const AddAttributeModal = ({ onClose, onAttributeAdded }) => {
         }
     };
 
-
     const handlePrevPage = () => {
         if (currentPage > 0) {
             setCurrentPage(currentPage - 1);
@@ -60,6 +57,7 @@ const AddAttributeModal = ({ onClose, onAttributeAdded }) => {
             setCurrentPage(currentPage + 1);
         }
     };
+
     const resetForm = () => {
         setAttributeName('');
         setValues(['']);
@@ -87,7 +85,10 @@ const AddAttributeModal = ({ onClose, onAttributeAdded }) => {
                 <div className="modal-box">
                     <h3 className="font-bold text-lg">Thêm Thuộc Tính</h3>
                     <form className='mt-4' onSubmit={handleSubmit}>
+                        {/* Label for Attribute Name */}
+                        <label htmlFor="attributeName" className="block mb-2">Tên thuộc tính</label>
                         <input
+                            id="attributeName"
                             type="text"
                             value={attributeName}
                             onChange={(e) => setAttributeName(e.target.value)}
@@ -95,28 +96,31 @@ const AddAttributeModal = ({ onClose, onAttributeAdded }) => {
                             className="input input-bordered w-full mb-2"
                             required
                         />
+
+                        {/* Loop through values and add labels */}
                         {values.map((value, index) => (
                             <div key={index} className="flex items-center mb-2">
                                 <input
+                                    id={`value-${index}`}
                                     type="text"
                                     value={value}
                                     onChange={(e) => updateValue(index, e.target.value)}
                                     placeholder={`Giá trị ${index + 1}`}
                                     className="input input-bordered w-full"
                                 />
-                                <MinusIcon className=" w-10 h-10 cursor-pointer text-error" onClick={() => removeValueField(index)}></MinusIcon>
+                                <MinusIcon className=" w-10 h-10 cursor-pointer text-error" onClick={() => removeValueField(index)} />
                             </div>
                         ))}
+
+                        {/* Add new value field */}
                         <div className="flex justify-end p-2">
                             <PlusIcon className="w-8 h-8 text-primary" onClick={addValueField} />
                         </div>
-
 
                         <div className="modal-action">
                             <button type="submit" className="btn btn-outline btn-sm btn-primary">Lưu</button>
                             <button type="button" className="btn btn-outline btn-sm btn-secondary" onClick={onClose}>Đóng</button>
                         </div>
-
                     </form>
                 </div>
             </dialog>

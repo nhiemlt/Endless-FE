@@ -138,7 +138,7 @@ function ProductPage() {
         <table className="table table-xs">
           <thead>
             <tr>
-              <th>No.</th>
+              <th>STT</th>
               <th>Tên</th>
               <th>Danh mục</th>
               <th>Thương hiệu</th>
