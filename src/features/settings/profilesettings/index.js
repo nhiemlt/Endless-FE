@@ -468,6 +468,7 @@ function ProfileSettings() {
                                     ))}
                                 </select>
                                 <input
+                                    autoComplete="off"
                                     type="text"
                                     name="detailAddress"
                                     placeholder="Địa chỉ chi tiết"

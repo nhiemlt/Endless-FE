@@ -34,20 +34,20 @@ const Cart = () => {
   const incrementQuantity = async (index) => {
     const updatedProduct = { ...products[index] };
     const originalQuantity = updatedProduct.quantity;
-  
+
     const newQuantity = updatedProduct.quantity + 1;
-  
+
     if (newQuantity > updatedProduct.stock) {
       dispatch(showNotification({ message: "Số lượng vượt quá số lượng tồn kho", status: 0 }));
       return;
     }
-  
+
     updatedProduct.quantity = newQuantity;
-  
+
     setProducts((prevProducts) =>
       prevProducts.map((product, i) => (i === index ? updatedProduct : product))
     );
-  
+
     // Cập nhật selectedProducts nếu sản phẩm đang được chọn
     setSelectedProducts((prevSelected) => {
       if (prevSelected[updatedProduct.productVersionID]) {
@@ -55,7 +55,7 @@ const Cart = () => {
       }
       return prevSelected;
     });
-  
+
     try {
       await CartService.updateCartQuantity(updatedProduct); // Lưu vào database
     } catch (error) {
@@ -73,18 +73,18 @@ const Cart = () => {
       });
     }
   };
-  
+
   const decrementQuantity = async (index) => {
     const updatedProduct = { ...products[index] };
     const originalQuantity = updatedProduct.quantity;
-  
+
     if (updatedProduct.quantity > 1) {
       updatedProduct.quantity -= 1;
-  
+
       setProducts((prevProducts) =>
         prevProducts.map((product, i) => (i === index ? updatedProduct : product))
       );
-  
+
       // Cập nhật selectedProducts nếu sản phẩm đang được chọn
       setSelectedProducts((prevSelected) => {
         if (prevSelected[updatedProduct.productVersionID]) {
@@ -92,7 +92,7 @@ const Cart = () => {
         }
         return prevSelected;
       });
-  
+
       try {
         await CartService.updateCartQuantity(updatedProduct); // Lưu vào database
       } catch (error) {
@@ -112,18 +112,18 @@ const Cart = () => {
     } else {
       dispatch(showNotification({ message: "Số lượng tối thiểu là 1", status: 0 }));
     }
-  };  
-  
+  };
+
 
   const handleQuantityChange = async (index, value) => {
     const newQuantity = Math.max(1, Number(value));
     const updatedProduct = { ...products[index], quantity: newQuantity };
     const originalQuantity = products[index].quantity;
-  
+
     setProducts((prevProducts) =>
       prevProducts.map((product, i) => (i === index ? updatedProduct : product))
     );
-  
+
     // Cập nhật selectedProducts nếu sản phẩm đang được chọn
     setSelectedProducts((prevSelected) => {
       if (prevSelected[updatedProduct.productVersionID]) {
@@ -131,7 +131,7 @@ const Cart = () => {
       }
       return prevSelected;
     });
-  
+
     try {
       await CartService.updateCartQuantity(updatedProduct); // Lưu vào database
     } catch (error) {
@@ -149,7 +149,7 @@ const Cart = () => {
       });
     }
   };
-  
+
 
   const handleRemoveItem = async (productVersionID) => {
     try {
@@ -192,17 +192,23 @@ const Cart = () => {
     }, 0);
   };
 
-const handleCheckout = async () => {
-  try {
-    // Chọn các sản phẩm đã chọn
-    const selectedItems = Object.values(selectedProducts).filter(Boolean);
+  const handleCheckout = async () => {
+    try {
+      // Chọn các sản phẩm đã chọn
+      const selectedItems = Object.values(selectedProducts).filter(Boolean);
 
-    // Điều hướng sang trang thanh toán
-    navigate('/purchase', { state: { selectedItems } });
-  } catch (error) {
-    dispatch(showNotification({ message: "Lỗi khi chuyển sang trang thanh toán", status: 0 }));
-  }
-};
+      // Kiểm tra nếu không có sản phẩm nào được chọn
+      if (selectedItems.length === 0) {
+        dispatch(showNotification({ message: "Bạn cần chọn ít nhất một sản phẩm", status: 0 }));
+        return;
+      }
+
+      // Điều hướng sang trang thanh toán
+      navigate('/purchase', { state: { selectedItems } });
+    } catch (error) {
+      dispatch(showNotification({ message: "Lỗi khi chuyển sang trang thanh toán", status: 0 }));
+    }
+  };
 
   return (
     <TitleCard>
@@ -294,12 +300,13 @@ const handleCheckout = async () => {
                     </div>
                   </dl>
                   <div className="flex justify-end">
-                    <button
-                      onClick={handleCheckout} // Gọi hàm handleCheckout
-                      className="block rounded bg-blue-600 px-5 py-3 text-sm text-white transition"
-                    >
-                      Thanh toán
-                    </button>
+                  <button
+                    onClick={handleCheckout}
+                    className={`block rounded bg-blue-600 px-5 py-3 text-sm text-white transition ${Object.keys(selectedProducts).length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    disabled={Object.keys(selectedProducts).length === 0} // Disable the button if no products are selected
+                  >
+                    Thanh toán
+                  </button>
                   </div>
 
                 </div>
