@@ -124,13 +124,13 @@ function Home() {
 
             <dl className="mt-6 grid grid-cols-1 gap-4 sm:mt-8 sm:grid-cols-2 lg:grid-cols-4">
               <div className="flex flex-col rounded-lg bg-blue-50 px-4 py-8 text-center">
-                <dt className="order-last text-lg font-medium text-gray-500">Tổng doanh thu</dt>
+                <dt className="order-last text-lg font-medium text-gray-500">Tổng thương hiệu hợp tác</dt>
 
                 <dd className="text-4xl font-extrabold text-blue-600 md:text-5xl">$4.8m</dd>
               </div>
 
               <div className="flex flex-col rounded-lg bg-blue-50 px-4 py-8 text-center">
-                <dt className="order-last text-lg font-medium text-gray-500">Sản phẩm chính thức</dt>
+                <dt className="order-last text-lg font-medium text-gray-500">Tổng số lượng sản phẩm</dt>
 
                 <dd className="text-4xl font-extrabold text-blue-600 md:text-5xl">24</dd>
               </div>
