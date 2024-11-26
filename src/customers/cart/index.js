@@ -33,24 +33,31 @@ const Cart = () => {
 
   const incrementQuantity = async (index) => {
     const updatedProduct = { ...products[index] };
-    const originalQuantity = updatedProduct.quantity; // Lưu lại số lượng gốc
-
+    const originalQuantity = updatedProduct.quantity;
+  
     const newQuantity = updatedProduct.quantity + 1;
-
+  
     if (newQuantity > updatedProduct.stock) {
       dispatch(showNotification({ message: "Số lượng vượt quá số lượng tồn kho", status: 0 }));
       return;
     }
-
+  
     updatedProduct.quantity = newQuantity;
-
+  
     setProducts((prevProducts) =>
       prevProducts.map((product, i) => (i === index ? updatedProduct : product))
     );
-
+  
+    // Cập nhật selectedProducts nếu sản phẩm đang được chọn
+    setSelectedProducts((prevSelected) => {
+      if (prevSelected[updatedProduct.productVersionID]) {
+        return { ...prevSelected, [updatedProduct.productVersionID]: updatedProduct };
+      }
+      return prevSelected;
+    });
+  
     try {
-      await CartService.updateCartQuantity(updatedProduct);
-      window.location.reload();
+      await CartService.updateCartQuantity(updatedProduct); // Lưu vào database
     } catch (error) {
       dispatch(showNotification({ message: "Lỗi khi cập nhật số lượng", status: 0 }));
       // Khôi phục lại số lượng gốc nếu có lỗi
@@ -58,22 +65,36 @@ const Cart = () => {
       setProducts((prevProducts) =>
         prevProducts.map((product, i) => (i === index ? updatedProduct : product))
       );
+      setSelectedProducts((prevSelected) => {
+        if (prevSelected[updatedProduct.productVersionID]) {
+          return { ...prevSelected, [updatedProduct.productVersionID]: updatedProduct };
+        }
+        return prevSelected;
+      });
     }
   };
-
+  
   const decrementQuantity = async (index) => {
     const updatedProduct = { ...products[index] };
-    const originalQuantity = updatedProduct.quantity; // Lưu lại số lượng gốc
-
+    const originalQuantity = updatedProduct.quantity;
+  
     if (updatedProduct.quantity > 1) {
       updatedProduct.quantity -= 1;
-
+  
       setProducts((prevProducts) =>
         prevProducts.map((product, i) => (i === index ? updatedProduct : product))
       );
-
+  
+      // Cập nhật selectedProducts nếu sản phẩm đang được chọn
+      setSelectedProducts((prevSelected) => {
+        if (prevSelected[updatedProduct.productVersionID]) {
+          return { ...prevSelected, [updatedProduct.productVersionID]: updatedProduct };
+        }
+        return prevSelected;
+      });
+  
       try {
-        await CartService.updateCartQuantity(updatedProduct);
+        await CartService.updateCartQuantity(updatedProduct); // Lưu vào database
       } catch (error) {
         dispatch(showNotification({ message: "Lỗi khi cập nhật số lượng", status: 0 }));
         // Khôi phục lại số lượng gốc nếu có lỗi
@@ -81,23 +102,38 @@ const Cart = () => {
         setProducts((prevProducts) =>
           prevProducts.map((product, i) => (i === index ? updatedProduct : product))
         );
+        setSelectedProducts((prevSelected) => {
+          if (prevSelected[updatedProduct.productVersionID]) {
+            return { ...prevSelected, [updatedProduct.productVersionID]: updatedProduct };
+          }
+          return prevSelected;
+        });
       }
     } else {
       dispatch(showNotification({ message: "Số lượng tối thiểu là 1", status: 0 }));
     }
-  };
+  };  
+  
 
   const handleQuantityChange = async (index, value) => {
     const newQuantity = Math.max(1, Number(value));
     const updatedProduct = { ...products[index], quantity: newQuantity };
-    const originalQuantity = products[index].quantity; // Lưu lại số lượng gốc
-
+    const originalQuantity = products[index].quantity;
+  
     setProducts((prevProducts) =>
       prevProducts.map((product, i) => (i === index ? updatedProduct : product))
     );
-
+  
+    // Cập nhật selectedProducts nếu sản phẩm đang được chọn
+    setSelectedProducts((prevSelected) => {
+      if (prevSelected[updatedProduct.productVersionID]) {
+        return { ...prevSelected, [updatedProduct.productVersionID]: updatedProduct };
+      }
+      return prevSelected;
+    });
+  
     try {
-      await CartService.updateCartQuantity(updatedProduct);
+      await CartService.updateCartQuantity(updatedProduct); // Lưu vào database
     } catch (error) {
       dispatch(showNotification({ message: "Lỗi khi cập nhật số lượng", status: 0 }));
       // Khôi phục lại số lượng gốc nếu có lỗi
@@ -105,8 +141,15 @@ const Cart = () => {
       setProducts((prevProducts) =>
         prevProducts.map((product, i) => (i === index ? updatedProduct : product))
       );
+      setSelectedProducts((prevSelected) => {
+        if (prevSelected[updatedProduct.productVersionID]) {
+          return { ...prevSelected, [updatedProduct.productVersionID]: updatedProduct };
+        }
+        return prevSelected;
+      });
     }
   };
+  
 
   const handleRemoveItem = async (productVersionID) => {
     try {
@@ -149,12 +192,17 @@ const Cart = () => {
     }, 0);
   };
 
-  const handleCheckout = () => {
-    // Chuyển đến trang thanh toán và truyền selectedProducts
-    const selectedItems = Object.values(selectedProducts).filter(Boolean); // Lọc ra các sản phẩm đã được chọn
-    navigate('/purchase', { state: { selectedItems } }); // Truyền toàn bộ sản phẩm
-  };
+const handleCheckout = async () => {
+  try {
+    // Chọn các sản phẩm đã chọn
+    const selectedItems = Object.values(selectedProducts).filter(Boolean);
 
+    // Điều hướng sang trang thanh toán
+    navigate('/purchase', { state: { selectedItems } });
+  } catch (error) {
+    dispatch(showNotification({ message: "Lỗi khi chuyển sang trang thanh toán", status: 0 }));
+  }
+};
 
   return (
     <TitleCard>

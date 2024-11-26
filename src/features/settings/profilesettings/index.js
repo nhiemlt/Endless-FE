@@ -120,9 +120,6 @@ function ProfileSettings() {
     };
 
 
-
-
-
     // State cho danh sách tỉnh, quận/huyện, phường/xã
     const [provinceIDs, setProvinces] = useState([]);
     const [districtIDs, setDistricts] = useState([]);
@@ -289,28 +286,28 @@ function ProfileSettings() {
 
     const [roles, setRoles] = useState([]);
 
-    const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-
+    // Gọi API để lấy vai trò người dùng
     useEffect(() => {
-        const fetchUserRoles = async () => {
+        const fetchRoles = async () => {
             try {
-                if (userInfo && userInfo.roleId) {
-                    const userRoles = await roleService.getUsersByRole(userInfo.roleId);
-                    setRoles(userRoles.map(role => role.name));
-                    console.log(userRoles)
-                }
-            } catch (error) {
-                console.error("Lỗi khi lấy vai trò người dùng:", error);
+                const userRoles = await roleService.getCurrentUserRoles(); // Gọi service để lấy vai trò
+                // Lọc ra roleName từ kết quả API
+                const roleNames = userRoles.map(role => role.roleName); // Lấy tất cả roleName
+                setRoles(roleNames); // Lưu vai trò vào state
+            } catch (err) {
+                setError("Không thể lấy thông tin vai trò.");
+            } finally {
+                setLoading(false);
             }
         };
 
-        fetchUserRoles();
-    }, [userInfo]);
+        fetchRoles();
+    }, []); // Chạy 1 lần khi component mount
 
     return (
         <TitleCard title="Thông tin cá nhân">
             {/* Tabs */}
-            <div role="tablist" className="tabs tabs-bordered">
+            <div role="tablist" className="tabs tabs-bordered font-bold">
                 <a
                     role="tab"
                     className={`tab ${activeTab === "info" ? "tab-active" : ""}`}
@@ -318,13 +315,16 @@ function ProfileSettings() {
                 >
                     Thông tin cá nhân
                 </a>
-                <a
-                    role="tab"
-                    className={`tab ${activeTab === "addresses" ? "tab-active" : ""}`}
-                    onClick={() => setActiveTab("addresses")}
-                >
-                    Địa chỉ
-                </a>
+                {/* Kiểm tra xem roles có trống hay không */}
+                {roles.length === 0 && (
+                    <a
+                        role="tab"
+                        className={`tab ${activeTab === "addresses" ? "tab-active" : ""}`}
+                        onClick={() => setActiveTab("addresses")}
+                    >
+                        Địa chỉ
+                    </a>
+                )}
             </div>
 
             {/* Form thông tin cá nhân */}
@@ -356,9 +356,11 @@ function ProfileSettings() {
                                     </div>
                                 </div>
                             </div>
-                            <p className="text-center mt-2">
-                                {roles.length > 0 ? roles.join(' | ') : 'Chưa có vai trò'}
-                            </p>
+                            {roles.length > 0 && (
+                                <p className="text-center font-bold mt-4 text-blue-600 dark:text-primary">
+                                    {roles}
+                                </p>
+                            )}
                         </div>
                         <div className="flex gap-2 justify-center w-full">
                             <div className="w-full mb-4">
@@ -368,12 +370,12 @@ function ProfileSettings() {
                                     name="username"
                                     className="mt-2 p-4 w-full border-2 rounded-lg"
                                     value={profileData.username}
-                                    readOnly
                                 />
                             </div>
                             <div className="w-full mb-4">
                                 <label htmlFor="fullname" className="mb-2 dark:text-gray-300">Họ và tên</label>
                                 <input
+                                    autoComplete="off"
                                     type="text"
                                     name="fullname"
                                     className="mt-2 p-4 w-full border-2 rounded-lg"
@@ -387,6 +389,7 @@ function ProfileSettings() {
                             <div className="w-full mb-4">
                                 <label htmlFor="phone" className="mb-2 dark:text-gray-300">Số điện thoại</label>
                                 <input
+                                    autoComplete="off"
                                     type="text"
                                     name="phone"
                                     className="mt-2 p-4 w-full border-2 rounded-lg"
@@ -397,6 +400,7 @@ function ProfileSettings() {
                             <div className="w-full mb-4">
                                 <label htmlFor="email" className="mb-2 dark:text-gray-300">Email</label>
                                 <input
+                                    autoComplete="off"
                                     type="email"
                                     name="email"
                                     className="mt-2 p-4 w-full border-2 rounded-lg"

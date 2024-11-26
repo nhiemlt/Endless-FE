@@ -17,23 +17,24 @@ function PasswordChange() {
 
   const handleChangePassword = async (e) => {
     e.preventDefault();
-
-    // Kiểm tra xem mật khẩu mới có khớp với xác nhận mật khẩu không
+  
+    // Kiểm tra dữ liệu trước khi gửi
+    console.log("Dữ liệu gửi đi:", { oldPassword, newPassword });
+  
     if (newPassword !== confirmPassword) {
       dispatch(showNotification({ message: "Mật khẩu mới và xác nhận mật khẩu không khớp.", status: 0 }));
       return;
     }
-
+  
     // Gọi service để thay đổi mật khẩu
     const response = await UserService.changePassword({
       oldPassword,
       newPassword,
     });
-
+  
     // Xử lý phản hồi từ service
     if (response.success) {
       dispatch(showNotification({ message: "Đổi mật khẩu thành công.", status: 1 }));
-      // Reset lại các trường input sau khi đổi mật khẩu thành công
       setOldPassword('');
       setNewPassword('');
       setConfirmPassword('');
@@ -41,6 +42,7 @@ function PasswordChange() {
       dispatch(showNotification({ message: response.message || "Đổi mật khẩu thất bại.", status: 0 }));
     }
   };
+  
 
   return (
     <>
