@@ -103,6 +103,14 @@ const AddProductVersionModal = ({ onClose, onProductAdded }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        // Kiểm tra giá bán không được nhỏ hơn giá gốc
+        if (price < purchasePrice) {
+            dispatch(showNotification({
+                message: 'Giá bán không được nhỏ hơn giá gốc.',
+                status: 0,
+            }));
+            return; // Dừng thực hiện nếu có lỗi
+        }
 
         const selectedAttributes = attributes.filter((attr) => attr.isChecked);
         console.log("AttributeValue:", selectedAttributes);
@@ -200,9 +208,34 @@ const AddProductVersionModal = ({ onClose, onProductAdded }) => {
                                 />
                             </label>
 
-                            {/* Giá Gốc */}
+
+                            {/* Giá Bán */}
                             <label>
                                 <span className="block text-sm font-medium mb-2">Giá Gốc</span>
+                                <input
+                                    type="number"
+                                    placeholder="Giá Bán"
+                                    className="input input-bordered w-full"
+                                    value={purchasePrice}
+                                    onChange={(e) => {
+                                        const value = Number(e.target.value);
+                                        if (value >= 0 && value <= 1_000_000_000) {
+                                            setPurchasePrice(value);
+                                        } else {
+                                            dispatch(
+                                                showNotification({
+                                                    message: "Giá bán phải lớn hơn hoặc bằng 0 và không vượt quá 1 tỷ",
+                                                    status: 0,
+                                                })
+                                            );
+                                        }
+                                    }}
+                                    required
+                                />
+                            </label>
+                            {/* Giá Gốc */}
+                            <label>
+                                <span className="block text-sm font-medium mb-2">Giá Bán</span>
                                 <input
                                     type="number"
                                     placeholder="Giá Gốc"
@@ -225,30 +258,6 @@ const AddProductVersionModal = ({ onClose, onProductAdded }) => {
                                 />
                             </label>
 
-                            {/* Giá Bán */}
-                            <label>
-                                <span className="block text-sm font-medium mb-2">Giá Bán</span>
-                                <input
-                                    type="number"
-                                    placeholder="Giá Bán"
-                                    className="input input-bordered w-full"
-                                    value={purchasePrice}
-                                    onChange={(e) => {
-                                        const value = Number(e.target.value);
-                                        if (value >= 0 && value <= 1_000_000_000) {
-                                            setPurchasePrice(value);
-                                        } else {
-                                            dispatch(
-                                                showNotification({
-                                                    message: "Giá bán phải lớn hơn hoặc bằng 0 và không vượt quá 1 tỷ",
-                                                    status: 0,
-                                                })
-                                            );
-                                        }
-                                    }}
-                                    required
-                                />
-                            </label>
 
                             {/* Trọng Lượng */}
                             <label>
