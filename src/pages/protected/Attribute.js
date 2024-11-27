@@ -3,15 +3,15 @@ import { useDispatch } from 'react-redux'
 import { setPageTitle } from '../../features/common/headerSlice'
 import Attribute from '../../features/attribute/index'
 
-function InternalPage(){
+function InternalPage() {
     const dispatch = useDispatch()
 
     useEffect(() => {
-        dispatch(setPageTitle({ title : "Atribute"}))
-      }, [])
+        dispatch(setPageTitle({ title: "Thuộc tính" }))
+    }, [])
 
 
-    return(
+    return (
         <Attribute />
     )
 }

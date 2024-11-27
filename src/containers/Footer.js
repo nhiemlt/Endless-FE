@@ -136,7 +136,8 @@ function Footer() {
                                         <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                         </svg>
-                                        <span className="flex-1 ">endlessshop.contact@gmail.com</span>
+
+                                        <span className="flex-1">lytinhnhiem@gmail.com</span>
                                     </a>
                                 </li>
                                 <li>
@@ -153,7 +154,7 @@ function Footer() {
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                     </svg>
                                     <address className="flex-1 not-italic ">
-                                       Tòa nhà FPT Polytechnic, Đ.số 22, Thường Thạnh, Cái Răng, Cần Thơ
+                                        Tòa nhà FPT Polytechnic, Đ.số 22, Thường Thạnh, Cái Răng, Cần Thơ
                                     </address>
                                 </li>
                             </ul>
@@ -164,7 +165,7 @@ function Footer() {
 
                 <div className="mt-12 border-t border-gray-100 pt-6">
                     <div className="text-center sm:flex sm:justify-center sm:text-left">
-                        
+
                         <p className="mt-4 text-sm text-gray-500 sm:order-first sm:mt-0">&copy; Endless 2024</p>
                     </div>
                 </div>

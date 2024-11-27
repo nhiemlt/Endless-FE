@@ -12,6 +12,7 @@ import AddPromotionModal from './components/AddPromotionModal';  // Modal thêm 
 import EditPromotionModal from './components/EditPromotionModal';  // Modal cập nhật Promotion
 
 import ConfirmDialogStatus from './components/ConfirmDialogStatus';  // Import ConfirmDialog
+import ConfirmDialog from './components/ConfirmDialog';  // Import ConfirmDialog
 
 function PromotionList() {
   const [isPromotionModalOpen, setIsPromotionModalOpen] = useState(false);
@@ -27,49 +28,48 @@ function PromotionList() {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const dispatch = useDispatch();
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [promotionToDelete, setPromotionToDelete] = useState(null);
-  // Khai báo state cho promotions và setEditPromotion
   const [promotions, setPromotions] = useState([]);
   const [editPromotion, setEditPromotion] = useState(null);
-
   const [selectedPromotion, setSelectedPromotion] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [selectedPromotionForToggle, setSelectedPromotionForToggle] = useState(null);
+
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
+
+  const dispatch = useDispatch();
+
+
+
   const openConfirmDialog = (promotion) => {
     setSelectedPromotionForToggle(promotion);
-    setIsConfirmDialogOpen(true);
+    setIsStatusDialogOpen(true);
   };
+
   const handleConfirmToggle = async () => {
     if (!selectedPromotionForToggle) return;
 
     try {
       await toggleActiveStatus(selectedPromotionForToggle.promotionID, selectedPromotionForToggle.active);
-      dispatch(showNotification({ message: "Cập nhật trạng thái thành công", type: "success" }));
     } catch (error) {
-      dispatch(showNotification({ message: "Lỗi khi cập nhật trạng thái", type: "error" }));
+      dispatch(showNotification({ message: "Lỗi khi cập nhật trạng thái", status: 0 }));
     } finally {
-      setIsConfirmDialogOpen(false);
+      setIsStatusDialogOpen(false);
       setSelectedPromotionForToggle(null);
     }
   };
 
 
-  console.log('Edit Promotion:', editPromotion); // Kiểm tra giá trị promotion khi mở modal
-  // console.log("Promotion ID trong component cha:", promotionID);
 
-  console.log(promotions);
-  // Hàm tải khuyến mãi
   const loadPromotions = async () => {
     setIsLoading(true); // Hiển thị trạng thái đang tải
     try {
       // Gọi hàm getAllPromotions từ PromotionService
       const response = await PromotionService.getAllPromotions(
-        { keyword: searchKeyword }, // Bộ lọc tìm kiếm
+        { keyword: searchKeyword, }, // Bộ lọc tìm kiếm
         currentPage, // Trang hiện tại
         size, // Số lượng bản ghi mỗi trang
         'createDate', // Tiêu chí sắp xếp
@@ -102,10 +102,7 @@ function PromotionList() {
     setIsEditModalOpen(true);     // Mở modal chỉnh sửa
   };
 
-  const handleDeleteClick = (promotionID) => {
-    setPromotionToDelete(promotionID);  // Lưu ID khuyến mãi cần xóa
-    setDialogOpen(true);  // Mở dialog xác nhận
-  };
+
 
   const handlePrevPage = () => {
     if (currentPage > 0) {
@@ -117,19 +114,20 @@ function PromotionList() {
       setCurrentPage(currentPage + 1);
     }
   };
-  // Hàm xử lý khi lọc theo ngày
-  const handleDateFilter = (endDate) => {
-    if (startDate && endDate) {
-      loadPromotions();  // Gọi lại loadPromotions để áp dụng bộ lọc
-    }
-  };
+
   const toggleActiveStatus = async (promotionID, currentStatus) => {
     try {
+      // Hiển thị thông báo đang xử lý
+      dispatch(showNotification({ message: "Đang thay đổi trạng thái...", type: "info" }));
+
       await PromotionService.togglePromotionActive(promotionID);
-      loadPromotions(); // Tải lại dữ liệu sau khi thay đổi trạng thái
+
+      // Cập nhật lại dữ liệu sau khi BE xử lý
+      loadPromotions();
+      dispatch(showNotification({ message: "Thay đổi trạng thái thành công!", status: 1 }));
     } catch (error) {
       console.error("Lỗi khi thay đổi trạng thái:", error);
-      dispatch(showNotification({ message: "Thay đổi trạng thái thất bại", type: "error" }));
+      dispatch(showNotification({ message: "Thay đổi trạng thái thất bại", status: 0 }));
     }
   };
 
@@ -145,6 +143,29 @@ function PromotionList() {
     setSelectedPromotion(null);
   };
 
+  const handleDeleteClick = (promotionID) => {
+    setPromotionToDelete(promotionID);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      await PromotionService.deletePromotion(promotionToDelete);
+      dispatch(showNotification({ message: "Xóa thành công!", status: 1 }));
+      loadPromotions();
+    } catch (error) {
+      dispatch(showNotification({ message: "Xóa thất bại!", status: 0 }));
+    } finally {
+      setIsDeleteDialogOpen(false);
+      setPromotionToDelete(null);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setIsDeleteDialogOpen(false);
+    setPromotionToDelete(null);
+  };
+
 
   return (
     <>
@@ -153,7 +174,7 @@ function PromotionList() {
 
       {/* Promotions Table */}
       {activeTab === 'promotions' && (
-        <TitleCard title="Promotion List">
+        <TitleCard title="Quản lý khuyến mãi">
           <div className="flex flex-col md:flex-row justify-between items-center w-full mb-4">
             <div className="flex justify-start items-center space-x-2 mb-2 mr-2 md:mb-0">
               {/* Search Input */}
@@ -167,27 +188,7 @@ function PromotionList() {
                 className="input input-bordered w-full md:w-50 h-8"
               />
 
-              {/* Date Range Filters */}
-              <div className="flex space-x-2 ml-2">
-                <input
-                  type="date"
-                  onChange={(e) => {
-                    setStartDate(e.target.value);
-                    setCurrentPage(0); // Đặt lại trang về đầu khi thay đổi ngày
-                  }}
-                  className="input input-bordered w-40 h-8"
-                />
-                <span className="text-gray-600">-</span>
-                <input
-                  type="date"
-                  onChange={(e) => {
-                    setEndDate(e.target.value);
-                    setCurrentPage(0); // Đặt lại trang về đầu khi thay đổi ngày
-                    handleDateFilter(e.target.value); // Gọi hàm lọc ngay khi thay đổi endDate
-                  }}
-                  className="input input-bordered w-40 h-8"
-                />
-              </div>
+
             </div>
 
             <button className="btn btn-outline btn-sm btn-primary" onClick={openAddPromotionModal}>
@@ -209,7 +210,7 @@ function PromotionList() {
                   <th>Trạng thái</th>
                   <th>Ngày tạo</th>
                   <th>Sản phẩm</th>
-                  <th className="text-center" colSpan={2}>Action</th>
+                  <th className="text-center" colSpan={2}></th>
                 </tr>
               </thead>
               <tbody>
@@ -251,16 +252,19 @@ function PromotionList() {
                         </td>
 
 
-                        <td className="text-center">
-                          <PencilIcon
-                            onClick={() => openEditPromotionModal(promotion)}
-                            className="w-5 h-5 cursor-pointer text-info"
-                          />
-                          <TrashIcon
-                            onClick={() => handleDeleteClick(promotion.promotionID)}
-                            className="w-5 h-5 cursor-pointer text-error"
-                          />
+                        <td>
+                          <div className="flex space-x-2">
+                            <PencilIcon
+                              onClick={() => openEditPromotionModal(promotion)}
+                              className="w-4 h-4 cursor-pointer text-info"
+                            />
+                            <TrashIcon
+                              onClick={() => handleDeleteClick(promotion.promotionID)}
+                              className="w-4 h-4 cursor-pointer text-error"
+                            />
+                          </div>
                         </td>
+
                       </tr>
                     ))
                   ) : (
@@ -277,25 +281,27 @@ function PromotionList() {
             {/* Pagination */}
             <div className="join mt-4 flex justify-center w-full">
               <button
-                className="join-item btn btn-sm btn-primary"
                 onClick={handlePrevPage}
+                className="join-item btn"
                 disabled={currentPage === 0}
               >
                 Trước
               </button>
+
               {Array.from({ length: totalPages }, (_, index) => (
                 <button
                   key={index}
-                  onClick={() => setCurrentPage(index)}
-                  className={`join-item btn btn-sm btn-primary ${currentPage === index ? "btn-active" : ""}`}
+                  onClick={() => setCurrentPage(index)} // Chuyển trang khi nhấn
+                  className={`join-item btn ${currentPage === index ? 'btn-primary' : ''}`} // Thêm 'btn-primary' cho trang hiện tại
                 >
                   {index + 1}
                 </button>
               ))}
+
               <button
-                className="join-item btn btn-sm btn-primary"
                 onClick={handleNextPage}
-                disabled={currentPage >= totalPages - 1}
+                className="join-item btn"
+                disabled={currentPage === totalPages - 1}
               >
                 Tiếp
               </button>
@@ -330,12 +336,18 @@ function PromotionList() {
         />
       )}
 
-
       <ConfirmDialogStatus
         isOpen={isConfirmDialogOpen}
         onClose={() => setIsConfirmDialogOpen(false)}
         onConfirm={handleConfirmToggle}
         message={`Bạn có chắc chắn muốn ${selectedPromotionForToggle?.active ? "tắt" : "bật"} trạng thái khuyến mãi này?`}
+      />
+
+      <ConfirmDialog
+        isOpen={isDeleteDialogOpen}
+        message="Bạn có chắc chắn muốn xóa khuyến mãi này?"
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
       />
 
 

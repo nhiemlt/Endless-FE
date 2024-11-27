@@ -148,19 +148,29 @@ function BrandPage() {
         </div>
 
         <div className="join mt-4 flex justify-center w-full">
-          <button className="join-item btn btn-sm btn-primary" onClick={handlePrevPage} disabled={currentPage === 0}>
+          <button
+            onClick={handlePrevPage}
+            className="join-item btn"
+            disabled={currentPage === 0}
+          >
             Trước
           </button>
+
           {Array.from({ length: totalPages }, (_, index) => (
             <button
               key={index}
-              onClick={() => setCurrentPage(index)}
-              className={`join-item btn btn-sm btn-primary ${currentPage === index ? "btn-active" : ""}`}
+              onClick={() => setCurrentPage(index)} // Chuyển trang khi nhấn
+              className={`join-item btn ${currentPage === index ? 'btn-primary' : ''}`} // Thêm 'btn-primary' cho trang hiện tại
             >
               {index + 1}
             </button>
           ))}
-          <button className="join-item btn btn-sm btn-primary" onClick={handleNextPage} disabled={currentPage >= totalPages - 1}>
+
+          <button
+            onClick={handleNextPage}
+            className="join-item btn"
+            disabled={currentPage === totalPages - 1}
+          >
             Tiếp
           </button>
         </div>

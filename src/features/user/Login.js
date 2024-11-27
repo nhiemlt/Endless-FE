@@ -47,7 +47,7 @@ function Login() {
                         setTimeout(() => {
                             navigate("/app/welcome");
                             window.location.reload();
-                        }, 50); // Chờ 1 giây trước khi navigate
+                        }, 500); // Chờ 1 giây trước khi navigate
                     } else {
                         document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
                     }

@@ -67,7 +67,7 @@ const PromotionService = {
     // Toggle trạng thái active của khuyến mãi
     togglePromotionActive: async (promotionID) => {
         try {
-            const response = await axios.patch(`${API_URL}/${promotionID}/toggle`);
+            const response = await axios.post(`${API_URL}/${promotionID}/toggle`);
             return response.data;
         } catch (error) {
             console.error(`Lỗi khi thay đổi trạng thái active của khuyến mãi với ID: ${promotionID}`, error);

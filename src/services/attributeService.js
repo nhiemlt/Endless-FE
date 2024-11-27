@@ -50,48 +50,6 @@ const attributeService = {
             throw new Error('Failed to delete attribute');
         }
     },
-
-    // // Lấy tất cả giá trị thuộc tính với các tham số lọc và phân trang
-    // getAttributeValues: async (attributeId = '', page = 0, size = 10) => {
-    //     try {
-    //         const response = await axios.get(`${API_URL}/attribute-values`, {
-    //             params: { attributeId, page, size },
-    //         });
-    //         return response.data;
-    //     } catch (error) {
-    //         throw new Error('Failed to fetch attribute values');
-    //     }
-    // },
-
-    // // Thêm mới giá trị thuộc tính
-    // createAttributeValue: async (attributeId, attributeValueDTO) => {
-    //     try {
-    //         const response = await axios.post(`${API_URL}/${attributeId}/values`, attributeValueDTO);
-    //         return response.data;
-    //     } catch (error) {
-    //         throw new Error('Failed to create attribute value');
-    //     }
-    // },
-
-    // // Cập nhật giá trị thuộc tính
-    // updateAttributeValue: async (valueId, attributeValueDTO) => {
-    //     try {
-    //         const response = await axios.put(`${API_URL}/values/${valueId}`, attributeValueDTO);
-    //         return response.data;
-    //     } catch (error) {
-    //         throw new Error('Failed to update attribute value');
-    //     }
-    // },
-
-    // // Xóa giá trị thuộc tính
-    // deleteAttributeValue: async (valueId) => {
-    //     try {
-    //         const response = await axios.delete(`${API_URL}/values/${valueId}`);
-    //         return response.data;
-    //     } catch (error) {
-    //         throw new Error('Failed to delete attribute value');
-    //     }
-    // },
 };
 
 export default attributeService;
