@@ -91,9 +91,11 @@ const AddProductModal = ({ onClose, onProductAdded }) => {
                     <form className='mt-4' onSubmit={handleSubmit}>
                         <div className="grid grid-cols-1 gap-4">
                             {/* Input tên sản phẩm trên một hàng */}
+                            <label>Tên sản phẩm</label>
+
                             <input
                                 type="text"
-                                placeholder="Tên sản phẩm"
+                                placeholder="Nhập tên sản phẩm..."
                                 value={productName}
                                 onChange={(e) => setProductName(e.target.value)}
                                 className="input input-bordered w-full"
@@ -133,8 +135,9 @@ const AddProductModal = ({ onClose, onProductAdded }) => {
 
                             </div>
                             {/* Mô tả sản phẩm trên một hàng */}
+                            <label>Mô tả:</label>
                             <textarea
-                                placeholder="Mô tả"
+                                placeholder="Nhập mô tả..."
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}
                                 className="textarea textarea-bordered w-full"

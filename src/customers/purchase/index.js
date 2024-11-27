@@ -289,13 +289,10 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
     setSelectedAddressId(newAddress.wardCode); // Hoặc một giá trị xác định khác của địa chỉ mới
   };
 
-  // const handleChangeAddress = (e) => {
-  //   setSelectedAddress(e.target.value); // Cập nhật địa chỉ đã chọn
-  // };
   return (
     <TitleCard>
       <section className="bg-white antialiased dark:bg-gray-900">
-        <form onSubmit={handleSubmit} action="#" className="mx-auto max-w-screen-xl px-4 2xl:px-0">
+       <div className="mx-auto max-w-screen-xl px-4 2xl:px-0">
           <div className="mt-6 sm:mt-8 lg:flex lg:items-start lg:gap-12 xl:gap-16">
 
             {/* Thông tin sản phẩm */}
@@ -356,6 +353,8 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
                 </div>
               </div>
 
+              {/* Nút mua hàng */}
+              <form onSubmit={handleSubmit}>
               <div className="space-y-3">
                 <button
                   type="submit"
@@ -365,6 +364,7 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
                 </button>
                 <p className="text-sm font-normal text-gray-500 dark:text-gray-400">Kiểm tra thông tin đầy đủ trước khi mua hàng bạn nhé!</p>
               </div>
+              </form>
             </div>
 
             {/* Thông tin người dùng */}
@@ -423,6 +423,7 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
                       isModalOpen={isAddressModalOpen}
                       onCancel={handleCloseModal}
                       onAddNewAddress={handleAddNewAddress}
+                      fetchUserData={fetchUserData}
                     />
                   </div>
                 </div>
@@ -510,7 +511,7 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
               </div>
             </div>
           </div>
-        </form>
+          </div>
       </section>
     </TitleCard >
   );

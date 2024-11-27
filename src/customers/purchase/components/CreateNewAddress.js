@@ -4,7 +4,7 @@ import { useDispatch } from "react-redux";
 import GHNService from "../../../services/GHNService";
 import UserAddressService from "../../../services/userAddressService";
 
-function CreateNewAddress({ isModalOpen, onCancel, onAddNewAddress }) {
+function CreateNewAddress({ isModalOpen, onCancel, onAddNewAddress, fetchUserData }) {
     const dispatch = useDispatch();
 
     // State cho danh sách tỉnh, quận/huyện, phường/xã
@@ -108,19 +108,32 @@ function CreateNewAddress({ isModalOpen, onCancel, onAddNewAddress }) {
     // Hàm xử lý thêm địa chỉ mới
     const handleAddNewAddress = async (e) => {
         e.preventDefault();
-
+    
         // Kiểm tra các trường có hợp lệ không
         if (!newAddress?.detailAddress || !newAddress?.provinceID || !newAddress?.districtID || !newAddress?.wardCode) {
             dispatch(showNotification({ message: "Vui lòng điền đầy đủ thông tin địa chỉ", status: 0 }));
             return;
         }
-
         try {
-            await UserAddressService.addUserAddressCurrent(newAddress); // newAddress sẽ chứa cả ID và Name
+            const addedAddress = await UserAddressService.addUserAddressCurrent(newAddress); // Thêm địa chỉ vào database
             dispatch(showNotification({ message: "Thêm địa chỉ thành công", status: 1 }));
-            setNewAddress({ detailAddress: '', wardCode: '', wardName: '', districtID: '', districtName: '', provinceID: '', provinceName: '' });
-            fetchAddresses();
-            onCancel();
+    
+            // Gọi callback để cập nhật danh sách địa chỉ
+            onAddNewAddress(addedAddress);
+    
+            // Reset state
+            setNewAddress({
+                detailAddress: '',
+                wardCode: '',
+                wardName: '',
+                districtID: '',
+                districtName: '',
+                provinceID: '',
+                provinceName: '',
+            });
+    
+            onCancel(); // Đóng modal
+            fetchUserData();
         } catch (error) {
             console.error('Không thể thêm địa chỉ mới:', error.response ? error.response.data : error.message);
             if (error.response && error.response.data) {
@@ -129,8 +142,7 @@ function CreateNewAddress({ isModalOpen, onCancel, onAddNewAddress }) {
                 dispatch(showNotification({ message: "Thêm địa chỉ thất bại", status: 0 }));
             }
         }
-    };
-
+    };    
 
     // Hàm để fetch danh sách địa chỉ
     const fetchAddresses = async () => {
@@ -191,6 +203,7 @@ function CreateNewAddress({ isModalOpen, onCancel, onAddNewAddress }) {
                     <div className="flex flex-col">
                         <label htmlFor="detailAddress" className="mb-3">Địa chỉ chi tiết</label>
                         <input
+                            autoComplete="off"
                             type="text"
                             name="detailAddress"
                             className="p-2 border-2 rounded-lg flex-1"

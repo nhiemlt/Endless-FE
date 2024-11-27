@@ -4,7 +4,6 @@ import { lazy } from 'react';
 const Dashboard = lazy(() => import('../pages/protected/Dashboard'));
 const Welcome = lazy(() => import('../pages/protected/Welcome'));
 const Attribute = lazy(() => import('../pages/protected/Attribute'));
-const AttributeValue = lazy(() => import('../pages/protected/AttributeValue'));
 const Brand = lazy(() => import('../pages/protected/Brand'));
 const Category = lazy(() => import('../pages/protected/Category'));
 const Entry = lazy(() => import('../pages/protected/Entry'));
@@ -31,7 +30,6 @@ const adminRoutes = [
   { path: '/dashboard', component: Dashboard, role: 'admin' },
   { path: '/welcome', component: Welcome, role: 'admin' },
   { path: '/attribute', component: Attribute, role: 'admin' },
-  { path: '/attribute-value', component: AttributeValue, role: 'admin' },
   { path: '/brand', component: Brand, role: 'admin' },
   { path: '/category', component: Category, role: 'admin' },
   { path: '/entry', component: Entry, role: 'admin' },
