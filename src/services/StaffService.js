@@ -2,7 +2,6 @@ import axios from "axios";
 import constants from "../utils/globalConstantUtil";
 
 const StaffService = {
-  
   getAllEmployees: async (
     page = 0,
     size = 10,
@@ -74,6 +73,18 @@ const StaffService = {
       roleIds
     );
     return response.data;
+  },
+
+  deleteEmployee: async (userId) => {
+    try {
+      const response = await axios.delete(
+        `${constants.API_BASE_URL}/api/employees/${userId}`
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Không thể xóa nhân viên:", error);
+      throw error;
+    }
   },
 };
 

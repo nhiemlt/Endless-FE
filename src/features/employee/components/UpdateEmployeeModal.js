@@ -3,9 +3,13 @@ import { useDispatch } from "react-redux";
 import EmployeeService from "../../../services/StaffService";
 import { showNotification } from "../../common/headerSlice";
 import UploadFileService from "../../../services/UploadFileService";
-import RoleService from '../../../services/roleService';
 
-const UpdateEmployeeModal = ({ showModal, closeModal, employee, fetchEmployees }) => {
+const UpdateEmployeeModal = ({
+  showModal,
+  closeModal,
+  employee,
+  fetchEmployees,
+}) => {
   const dispatch = useDispatch();
   const [employeeData, setEmployeeData] = useState({
     username: "",
@@ -14,14 +18,15 @@ const UpdateEmployeeModal = ({ showModal, closeModal, employee, fetchEmployees }
     email: "",
     position: "",
   });
-  const [avatar, setAvatar] = useState(null); // File ảnh upload
-  const [avatarPreview, setAvatarPreview] = useState(""); // Preview ảnh
-  const defaultAvatar = "https://example.com/default-avatar.png"; // Ảnh mặc định
+  const [avatar, setAvatar] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState("");
+  const [isLoading, setIsLoading] = useState(false); // Trạng thái cập nhật
+  const defaultAvatar = "https://example.com/default-avatar.png";
 
   useEffect(() => {
     if (employee) {
+      console.log("Employee data updated:", employee);
       setEmployeeData({
-        avatar: employee.avatar || "",
         username: employee.username || "",
         fullname: employee.fullname || "",
         phone: employee.phone || "",
@@ -44,6 +49,7 @@ const UpdateEmployeeModal = ({ showModal, closeModal, employee, fetchEmployees }
 
   const handleUpdateEmployee = async (event) => {
     event.preventDefault();
+    setIsLoading(true);
 
     if (
       !employeeData.username ||
@@ -58,16 +64,13 @@ const UpdateEmployeeModal = ({ showModal, closeModal, employee, fetchEmployees }
           status: 0,
         })
       );
+      setIsLoading(false);
       return;
     }
 
     if (!/\S+@\S+\.\S+/.test(employeeData.email)) {
-      dispatch(
-        showNotification({
-          message: "Email không hợp lệ.",
-          status: 0,
-        })
-      );
+      dispatch(showNotification({ message: "Email không hợp lệ.", status: 0 }));
+      setIsLoading(false);
       return;
     }
 
@@ -81,8 +84,10 @@ const UpdateEmployeeModal = ({ showModal, closeModal, employee, fetchEmployees }
         ...employeeData,
         avatar: avatarUrl || employee.avatar,
       };
-
-      await EmployeeService.updateEmployee(employee.userID, updatedEmployeeData);
+      await EmployeeService.updateEmployee(
+        employee.userID,
+        updatedEmployeeData
+      );
 
       dispatch(
         showNotification({
@@ -90,17 +95,19 @@ const UpdateEmployeeModal = ({ showModal, closeModal, employee, fetchEmployees }
           status: 1,
         })
       );
-
       fetchEmployees();
       closeModal();
     } catch (error) {
-      console.error("Không thể cập nhật nhân viên: ", error.response ? error.response.data : error.message);
       dispatch(
         showNotification({
-          message: `Cập nhật nhân viên thất bại: ${error.response?.data?.message || "Lỗi không xác định"}`,
+          message: `Cập nhật nhân viên thất bại: ${
+            error.response?.data?.message || "Lỗi không xác định"
+          }`,
           status: 0,
         })
       );
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -108,119 +115,110 @@ const UpdateEmployeeModal = ({ showModal, closeModal, employee, fetchEmployees }
     <div className={`modal ${showModal ? "modal-open" : ""}`}>
       <div className="modal-box w-full max-w-3xl lg:max-w-4xl">
         <form onSubmit={handleUpdateEmployee}>
-          <h2 className="font-bold text-lg mb-4">Cập nhật thông tin nhân viên</h2>
+          <h2 className="font-bold text-lg mb-4">
+            Cập nhật thông tin nhân viên
+          </h2>
 
-          <div className="flex flex-col items-center mb-4 mt-5">
-            <div className="avatar">
-              <div className="ring-secondary ring-offset-base-100 rounded-full ring ring-offset-2">
-                <div
-                  className="mx-auto flex justify-center w-[141px] h-[141px] bg-blue-300/20 rounded-full cursor-pointer"
-                  style={{
-                    backgroundImage: `url(${avatarPreview || defaultAvatar})`,
-                    backgroundSize: "cover",
-                  }}
-                  onClick={() => document.getElementById("upload_avatarUpdate").click()}
+          {/* Avatar */}
+          <div className="flex flex-col items-center mb-6">
+            <div
+              className="relative w-[140px] h-[140px] rounded-full bg-gray-200"
+              style={{
+                backgroundImage: `url(${avatarPreview})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }}
+              onClick={() =>
+                document.getElementById("upload_avatarUpdate").click()
+              }
+              title="Thay đổi ảnh đại diện"
+            >
+              <input
+                type="file"
+                id="upload_avatarUpdate"
+                hidden
+                accept="image/*"
+                onChange={handleAvatarChange}
+              />
+              <span className="absolute bottom-2 right-2 bg-white p-1 rounded-full text-blue-600 cursor-pointer">
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
                 >
-                  <div className="bg-white/90 rounded-full w-6 h-6 text-center ml-28 mt-4">
-                    <input
-                      type="file"
-                      id="upload_avatarUpdate"
-                      hidden
-                      accept="image/*"
-                      onChange={handleAvatarChange}
-                    />
-                    <label htmlFor="upload_avatarUpdate">
-                      <svg
-                        className="w-6 h-5 text-blue-700"
-                        fill="none"
-                        strokeWidth="1.5"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg"
-                        aria-hidden="true"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M12 6v6l4 2"
-                        />
-                      </svg>
-                    </label>
-                  </div>
-                </div>
-              </div>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+              </span>
             </div>
           </div>
 
-          <div className="mb-4">
-            <label className="label">Tên người dùng:</label>
-            <input
-              type="text"
-              placeholder="Tên người dùng"
-              value={employeeData.username}
-              onChange={(e) =>
-                setEmployeeData({ ...employeeData, username: e.target.value })
-              }
-              className="input input-bordered w-full"
-              required
-            />
-          </div>
-          <div className="mb-4">
-            <label className="label">Họ và tên:</label>
-            <input
-              type="text"
-              placeholder="Họ và tên"
-              value={employeeData.fullname}
-              onChange={(e) =>
-                setEmployeeData({ ...employeeData, fullname: e.target.value })
-              }
-              className="input input-bordered w-full"
-              required
-            />
-          </div>
-          <div className="mb-4">
-            <label className="label">Email:</label>
-            <input
-              type="email"
-              placeholder="Email"
-              value={employeeData.email}
-              onChange={(e) =>
-                setEmployeeData({ ...employeeData, email: e.target.value })
-              }
-              className="input input-bordered w-full"
-              required
-            />
-          </div>
-          <div className="mb-4">
-            <label className="label">Số điện thoại:</label>
-            <input
-              type="tel"
-              placeholder="Số điện thoại"
-              value={employeeData.phone}
-              onChange={(e) =>
-                setEmployeeData({ ...employeeData, phone: e.target.value })
-              }
-              className="input input-bordered w-full"
-              required
-            />
-          </div>
-          <div className="mb-4">
-            <label className="label">Chức vụ:</label>
-            <input
-              type="text"
-              placeholder="Chức vụ"
-              value={employeeData.position}
-              onChange={(e) =>
-                setEmployeeData({ ...employeeData, position: e.target.value })
-              }
-              className="input input-bordered w-full"
-              required
-            />
+          {/* Form */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+            {[
+              {
+                label: "Tên người dùng",
+                field: "username",
+                type: "text",
+                placeholder: "Tên người dùng",
+              },
+              {
+                label: "Họ và tên",
+                field: "fullname",
+                type: "text",
+                placeholder: "Họ và tên",
+              },
+              {
+                label: "Email",
+                field: "email",
+                type: "email",
+                placeholder: "Email",
+              },
+              {
+                label: "Số điện thoại",
+                field: "phone",
+                type: "tel",
+                placeholder: "Số điện thoại",
+              },
+              {
+                label: "Chức vụ",
+                field: "position",
+                type: "text",
+                placeholder: "Chức vụ",
+              },
+            ].map(({ label, field, type, placeholder }, idx) => (
+              <div key={idx} className="mb-4">
+                <label className="label">{label}:</label>
+                <input
+                  type={type}
+                  placeholder={placeholder}
+                  value={employeeData[field]}
+                  onChange={(e) =>
+                    setEmployeeData({
+                      ...employeeData,
+                      [field]: e.target.value,
+                    })
+                  }
+                  className="input input-bordered w-full"
+                  required
+                />
+              </div>
+            ))}
           </div>
 
           <div className="modal-action">
-            <button type="submit" className="btn btn-primary">
-              Cập nhật nhân viên
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={isLoading}
+            >
+              {isLoading ? "Đang cập nhật..." : "Cập nhật nhân viên"}
             </button>
             <button type="button" className="btn" onClick={closeModal}>
               Hủy
