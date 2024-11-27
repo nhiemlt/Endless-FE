@@ -100,7 +100,6 @@ const ProductVersionService = {
         }
     },
 
-
     // Tạo phiên bản sản phẩm mới
     createProductVersion: async (productVersionData) => {
         try {
@@ -144,6 +143,39 @@ const ProductVersionService = {
             throw error;
         }
     },
+    // Lấy số lượng sản phẩm
+    getProductCount: async () => {
+        try {
+            const response = await axios.get(`${BASE_URL}/count-products`);
+            return response.data;
+        } catch (error) {
+            console.error("Error fetching product count:", error);
+            throw error;
+        }
+    },
+    // Lấy số lượng thương hiệu
+    getBrandCount: async () => {
+        try {
+            const response = await axios.get(`${BASE_URL}/count-brands`);
+            return response.data;
+        } catch (error) {
+            console.error("Error fetching brand count:", error);
+            throw error;
+        }
+    },
+    // Lấy danh sách phiên bản sản phẩm đã sắp xếp
+    getSortedProductVersions: async (sortBy = 'versionName', direction = 'ASC') => {
+        try {
+            const response = await axios.get(`${BASE_URL}/sorted`, {
+                params: { sortBy, direction }
+            });
+            return response.data;
+        } catch (error) {
+            console.error("Error fetching sorted product versions:", error);
+            throw error;
+        }
+    },
+
 };
 
 export default ProductVersionService;
