@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
+import Select from "react-select";
 import StaffService from "../../../services/StaffService";
 import { showNotification } from "../../common/headerSlice";
 import UploadFileService from "../../../services/UploadFileService";
@@ -23,7 +24,12 @@ const AddEmployeeModal = ({ showModal, closeModal, fetchEmployees }) => {
       const fetchRoles = async () => {
         try {
           const data = await RoleService.getAllRoles();
-          setRoles(data.content || []);
+          setRoles(
+            data.content.map((role) => ({
+              value: role.id,
+              label: role.roleName,
+            }))
+          );
         } catch (error) {
           console.error("Error fetching roles:", error);
         }
@@ -65,6 +71,16 @@ const AddEmployeeModal = ({ showModal, closeModal, fetchEmployees }) => {
       return;
     }
 
+    if (!/^\d{10}$/.test(employeeData.phone)) {
+      dispatch(
+        showNotification({
+          message: "Số điện thoại phải là 10 chữ số.",
+          status: 0,
+        })
+      );
+      return;
+    }
+
     try {
       let avatarUrl = null;
       if (avatar) {
@@ -73,7 +89,7 @@ const AddEmployeeModal = ({ showModal, closeModal, fetchEmployees }) => {
 
       const newEmployee = {
         ...employeeData,
-        roles: selectedRoles,
+        roles: selectedRoles.map((role) => role.value), // Lấy danh sách ID vai trò
         avatar: avatarUrl || "https://example.com/default-avatar.png",
       };
 
@@ -111,20 +127,13 @@ const AddEmployeeModal = ({ showModal, closeModal, fetchEmployees }) => {
     }
   };
 
-  const handleRoleChange = (roleId) => {
-    setSelectedRoles((prev) =>
-      prev.includes(roleId)
-        ? prev.filter((id) => id !== roleId)
-        : [...prev, roleId]
-    );
-  };
-
   return (
     <div className={`modal ${showModal ? "modal-open" : ""}`}>
       <div className="modal-box w-full max-w-3xl lg:max-w-4xl">
         <form onSubmit={handleAddEmployee}>
           <h2 className="font-bold text-lg">Thêm nhân viên mới</h2>
 
+          {/* Avatar Section */}
           <div className="flex flex-col items-center mb-4 mt-5">
             <div className="avatar">
               <div className="ring-secondary ring-offset-base-100 rounded-full ring ring-offset-2">
@@ -171,65 +180,59 @@ const AddEmployeeModal = ({ showModal, closeModal, fetchEmployees }) => {
             </div>
           </div>
 
-          <input
-            type="text"
-            value={employeeData.username}
-            onChange={(e) =>
-              setEmployeeData({ ...employeeData, username: e.target.value })
-            }
-            placeholder="Tên người dùng"
-            className="input input-bordered w-full mb-4"
-          />
-
-          <input
-            type="text"
-            value={employeeData.fullname}
-            onChange={(e) =>
-              setEmployeeData({ ...employeeData, fullname: e.target.value })
-            }
-            placeholder="Họ và tên"
-            className="input input-bordered w-full mb-4"
-          />
-
-          <input
-            type="email"
-            value={employeeData.email}
-            onChange={(e) =>
-              setEmployeeData({ ...employeeData, email: e.target.value })
-            }
-            placeholder="Email"
-            className="input input-bordered w-full mb-4"
-          />
-
-          <input
-            type="tel"
-            value={employeeData.phone}
-            onChange={(e) =>
-              setEmployeeData({ ...employeeData, phone: e.target.value })
-            }
-            placeholder="Số điện thoại"
-            className="input input-bordered w-full mb-4"
-          />
-
-          <div className="mb-4">
-            <label className="block mb-2 font-medium">Chọn vai trò:</label>
-            <select
-              multiple
-              className="select select-bordered w-full"
-              value={selectedRoles}
-              onChange={(e) => handleRoleChange(e.target.value)}
-            >
-              {roles.map((role) => (
-                <option key={role.id} value={role.id}>
-                  {role.roleName}
-                </option>
-              ))}
-            </select>
-            <p className="text-sm text-gray-500 mt-2">
-              Nhấn Ctrl/Command để chọn nhiều vai trò.
-            </p>
+          {/* Input Fields Section */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <input
+              type="text"
+              value={employeeData.username}
+              onChange={(e) =>
+                setEmployeeData({ ...employeeData, username: e.target.value })
+              }
+              placeholder="Tên người dùng"
+              className="input input-bordered w-full"
+            />
+            <input
+              type="text"
+              value={employeeData.fullname}
+              onChange={(e) =>
+                setEmployeeData({ ...employeeData, fullname: e.target.value })
+              }
+              placeholder="Họ và tên"
+              className="input input-bordered w-full"
+            />
+            <input
+              type="email"
+              value={employeeData.email}
+              onChange={(e) =>
+                setEmployeeData({ ...employeeData, email: e.target.value })
+              }
+              placeholder="Email"
+              className="input input-bordered w-full"
+            />
+            <input
+              type="tel"
+              value={employeeData.phone}
+              onChange={(e) =>
+                setEmployeeData({ ...employeeData, phone: e.target.value })
+              }
+              placeholder="Số điện thoại"
+              className="input input-bordered w-full"
+            />
           </div>
 
+          {/* Role Dropdown Section */}
+          <div className="mb-4">
+            <label className="block mb-2 font-medium">Chọn vai trò:</label>
+            <Select
+              options={roles}
+              isMulti
+              value={selectedRoles}
+              onChange={setSelectedRoles}
+              placeholder="Nhập để tìm kiếm vai trò..."
+            />
+          </div>
+
+          {/* Actions Section */}
           <div className="modal-action">
             <button type="submit" className="btn btn-primary">
               Thêm nhân viên

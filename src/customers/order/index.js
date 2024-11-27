@@ -8,8 +8,12 @@ import {
   ShieldCheckIcon,
 } from "@heroicons/react/24/solid";
 import OrderService from "../../services/OrderService";
+import ConfirmCancelModal from "./components/ConfirmCancelModal";
+import { showNotification } from "../../features/common/headerSlice";
+import { useDispatch } from "react-redux";
 
 function PurchaseHistory() {
+  const dispatch = useDispatch();
   const [orders, setOrders] = useState([]);
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [modalIsOpen, setModalIsOpen] = useState(false);
@@ -19,6 +23,9 @@ function PurchaseHistory() {
   const [currentPage, setCurrentPage] = useState(0);
   const [size, setSize] = useState(5);
   const [totalPages, setTotalPages] = useState(0);
+  const [orderToCancel, setOrderToCancel] = useState(null);
+  const [confirmCancelModalIsOpen, setConfirmCancelModalIsOpen] =
+    useState(false);
 
   const orderStatuses = [
     "Tất cả",
@@ -90,6 +97,48 @@ function PurchaseHistory() {
   const closeModal = () => {
     setModalIsOpen(false);
     setSelectedOrder(null);
+  };
+
+  const openConfirmCancelModal = (order) => {
+    setOrderToCancel(order);
+    setConfirmCancelModalIsOpen(true);
+  };
+
+  const closeConfirmCancelModal = () => {
+    setOrderToCancel(null);
+    setConfirmCancelModalIsOpen(false);
+  };
+
+  const confirmCancelOrder = async () => {
+    if (!orderToCancel) return;
+    try {
+      await OrderService.cancelOrder(orderToCancel.orderID);
+      setOrders((prevOrders) =>
+        prevOrders.map((order) =>
+          order.orderID === orderToCancel.orderID
+            ? { ...order, status: "Đã hủy" }
+            : order
+        )
+      );
+
+      dispatch(
+        showNotification({
+          message: "Đơn hàng đã được hủy thành công!",
+          status: 1,
+        })
+      );
+    } catch (error) {
+      console.error("Lỗi khi hủy đơn hàng:", error);
+
+      dispatch(
+        showNotification({
+          message: "Lỗi khi hủy đơn hàng. Vui lòng thử lại.",
+          status: 0,
+        })
+      );
+    } finally {
+      closeConfirmCancelModal();
+    }
   };
 
   const renderPagination = () => {
@@ -169,16 +218,6 @@ function PurchaseHistory() {
     return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " đ";
   };
 
-  const handleCancelOrder = async (orderId) => {
-    try {
-      await OrderService.cancelOrder(orderId);
-      setSelectedOrder((prev) => ({ ...prev, status: "Đã hủy" }));
-      alert("Order canceled successfully");
-    } catch (error) {
-      console.error("Failed to cancel order:", error);
-    }
-  };
-
   const handleMarkAsDelivered = async (orderId) => {
     try {
       const updatedOrder = await OrderService.markOrderAsDelivered(orderId);
@@ -189,8 +228,22 @@ function PurchaseHistory() {
             : order
         )
       );
+
+      dispatch(
+        showNotification({
+          message: "Đơn hàng đã được nhận!",
+          status: 1,
+        })
+      );
     } catch (error) {
       console.error("Failed to mark order as delivered:", error);
+
+      dispatch(
+        showNotification({
+          message: "Lỗi khi cập nhật trạng thái đơn hàng.",
+          status: 0,
+        })
+      );
     }
   };
 
@@ -305,13 +358,24 @@ function PurchaseHistory() {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleCancelOrder(order.orderID);
+                      openConfirmCancelModal(order);
                     }}
                     className="btn btn-error w-auto text-sm"
                   >
                     Hủy Đơn Hàng
                   </button>
                 )}
+                {/* {order.status === "Chờ thanh toán" && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handlePayment(order.orderID);
+                    }}
+                    className="btn btn-primary w-auto text-sm"
+                  >
+                    Thanh toán
+                  </button>
+                )} */}
                 {order.status === "Đang giao hàng" && (
                   <button
                     onClick={(e) => {
@@ -542,6 +606,12 @@ function PurchaseHistory() {
           </div>
         </div>
       )}
+
+      <ConfirmCancelModal
+        isOpen={confirmCancelModalIsOpen}
+        onClose={closeConfirmCancelModal}
+        onConfirm={confirmCancelOrder}
+      />
     </div>
   );
 }

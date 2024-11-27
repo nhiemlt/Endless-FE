@@ -7,11 +7,11 @@ import TrashIcon from '@heroicons/react/24/outline/TrashIcon';
 import EyeIcon from '@heroicons/react/24/outline/EyeIcon';
 import PromotionService from '../../services/PromotionService';  // Sử dụng PromotionService
 import { useDispatch } from 'react-redux';
-import ProductDetailsModal from './components/ProductDetailsModal';  // Import ConfirmDialog
+// import ProductDetailsModal from './components/ProductDetailsModal';  // Import ConfirmDialog
 import AddPromotionModal from './components/AddPromotionModal';  // Modal thêm Promotion
 import EditPromotionModal from './components/EditPromotionModal';  // Modal cập nhật Promotion
 
-import ConfirmDialogStatus from './components/ConfirmDialogStatus';  // Import ConfirmDialog
+// import ConfirmDialogStatus from './components/ConfirmDialogStatus';  // Import ConfirmDialog
 
 function PromotionList() {
   const [isPromotionModalOpen, setIsPromotionModalOpen] = useState(false);
@@ -323,20 +323,20 @@ function PromotionList() {
       )}
 
 
-      {isModalOpen && (
+      {/* {isModalOpen && (
         <ProductDetailsModal
           promotion={selectedPromotion}  // Đảm bảo gửi đúng promotion vào modal
           onClose={handleCloseModal}  // Hàm đóng modal
         />
-      )}
+      )} */}
 
 
-      <ConfirmDialogStatus
+      {/* <ConfirmDialogStatus
         isOpen={isConfirmDialogOpen}
         onClose={() => setIsConfirmDialogOpen(false)}
         onConfirm={handleConfirmToggle}
         message={`Bạn có chắc chắn muốn ${selectedPromotionForToggle?.active ? "tắt" : "bật"} trạng thái khuyến mãi này?`}
-      />
+      /> */}
 
 
     </>

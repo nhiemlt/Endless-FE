@@ -100,6 +100,7 @@ function Staff() {
       );
       return;
     }
+    console.log("Opening update modal for staff:", staff);
     setStaffDetails(staff);
     setShowUpdateModal(true);
   };
@@ -109,8 +110,17 @@ function Staff() {
     setStaffDetails(null);
   };
 
-  const handleDeleteStaff = (userId) => {
-    setUserIdToDelete(userId);
+  const handleDeleteStaff = (staffId) => {
+    if (!staffId) {
+      dispatch(
+        showNotification({
+          message: "Không tìm thấy nhân viên để xóa.",
+          status: 0,
+        })
+      );
+      return;
+    }
+    setUserIdToDelete(staffId);
     setShowDeleteModal(true);
   };
 
@@ -118,7 +128,9 @@ function Staff() {
     if (userIdToDelete) {
       try {
         await StaffService.deleteEmployee(userIdToDelete);
+
         fetchStaffs();
+
         dispatch(
           showNotification({ message: "Xóa nhân viên thành công!", status: 1 })
         );
@@ -303,7 +315,6 @@ function Staff() {
         showModal={showDeleteModal}
         closeModal={() => setShowDeleteModal(false)}
         onConfirm={confirmDeleteStaff}
-        fetchStaffs={fetchStaffs}
       />
     </TitleCard>
   );
