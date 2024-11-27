@@ -4,7 +4,7 @@ import { useDispatch } from "react-redux";
 import GHNService from "../../../services/GHNService";
 import UserAddressService from "../../../services/userAddressService";
 
-function CreateNewAddress({ isModalOpen, onCancel, onAddNewAddress }) {
+function CreateNewAddress({ isModalOpen, onCancel, onAddNewAddress, fetchUserData }) {
     const dispatch = useDispatch();
 
     // State cho danh sách tỉnh, quận/huyện, phường/xã
@@ -133,6 +133,7 @@ function CreateNewAddress({ isModalOpen, onCancel, onAddNewAddress }) {
             });
     
             onCancel(); // Đóng modal
+            fetchUserData();
         } catch (error) {
             console.error('Không thể thêm địa chỉ mới:', error.response ? error.response.data : error.message);
             if (error.response && error.response.data) {

@@ -423,6 +423,7 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
                       isModalOpen={isAddressModalOpen}
                       onCancel={handleCloseModal}
                       onAddNewAddress={handleAddNewAddress}
+                      fetchUserData={fetchUserData}
                     />
                   </div>
                 </div>
