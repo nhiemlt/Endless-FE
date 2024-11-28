@@ -122,7 +122,14 @@ const EditProductVersionModal = ({ productVersion, onClose, onProductUpdated }) 
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
+        // Kiểm tra giá bán không được nhỏ hơn giá gốc
+        if (price < purchasePrice) {
+            dispatch(showNotification({
+                message: 'Giá bán không được nhỏ hơn giá gốc.',
+                status: 0,
+            }));
+            return; // Dừng thực hiện nếu có lỗi
+        }
 
         const selectedAttributes = attributes.filter((attr) => attr.isChecked);
         const selectedAttributeValueID = selectedAttributes.map(attr => attr.attributeValueID);
@@ -221,37 +228,12 @@ const EditProductVersionModal = ({ productVersion, onClose, onProductUpdated }) 
                                 />
                             </label>
 
-                            {/* Giá Gốc */}
+                            {/* Giá Bán */}
                             <label>
                                 <span className="block text-sm font-medium mb-2">Giá Gốc</span>
                                 <input
                                     type="number"
                                     placeholder="Giá Gốc"
-                                    className="input input-bordered w-full"
-                                    value={price}
-                                    onChange={(e) => {
-                                        const value = Number(e.target.value);
-                                        if (value >= 0 && value <= 1_000_000_000) {
-                                            setPrice(value);
-                                        } else {
-                                            dispatch(
-                                                showNotification({
-                                                    message: "Giá gốc phải lớn hơn hoặc bằng 0 và không vượt quá 1 tỷ",
-                                                    status: 0,
-                                                })
-                                            );
-                                        }
-                                    }}
-                                    required
-                                />
-                            </label>
-
-                            {/* Giá Bán */}
-                            <label>
-                                <span className="block text-sm font-medium mb-2">Giá Bán</span>
-                                <input
-                                    type="number"
-                                    placeholder="Giá Bán"
                                     className="input input-bordered w-full"
                                     value={purchasePrice}
                                     onChange={(e) => {
@@ -262,6 +244,31 @@ const EditProductVersionModal = ({ productVersion, onClose, onProductUpdated }) 
                                             dispatch(
                                                 showNotification({
                                                     message: "Giá bán phải lớn hơn hoặc bằng 0 và không vượt quá 1 tỷ",
+                                                    status: 0,
+                                                })
+                                            );
+                                        }
+                                    }}
+                                    required
+                                />
+                            </label>
+
+                            {/* Giá Gốc */}
+                            <label>
+                                <span className="block text-sm font-medium mb-2">Giá Bán</span>
+                                <input
+                                    type="number"
+                                    placeholder="Giá Bán"
+                                    className="input input-bordered w-full"
+                                    value={price}
+                                    onChange={(e) => {
+                                        const value = Number(e.target.value);
+                                        if (value >= 0 && value <= 1_000_000_000) {
+                                            setPrice(value);
+                                        } else {
+                                            dispatch(
+                                                showNotification({
+                                                    message: "Giá gốc phải lớn hơn hoặc bằng 0 và không vượt quá 1 tỷ",
                                                     status: 0,
                                                 })
                                             );
@@ -373,7 +380,8 @@ const EditProductVersionModal = ({ productVersion, onClose, onProductUpdated }) 
                             {/* Hình ảnh */}
                             <div className="mb-4">
                                 <input id="logoInput" type="file" onChange={handleImageChange} className="hidden" />
-                                <div className="h-40 flex justify-center items-center rounded-lg bg-cover cursor-pointer" onClick={() => document.getElementById('logoInput').click()}>
+                                <div className="h-40 flex justify-center items-center rounded-lg bg-cover cursor-pointer"
+                                    onClick={() => document.getElementById('logoInput').click()}>
                                     {previewLogo ? (
                                         <img src={previewLogo} alt="Tải ảnh thất bại" className="h-full object-cover rounded-lg" />
                                     ) : (
