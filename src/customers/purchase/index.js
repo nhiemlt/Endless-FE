@@ -69,7 +69,16 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
     setLoading(true);
     try {
       const response = await UserVoucherService.getUserVouchers();
-      const sortedVouchers = response?.length ? response.sort((a, b) => b.discountLevel - a.discountLevel) : [];
+      const totalAmount = calculateTotalAmount(); // Tính toán tổng số tiền hiện tại
+
+      // Lọc các voucher có leastBill <= totalAmount
+      const filteredVouchers = response?.filter(voucher => voucher.leastBill <= totalAmount) || [];
+
+      // Sắp xếp các voucher còn lại theo mức giảm giá
+      const sortedVouchers = filteredVouchers.length
+        ? filteredVouchers.sort((a, b) => b.discountLevel - a.discountLevel)
+        : [];
+
       setVouchers(sortedVouchers);
 
       if (sortedVouchers.length > 0) {
@@ -84,6 +93,7 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
     }
   };
 
+
   const calculateTotalOriginalPrice = () => {
     return selectedItems.reduce((total, item) => total + (item.discountPrice * item.quantity), 0);
   };
@@ -92,7 +102,7 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
     const selectedVoucherId = event.target.value;
     setSelectedVoucher(selectedVoucherId);
 
-    if (calculateTotalOriginalPrice() <= 99000) {
+    if (calculateTotalOriginalPrice() <= selectedVoucherId.discountLevel) {
       setSelectedVoucherDiscount(0);
       return;
     }
@@ -143,12 +153,12 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-  
+
     if (!paymentMethod) {
       setError('Vui lòng chọn phương thức thanh toán.');
       return;
     }
-  
+
     // Tạo đối tượng orderModel theo cấu trúc OrderModel
     const createOrderModel = () => ({
       voucherID: selectedVoucher || null, // Nếu voucher không có, trả về null
@@ -164,20 +174,20 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
       insuranceValue: 0,
       serviceTypeID: 2, // Mã dịch vụ
     });
-  
+
     const handleOrderSuccess = (message) => {
       dispatch(showNotification({ message, status: 1 }));
       navigate('/home');
     };
-  
+
     const handleOrderError = (errorMessage) => {
       dispatch(showNotification({ message: errorMessage, status: 0 }));
     };
-  
+
     try {
       const orderModel = createOrderModel();
       let response;
-  
+
       switch (paymentMethod) {
         case 'cod': // Thanh toán khi nhận hàng
           response = await OrderService.createOrder(orderModel);
@@ -187,13 +197,13 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
             handleOrderError(response.message || 'Lỗi khi tạo đơn hàng.');
           }
           break;
-  
+
         case 'zalopay': // Thanh toán qua ZaloPay
           response = await OrderService.createOrderOnline(orderModel);
           if (response.success) {
             const orderId = response.data.orderID;
             const zaloPaymentData = await OrderService.createPayment(orderId);
-  
+
             if (zaloPaymentData.returncode === 1 && zaloPaymentData.orderurl) {
               dispatch(showNotification({ message: 'Chuyển hướng đến ZaloPay...', status: 1 }));
               window.location.href = zaloPaymentData.orderurl;
@@ -204,14 +214,14 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
             handleOrderError(response.message || 'Lỗi khi tạo đơn hàng.');
           }
           break;
-  
+
         case 'vnpay': // Thanh toán qua VNPay
           response = await OrderService.createOrderOnline(orderModel);
           if (response.success) {
             const orderId = response.data.orderID;
             const vnpayPaymentData = await OrderService.createVNPayPaymentUrl(orderId);
             console.log("VNPay Response:", vnpayPaymentData);
-  
+
             if (typeof vnpayPaymentData === 'string') {
 
               dispatch(showNotification({ message: 'Chuyển hướng đến VNPay...', status: 1 }));
@@ -223,7 +233,7 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
             handleOrderError(response.message || 'Lỗi khi tạo đơn hàng.');
           }
           break;
-  
+
         default:
           handleOrderError('Phương thức thanh toán không hợp lệ.');
           break;
@@ -233,7 +243,7 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
       handleOrderError('Không thể tạo đơn hàng, vui lòng thử lại.');
     }
   };
-  
+
 
   // Hàm xử lý khi thay đổi địa chỉ
   const handleChangeAddress = (e) => {
@@ -435,7 +445,6 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
                   </div>
                 </div>
               </div>
-
               <hr />
 
               <div className="w-full">
@@ -448,7 +457,7 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
                   onChange={handleVoucherChange} // Thêm onChange để xử lý sự kiện
                   className="select select-bordered w-full max-w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
                 >
-                  <option disabled value="">Chọn mã voucher</option>
+                  <option value="">Chọn mã voucher</option>
                   {loading ? (
                     <option>Đang tải...</option>
                   ) : (

@@ -12,11 +12,13 @@ function Voucher() {
     const fetchVouchers = async () => {
       setLoading(true);
       const response = await UserVoucherService.getUserVouchers();
+      console.log("Danh sách voucher từ API:", response); // Kiểm tra dữ liệu trả về
       setVouchers(response?.length ? response : []);
       setLoading(false);
     };
     fetchVouchers();
   }, []);
+  
 
   // Hàm định dạng thời gian đếm ngược cho đến khi hết hạn
   const formatCountdown = (endDate) => {
@@ -33,7 +35,6 @@ function Voucher() {
     return { days, hours, minutes, seconds };
   };
 
-  // Cập nhật countdown mỗi giây
   useEffect(() => {
     const intervalId = setInterval(() => {
       setVouchers((prevVouchers) =>
@@ -42,11 +43,11 @@ function Voucher() {
           countdown: formatCountdown(voucher.endDate),
         }))
       );
-    }, 1000);
-
+    });
+  
     return () => clearInterval(intervalId);
-  }, [vouchers]);
-
+  }, []);
+  
   return (
     <TitleCard title={"Danh sách voucher"}>
       {loading ? (
@@ -104,8 +105,6 @@ function Voucher() {
           ))}
         </div>
       )}
-
-
     </TitleCard>
 
   );
