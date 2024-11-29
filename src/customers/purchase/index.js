@@ -143,90 +143,97 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+  
     if (!paymentMethod) {
       setError('Vui lòng chọn phương thức thanh toán.');
       return;
     }
-
-    // Kiểm tra nếu phương thức thanh toán là thanh toán khi nhận hàng
-    if (paymentMethod === 'cod') {
-      try {
-        // Tạo đối tượng orderModel theo cấu trúc OrderModel
-        const orderModel = {
-          voucherID: selectedVoucher || null,  // Nếu voucher không có, trả về null
-          orderAddress: selectedAddress?.addressID,
-          orderPhone: userInfo?.phone,
-          orderName: userInfo?.fullname,
-          orderDetails: selectedItems.map(item => ({
-            productVersionID: item.productVersionID,
-            quantity: item.quantity,
-          })),
-          shipFee: shippingFee || 0,
-          codValue: calculateTotalAmount() || 0,
-          insuranceValue: 0,
-          serviceTypeID: 2,
-        };
-
-        // Gọi API để tạo đơn hàng
-        const response = await OrderService.createOrder(orderModel);
-        console.log("Order created:", response);
-        navigate('/home');
-        dispatch(showNotification({ message: "Đặt hàng thành công, đơn hàng đang chờ xác nhận.", status: 1 })); // Hiển thị thông báo
-      } catch (error) {
-        console.error("Error creating order:", error);
-        dispatch(showNotification({ message: "Không thể tạo đơn hàng, vui lòng thử lại.", status: 0 })); // Hiển thị thông báo lỗi
-      }
-    } else if (paymentMethod === 'zalopay') {
-      try {
-        // Tạo đối tượng orderModel theo cấu trúc OrderModel
-        const orderModel = {
-          voucherID: selectedVoucher || null,  // Nếu voucher không có, trả về null
-          orderAddress: selectedAddress?.addressID,
-          orderPhone: userInfo?.phone,
-          orderName: userInfo?.fullname,
-          orderDetails: selectedItems.map(item => ({
-            productVersionID: item.productVersionID,
-            quantity: item.quantity,
-          })),
-          shipFee: shippingFee || 0,
-          codValue: calculateTotalAmount() || 0,
-          insuranceValue: 0,
-          serviceTypeID: 2,
-        };
-        try {
-          // Tạo đơn hàng qua API
-          const response = await OrderService.createOrderzalopay(orderModel);
-
+  
+    // Tạo đối tượng orderModel theo cấu trúc OrderModel
+    const createOrderModel = () => ({
+      voucherID: selectedVoucher || null, // Nếu voucher không có, trả về null
+      orderAddress: selectedAddress?.addressID,
+      orderPhone: userInfo?.phone,
+      orderName: userInfo?.fullname,
+      orderDetails: selectedItems.map(item => ({
+        productVersionID: item.productVersionID,
+        quantity: item.quantity,
+      })),
+      shipFee: shippingFee || 0,
+      codValue: calculateTotalAmount() || 0,
+      insuranceValue: 0,
+      serviceTypeID: 2, // Mã dịch vụ
+    });
+  
+    const handleOrderSuccess = (message) => {
+      dispatch(showNotification({ message, status: 1 }));
+      navigate('/home');
+    };
+  
+    const handleOrderError = (errorMessage) => {
+      dispatch(showNotification({ message: errorMessage, status: 0 }));
+    };
+  
+    try {
+      const orderModel = createOrderModel();
+      let response;
+  
+      switch (paymentMethod) {
+        case 'cod': // Thanh toán khi nhận hàng
+          response = await OrderService.createOrder(orderModel);
           if (response.success) {
-            // Lấy order_id từ phản hồi
+            handleOrderSuccess('Đặt hàng thành công, đơn hàng đang chờ xác nhận.');
+          } else {
+            handleOrderError(response.message || 'Lỗi khi tạo đơn hàng.');
+          }
+          break;
+  
+        case 'zalopay': // Thanh toán qua ZaloPay
+          response = await OrderService.createOrderOnline(orderModel);
+          if (response.success) {
             const orderId = response.data.orderID;
-
-            // Gọi API tạo thanh toán ZaloPay
             const zaloPaymentData = await OrderService.createPayment(orderId);
-
+  
             if (zaloPaymentData.returncode === 1 && zaloPaymentData.orderurl) {
-              // Hiển thị thông báo trước khi chuyển hướng
-              dispatch(showNotification({ message: "Chuyển hướng đến ZaloPay...", status: 1 }));
-
-              // Chuyển hướng sang URL thanh toán của ZaloPay
+              dispatch(showNotification({ message: 'Chuyển hướng đến ZaloPay...', status: 1 }));
               window.location.href = zaloPaymentData.orderurl;
             } else {
-              // Hiển thị lỗi nếu không có URL
-              dispatch(showNotification({ message: zaloPaymentData.returnmessage || "Không tìm thấy URL thanh toán ZaloPay.", status: 0 }));
+              handleOrderError(zaloPaymentData.returnmessage || 'Không tìm thấy URL thanh toán ZaloPay.');
             }
           } else {
-            dispatch(showNotification({ message: response.message || "Lỗi khi tạo đơn hàng.", status: 0 }));
+            handleOrderError(response.message || 'Lỗi khi tạo đơn hàng.');
           }
-        } catch (error) {
-          console.error("Đã xảy ra lỗi:", error);
-          dispatch(showNotification({ message: "Đã xảy ra lỗi, vui lòng thử lại sau.", status: 0 }));
-        }
-      } catch (error) {
-        console.error("Error creating order:", error);
-        dispatch(showNotification({ message: "Không thể tạo đơn hàng, vui lòng thử lại.", status: 0 })); // Hiển thị thông báo lỗi
+          break;
+  
+        case 'vnpay': // Thanh toán qua VNPay
+          response = await OrderService.createOrderOnline(orderModel);
+          if (response.success) {
+            const orderId = response.data.orderID;
+            const vnpayPaymentData = await OrderService.createVNPayPaymentUrl(orderId);
+            console.log("VNPay Response:", vnpayPaymentData);
+  
+            if (typeof vnpayPaymentData === 'string') {
+
+              dispatch(showNotification({ message: 'Chuyển hướng đến VNPay...', status: 1 }));
+              window.location.href = vnpayPaymentData;
+            } else {
+              handleOrderError('Không tìm thấy URL thanh toán VNPay.');
+            }
+          } else {
+            handleOrderError(response.message || 'Lỗi khi tạo đơn hàng.');
+          }
+          break;
+  
+        default:
+          handleOrderError('Phương thức thanh toán không hợp lệ.');
+          break;
       }
+    } catch (error) {
+      console.error('Error during payment process:', error);
+      handleOrderError('Không thể tạo đơn hàng, vui lòng thử lại.');
     }
   };
+  
 
   // Hàm xử lý khi thay đổi địa chỉ
   const handleChangeAddress = (e) => {
@@ -292,7 +299,7 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
   return (
     <TitleCard>
       <section className="bg-white antialiased dark:bg-gray-900">
-       <div className="mx-auto max-w-screen-xl px-4 2xl:px-0">
+        <div className="mx-auto max-w-screen-xl px-4 2xl:px-0">
           <div className="mt-6 sm:mt-8 lg:flex lg:items-start lg:gap-12 xl:gap-16">
 
             {/* Thông tin sản phẩm */}
@@ -355,15 +362,15 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
 
               {/* Nút mua hàng */}
               <form onSubmit={handleSubmit}>
-              <div className="space-y-3">
-                <button
-                  type="submit"
-                  className="btn flex w-full items-center justify-center rounded-lg text-white bg-primary dark:bg-primary font-bold"
-                >
-                  Mua hàng
-                </button>
-                <p className="text-sm font-normal text-gray-500 dark:text-gray-400">Kiểm tra thông tin đầy đủ trước khi mua hàng bạn nhé!</p>
-              </div>
+                <div className="space-y-3">
+                  <button
+                    type="submit"
+                    className="btn flex w-full items-center justify-center rounded-lg text-white bg-primary dark:bg-primary font-bold"
+                  >
+                    Mua hàng
+                  </button>
+                  <p className="text-sm font-normal text-gray-500 dark:text-gray-400">Kiểm tra thông tin đầy đủ trước khi mua hàng bạn nhé!</p>
+                </div>
               </form>
             </div>
 
@@ -456,52 +463,83 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
 
               <div className="space-y-4">
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Phương thức thanh toán</h3>
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                  {/* Thanh toán COD */}
                   <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 ps-4 dark:border-gray-700 dark:bg-gray-800">
                     <div className="flex items-start">
                       <div className="flex h-5 items-center">
                         <input
-                          id="credit-card"
-                          aria-describedby="credit-card-text"
+                          id="cod"
+                          aria-describedby="cod-text"
                           type="radio"
                           name="payment-method"
-                          value="zalopay" // Thêm giá trị cho phương thức zalopay
+                          value="cod"
                           className="h-4 w-4 border-gray-300 bg-white text-primary-600 focus:ring-2 focus:ring-primary-600 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
                           onChange={handlePaymentMethodChange}
-                          checked={paymentMethod === 'zalopay'} // Kiểm tra xem có được chọn không
+                          checked={paymentMethod === 'cod'}
                         />
                       </div>
                       <div className="ms-4 text-sm">
-                        <label htmlFor="credit-card" className="font-medium leading-none text-gray-900 dark:text-white">Thanh toán zalopay</label>
+                        <label htmlFor="cod" className="font-medium leading-none text-gray-900 dark:text-white">Thanh toán khi nhận hàng</label>
                         <img
-                          id="credit-card-text"
+                          id="cod-text"
                           className="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400"
-                          src="./logo-zalopay-payment.png"
+                          src="./logo-direct-payment.png"
+                          alt="COD Logo"
                           style={{ width: '100px', height: 'auto' }}
                         />
                       </div>
                     </div>
                   </div>
+                  {/* Thanh toán VNPay */}
                   <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 ps-4 dark:border-gray-700 dark:bg-gray-800">
                     <div className="flex items-start">
                       <div className="flex h-5 items-center">
                         <input
-                          id="pay-on-delivery"
-                          aria-describedby="pay-on-delivery-text"
+                          id="vnpay"
+                          aria-describedby="vnpay-text"
                           type="radio"
                           name="payment-method"
-                          value="cod" // Thêm giá trị cho phương thức COD
+                          value="vnpay"
                           className="h-4 w-4 border-gray-300 bg-white text-primary-600 focus:ring-2 focus:ring-primary-600 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
                           onChange={handlePaymentMethodChange}
-                          checked={paymentMethod === 'cod'} // Kiểm tra xem có được chọn không
+                          checked={paymentMethod === 'vnpay'}
                         />
                       </div>
                       <div className="ms-4 text-sm">
-                        <label htmlFor="pay-on-delivery" className="font-medium leading-none text-gray-900 dark:text-white">Thanh toán khi nhận hàng</label>
+                        <label htmlFor="vnpay" className="font-medium leading-none text-gray-900 dark:text-white">Thanh toán VNPay</label>
                         <img
-                          id="credit-card-text"
+                          id="vnpay-text"
                           className="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400"
-                          src="./logo-direct-payment.png"
+                          src="./logo-vnpay-payment.png"
+                          alt="VNPay Logo"
+                          style={{ width: '100px', height: 'auto' }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  {/* Thanh toán ZaloPay */}
+                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 ps-4 dark:border-gray-700 dark:bg-gray-800">
+                    <div className="flex items-start">
+                      <div className="flex h-5 items-center">
+                        <input
+                          id="zalopay"
+                          aria-describedby="zalopay-text"
+                          type="radio"
+                          name="payment-method"
+                          value="zalopay"
+                          className="h-4 w-4 border-gray-300 bg-white text-primary-600 focus:ring-2 focus:ring-primary-600 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-primary-600"
+                          onChange={handlePaymentMethodChange}
+                          checked={paymentMethod === 'zalopay'}
+                        />
+                      </div>
+                      <div className="ms-4 text-sm">
+                        <label htmlFor="zalopay" className="font-medium leading-none text-gray-900 dark:text-white">Thanh toán ZaloPay</label>
+                        <img
+                          id="zalopay-text"
+                          className="mt-1 text-xs font-normal text-gray-500 dark:text-gray-400"
+                          src="./logo-zalopay-payment.png"
+                          alt="ZaloPay Logo"
                           style={{ width: '100px', height: 'auto' }}
                         />
                       </div>
@@ -509,9 +547,10 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
                   </div>
                 </div>
               </div>
+
             </div>
           </div>
-          </div>
+        </div>
       </section>
     </TitleCard >
   );

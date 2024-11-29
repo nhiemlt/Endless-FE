@@ -38,8 +38,8 @@ const OrderService = {
     },
 
     // Tạo đơn hàng mới VNPAY
-    createOrderzalopay: async (orderModel) => {
-        const response = await axios.post(`${constants.API_BASE_URL}/orders/create-order-vnpay`, orderModel);
+    createOrderOnline: async (orderModel) => {
+        const response = await axios.post(`${constants.API_BASE_URL}/orders/create-order-online`, orderModel);
         return response.data; // Trả về dữ liệu API
     },
 
@@ -51,6 +51,17 @@ const OrderService = {
         } catch (error) {
             console.error("Lỗi khi tạo thanh toán ZaloPay:", error);
             throw error; // Ném lại lỗi để xử lý ở nơi gọi
+        }
+    },
+
+    // Tạo URL thanh toán VNPAY
+    createVNPayPaymentUrl: async (orderId) => {
+        try {
+            const response = await axios.post(`${constants.API_BASE_URL}/api/payment/create-payment-url/${orderId}`);
+            return response.data; // Trả về URL thanh toán từ API
+        } catch (error) {
+            console.error("Lỗi khi tạo URL thanh toán VNPAY:", error.response?.data || error.message);
+            throw error; // Ném lỗi để xử lý tại nơi gọi hàm
         }
     },
 
