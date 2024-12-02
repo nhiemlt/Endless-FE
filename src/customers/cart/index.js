@@ -216,77 +216,100 @@ const Cart = () => {
         <div className="mx-auto max-w-screen-xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
           <div className="mx-auto max-w-3xl">
             <header className="text-center">
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white sm:text-3xl">Giỏ hàng của bạn</h1>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white sm:text-3xl">
+                Giỏ hàng của bạn
+              </h1>
             </header>
             <div className="mt-8">
-              <ul className="space-y-4">
-                {products.map((product, index) => (
-                  <li key={product.productVersionID} className="flex items-center gap-4 border-b border-gray-200 dark:border-gray-700 pb-4">
-                    <input
-                      type="checkbox"
-                      checked={!!selectedProducts[product.productVersionID]}
-                      onChange={() => handleCheckboxChange(product)} // Truyền cả sản phẩm vào đây
-                      className="mr-2"
-                    />
-                    <img
-                      src={product.image}
-                      className="w-16 h-16 rounded object-cover"
-                    />
-                    <div className="flex flex-1 flex-col">
-                      <h3 className="text-sm text-gray-900 dark:text-gray-200"><b>{product.productName} | {product.versionName}</b></h3>
-                      <dl className="mt-0.5 space-y-px text-[10px] text-gray-600 dark:text-gray-400">
-                        <div>
-                          <dt className="inline">Giá: </dt>
-                          <dd className="inline">{formatCurrency(product.price)}</dd>
-                        </div>
-                        <div>
-                          <dt className="inline">Giá khuyến mãi: </dt>
-                          <dd className="inline">{formatCurrency(product.discountPrice)}</dd>
-                        </div>
-                      </dl>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center space-x-2">
-                        <div>
-                          <label htmlFor={`Quantity_${index}`} className="sr-only">Quantity</label>
-                          <div className="flex items-center gap-1">
-                            <button
-                              type="button"
-                              onClick={() => decrementQuantity(index)} // Gọi hàm giảm số lượng
-                              className={`size-10 leading-10 font-bold dark:text-white text-gray-900 transition hover:opacity-75 ${product.quantity === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                              disabled={product.quantity === 1} // Vô hiệu hóa nếu số lượng là 1
-                            >
-                              -
-                            </button>
-
-                            <input
-                              type="number"
-                              id={`Quantity_${index}`}
-                              value={product.quantity} // Lấy giá trị số lượng từ product
-                              onChange={(e) => handleQuantityChange(index, e.target.value)} // Cập nhật khi giá trị thay đổi
-                              className="h-10 w-20 rounded border border-gray-200 bg-white text-black text-center [-moz-appearance:_textfield] sm:text-sm [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none"
-                            />
-
-                            <button
-                              type="button"
-                              onClick={() => incrementQuantity(index)} // Gọi hàm tăng số lượng
-                              className="size-10 leading-10 font-bold dark:text-white text-gray-900 transition hover:opacity-75"
-                            >
-                              +
-                            </button>
+              {products.length > 0 ? (
+                <ul className="space-y-4">
+                  {products.map((product, index) => (
+                    <li
+                      key={product.productVersionID}
+                      className="flex items-center gap-4 border-b border-gray-200 dark:border-gray-700 pb-4"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={!!selectedProducts[product.productVersionID]}
+                        onChange={() => handleCheckboxChange(product)}
+                        className="mr-2"
+                      />
+                      <img
+                        src={product.image}
+                        className="w-16 h-16 rounded object-cover"
+                      />
+                      <div className="flex flex-1 flex-col">
+                        <h3 className="text-sm text-gray-900 dark:text-gray-200">
+                          <b>{product.productName} | {product.versionName}</b>
+                        </h3>
+                        <dl className="mt-0.5 space-y-px text-[10px] text-gray-600 dark:text-gray-400">
+                          <div>
+                            <dt className="inline">Giá: </dt>
+                            <dd className="inline">{formatCurrency(product.price)}</dd>
+                          </div>
+                          <div>
+                            <dt className="inline">Giá khuyến mãi: </dt>
+                            <dd className="inline">{formatCurrency(product.discountPrice)}</dd>
+                          </div>
+                        </dl>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center space-x-2">
+                          <div>
+                            <label htmlFor={`Quantity_${index}`} className="sr-only">
+                              Quantity
+                            </label>
+                            <div className="flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => decrementQuantity(index)}
+                                className={`size-10 leading-10 font-bold dark:text-white text-gray-900 transition hover:opacity-75 ${product.quantity === 1
+                                    ? 'opacity-50 cursor-not-allowed'
+                                    : ''
+                                  }`}
+                                disabled={product.quantity === 1}
+                              >
+                                -
+                              </button>
+                              <input
+                                type="number"
+                                id={`Quantity_${index}`}
+                                value={product.quantity}
+                                onChange={(e) => handleQuantityChange(index, e.target.value)}
+                                className="h-10 w-20 rounded border border-gray-200 bg-white text-black text-center sm:text-sm"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => incrementQuantity(index)}
+                                className="size-10 leading-10 font-bold dark:text-white text-gray-900 transition hover:opacity-75"
+                              >
+                                +
+                              </button>
+                            </div>
                           </div>
                         </div>
+                        <button
+                          onClick={() => handleRemoveItem(product.productVersionID)}
+                          className="text-gray-600 transition hover:text-red-600"
+                        >
+                          <TrashIcon className="w-4 h-4" />
+                        </button>
                       </div>
-                      <button
-                        onClick={() => handleRemoveItem(product.productVersionID)}
-                        className="text-gray-600 transition hover:text-red-600"
-                      >
-                        <TrashIcon className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="text-center text-xl text-gray-600 dark:text-gray-300">
+                  <p>Hiện tại giỏ hàng chưa có sản phẩm vào <a
+                    href="/products"
+                    className="text-blue-600 font-bold hover:underline"
+                  >
+                    Trang sản phẩm
+                  </a> lượt chọn sản phẩm nào!^^ </p>
+                </div>
+              )}
+            </div>
+            {products.length > 0 && (
               <div className="mt-8 flex justify-end border-t border-gray-100 dark:border-gray-700 pt-8">
                 <div className="w-screen max-w-lg space-y-4">
                   <dl className="space-y-0.5 text-sm text-gray-700 dark:text-gray-300">
@@ -296,26 +319,31 @@ const Cart = () => {
                     </div>
                     <div className="flex justify-between font-semibold">
                       <dt>Tổng tiền</dt>
-                      <dd className="text-red-500"><b>{formatCurrency(totalAmount())}</b></dd>
+                      <dd className="text-red-500">
+                        <b>{formatCurrency(totalAmount())}</b>
+                      </dd>
                     </div>
                   </dl>
                   <div className="flex justify-end">
-                  <button
-                    onClick={handleCheckout}
-                    className={`block rounded bg-blue-600 px-5 py-3 text-sm text-white transition ${Object.keys(selectedProducts).length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    disabled={Object.keys(selectedProducts).length === 0} // Disable the button if no products are selected
-                  >
-                    Thanh toán
-                  </button>
+                    <button
+                      onClick={handleCheckout}
+                      className={`block rounded bg-blue-600 px-5 py-3 text-sm text-white transition ${Object.keys(selectedProducts).length === 0
+                          ? 'opacity-50 cursor-not-allowed'
+                          : ''
+                        }`}
+                      disabled={Object.keys(selectedProducts).length === 0}
+                    >
+                      Thanh toán
+                    </button>
                   </div>
-
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </section>
     </TitleCard>
+
   );
 }
 

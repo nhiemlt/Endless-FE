@@ -150,13 +150,13 @@ function ProductDetail() {
                   </>
                 )}
               </div>
-              <p className="text-2xl font-extrabold text-gray-900 dark:text-white">
-                {product?.product?.description}
+              <p className="text-xl text-gray-900 dark:text-white mt-2">
+                Mô tả: {product?.product?.description}
               </p>
               <div className="mt-8">
                 <button
                   type="button"
-                  className="flex-1 px-4 py-2.5 border border-yellow-600 dark:bg-yellow-400 bg-transparent dark:hover:bg-yellow-500 text-gray-950 text-sm font-semibold rounded"
+                  className="flex-1 px-4 py-2.5 bg-yellow-400 dark:bg-yellow-400 bg-transparent dark:hover:bg-yellow-500 text-gray-950 text-sm font-semibold rounded"
                   onClick={() => handleAddToCart(product)} // Thêm sự kiện onClick để gọi hàm handleAddToCart
                 >
                   Thêm vào giỏ hàng
