@@ -70,17 +70,25 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
     try {
       const response = await UserVoucherService.getUserVouchers();
       const totalAmount = calculateTotalAmount(); // Tính toán tổng số tiền hiện tại
-
-      // Lọc các voucher có leastBill <= totalAmount
-      const filteredVouchers = response?.filter(voucher => voucher.leastBill <= totalAmount) || [];
-
+      const currentDate = new Date(); // Lấy ngày hiện tại
+  
+      // Lọc các voucher thỏa mãn điều kiện
+      const filteredVouchers =
+        response?.filter(voucher => {
+          const voucherStartDate = new Date(voucher.startDate); // Chuyển đổi startDate về dạng Date
+          return (
+            voucher.leastBill <= totalAmount && // Điều kiện giá trị hóa đơn tối thiểu
+            voucherStartDate <= currentDate // Điều kiện ngày bắt đầu <= ngày hiện tại
+          );
+        }) || [];
+  
       // Sắp xếp các voucher còn lại theo mức giảm giá
       const sortedVouchers = filteredVouchers.length
         ? filteredVouchers.sort((a, b) => b.discountLevel - a.discountLevel)
         : [];
-
+  
       setVouchers(sortedVouchers);
-
+  
       if (sortedVouchers.length > 0) {
         const highestDiscountVoucher = sortedVouchers[0];
         setSelectedVoucher(highestDiscountVoucher.voucherID);
@@ -91,8 +99,7 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
     } finally {
       setLoading(false);
     }
-  };
-
+  };  
 
   const calculateTotalOriginalPrice = () => {
     return selectedItems.reduce((total, item) => total + (item.discountPrice * item.quantity), 0);
