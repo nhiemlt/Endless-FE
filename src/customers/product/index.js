@@ -20,12 +20,130 @@ function Product() {
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
   const [filterData, setFilterData] = useState({
-    priceMin: '',
-    priceMax: '',
-    categories: [],
-    brands: [],
+    minPrice: '',
+    maxPrice: '',
+    categoryIDs: [],
+    brandIDs: [],
+    keyword: '',
+    sortBy: 'versionName',
+    direction: 'ASC',
   });
 
+  const [pagination, setPagination] = useState({
+    page: 0,
+    size: 10,
+    totalPages: 0,
+  });
+
+  // Gọi API lọc sản phẩm
+  const fetchFilteredProducts = async (filterData) => {
+    try {
+      const filteredData = await productVersionService.filterProductVersions(filterData);
+      setProducts(filteredData.content);
+      setPagination({ ...pagination, totalPages: filteredData.totalPages });
+    } catch (error) {
+      console.error("Error fetching filtered products:", error);
+    }
+  };
+
+  // Gọi API lấy danh sách sản phẩm với phân trang và tìm kiếm
+  const fetchProducts = async () => {
+    try {
+      const data = await productVersionService.searchProductVersions(
+        pagination.page,
+        pagination.size,
+        filterData.sortBy,
+        filterData.direction,
+        filterData.keyword
+      );
+      setProducts(data.content);
+      setPagination({
+        ...pagination,
+        totalPages: data.totalPages,
+      });
+    } catch (error) {
+      console.error("Error fetching products:", error);
+    }
+  };
+  // Gọi API khi thay đổi filterData
+  useEffect(() => {
+    if (filterData.minPrice || filterData.maxPrice || filterData.categoryIDs.length || filterData.brandIDs.length) {
+      fetchFilteredProducts(filterData);  // Gọi API lọc khi có thay đổi bộ lọc
+    } else {
+      fetchProducts();  // Gọi API tìm kiếm khi không có bộ lọc
+    }
+  }, [filterData, pagination.page, pagination.size]);
+
+  // Gọi API lấy danh sách danh mục
+  const fetchCategories = async () => {
+    try {
+      const response = await CategoryService.getCategories({});
+      setCategories(response.content || []);  // Nếu không có dữ liệu, trả về mảng rỗng
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
+
+  const fetchBrands = async () => {
+    try {
+      const response = await BrandService.getBrands({});
+      setBrands(response.content || []);  // Nếu không có dữ liệu, trả về mảng rỗng
+    } catch (error) {
+      console.error('Error fetching brands:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchCategories();
+    fetchBrands();
+  }, []);
+
+  // Hàm thay đổi bộ lọc giá
+  const handlePriceChange = (e, field) => {
+    setFilterData((prev) => {
+      const newData = { ...prev, [field]: e.target.value };
+      return newData;
+    });
+  };
+
+  // Hàm thay đổi bộ lọc danh mục
+  const handleCategoryChange = (categoryID) => {
+    setFilterData((prev) => {
+      const newCategories = prev.categoryIDs ? prev.categoryIDs : [];
+      const newCategoriesUpdated = newCategories.includes(categoryID)
+        ? newCategories.filter((id) => id !== categoryID)
+        : [...newCategories, categoryID];
+      return { ...prev, categoryIDs: newCategoriesUpdated };
+    });
+  };
+
+  const handleBrandChange = (brandID) => {
+    setFilterData((prev) => {
+      const newBrands = prev.brandIDs ? prev.brandIDs : [];
+      const newBrandsUpdated = newBrands.includes(brandID)
+        ? newBrands.filter((id) => id !== brandID)
+        : [...newBrands, brandID];
+      return { ...prev, brandIDs: newBrandsUpdated };
+    });
+  };
+
+
+  useEffect(() => {
+    if (categories && brands) {
+      // Tiến hành gọi API hoặc thao tác khi danh mục và thương hiệu đã có dữ liệu
+    }
+  }, [categories, brands]);
+
+  // Hàm phân trang
+  // Hàm xử lý khi chuyển sang trang trước đó
+  const handlePreviousPage = () => {
+    if (page > 0) setPage(page - 1);
+  };
+
+  // Hàm xử lý khi chuyển sang trang kế tiếp
+  const handleNextPage = () => {
+    if (page < totalPages - 1) setPage(page + 1);
+  };
 
   // Gọi API lấy danh sách sản phẩm với phân trang và bộ lọc
   useEffect(() => {
@@ -41,92 +159,6 @@ function Product() {
     fetchProducts();
   }, [page, size, sortBy, direction, keyword]);
 
-  // Hàm xử lý khi chuyển sang trang trước đó
-  const handlePreviousPage = () => {
-    if (page > 0) setPage(page - 1);
-  };
-
-  // Hàm xử lý khi chuyển sang trang kế tiếp
-  const handleNextPage = () => {
-    if (page < totalPages - 1) setPage(page + 1);
-  };
-
-  // Gọi API lấy danh sách danh mục
-  const fetchCategories = async () => {
-    try {
-      const response = await CategoryService.getCategories({});
-      setCategories(response.content);
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-    }
-  };
-
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
-  // Gọi API lấy danh sách thương hiệu
-  const fetchBrands = async () => {
-    try {
-      const response = await BrandService.getBrands({});
-      setBrands(response.content); // Giả sử API trả về { content: [...], totalPages: ... }
-    } catch (error) {
-      console.error('Error fetching brands:', error);
-    }
-  };
-
-  useEffect(() => {
-    fetchBrands();
-  }, []);
-
-
-  // Hàm gọi API lọc sản phẩm
-  const fetchFilteredProducts = async (filterData) => {
-    try {
-      const filteredData = await productVersionService.filterProductVersions(filterData);
-      // Lưu kết quả lọc vào state
-      setProducts(filteredData);
-    } catch (error) {
-      console.error("Error fetching filtered products:", error);
-    }
-  };
-
-  useEffect(() => {
-    console.log("Current filter data:", filterData);  // Kiểm tra dữ liệu lọc
-    fetchFilteredProducts(filterData);                // Gọi API lọc khi `filterData` thay đổi
-  }, [filterData]);
-
-
-  // Thêm console.log để kiểm tra khi cập nhật giá trị
-  const handlePriceChange = (e, field) => {
-    setFilterData((prev) => {
-      const newData = { ...prev, [field]: e.target.value };
-      console.log("Updated price filter data:", newData);
-      return newData;
-    });
-  };
-
-  const handleCategoryChange = (categoryID) => {
-    setFilterData((prev) => {
-      const newCategories = prev.categories.includes(categoryID)
-        ? prev.categories.filter((id) => id !== categoryID)
-        : [...prev.categories, categoryID];
-      const newData = { ...prev, categories: newCategories };
-      console.log("Updated category filter data:", newData);
-      return newData;
-    });
-  };
-
-  const handleBrandChange = (brandID) => {
-    setFilterData((prev) => {
-      const newBrands = prev.brands.includes(brandID)
-        ? prev.brands.filter((id) => id !== brandID)
-        : [...prev.brands, brandID];
-      const newData = { ...prev, brands: newBrands };
-      console.log("Updated brand filter data:", newData);
-      return newData;
-    });
-  };
 
 
   //Hàm định dạng tiền 
@@ -196,22 +228,19 @@ function Product() {
             setSortBy(field);
             setDirection(dir);
           }} className="mt-1 rounded border-gray-300 text-sm select select-secondary w-full max-w-xs dark:text-white text-gray-900">
-            <option value="versionName, ASC">Tên sản phẩm - Tăng dần</option>
-            <option value="versionName, DESC">Tên sản phẩm - Giảm dần</option>
             <option value="price, ASC">Tiền - Tăng dần</option>
             <option value="price, DESC">Tiền - Giảm dần</option>
           </select>
         </div>
 
-        {/* Phần lọc khoảng giá */}
         <div className="flex items-center gap-2 mt-5">
           <input
             type="number"
             min="0"
             placeholder="Giá thấp"
             className="input input-success w-full h-10 max-w-xs text-xs"
-            value={filterData.priceMin}
-            onChange={(e) => handlePriceChange(e, 'priceMin')}
+            value={filterData.minPrice}
+            onChange={(e) => handlePriceChange(e, 'minPrice')}
           />
           <span className="text-xl">-</span>
           <input
@@ -219,14 +248,16 @@ function Product() {
             min="0"
             placeholder="Giá cao"
             className="input input-success w-full h-10 max-w-xs text-xs"
-            value={filterData.priceMax}
-            onChange={(e) => handlePriceChange(e, 'priceMax')}
+            value={filterData.maxPrice}
+            onChange={(e) => handlePriceChange(e, 'maxPrice')}
           />
         </div>
 
-        {/* Phần lọc theo thương hiệu và danh mục sản phẩm */}
+        {/* Lọc theo danh mục */}
         <div>
-          <p className="block text-xs font-medium dark:text-white text-gray-900 mt-5"><b>Lọc theo danh mục</b></p>
+          <p className="block text-xs font-medium dark:text-white text-gray-900 mt-5">
+            <b>Lọc theo danh mục</b>
+          </p>
           <div className="mt-2 space-y-2">
             <details className="overflow-hidden rounded border border-gray-300">
               <summary className="flex cursor-pointer items-center justify-between gap-2 p-4 text-gray-900 transition">
@@ -234,56 +265,73 @@ function Product() {
               </summary>
               <div className="border-t border-gray-200 dark:bg-base-100 bg-white">
                 <ul className="space-y-1 border-t border-gray-200 p-4">
-                  {categories.map((category) => (
-                    <li key={category.categoryID}>
-                      <label className="inline-flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={filterData.categories.includes(category.categoryID)} // Kiểm tra xem category có được chọn không
-                          onChange={() => handleCategoryChange(category.categoryID)} // Gọi hàm handleCategoryChange khi checkbox thay đổi
-                        />
-                        <span className="text-sm font-medium dark:text-white text-gray-900">{category.name}</span>
-                      </label>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </details>
-          </div>
-
-          {/* Lọc theo thương hiệu */}
-          <p className="block text-xs font-medium dark:text-white text-gray-900 mt-5"><b>Lọc theo thương hiệu</b></p>
-          <div className="mt-2 space-y-2">
-            <details className="overflow-hidden rounded border border-gray-300">
-              <summary className="flex cursor-pointer items-center justify-between gap-2 p-4 text-gray-900 transition">
-                <span className="text-sm font-medium dark:text-white text-gray-900">Danh sách thương hiệu</span>
-              </summary>
-              <div className="border-t border-gray-200 dark:bg-base-100 bg-white">
-                <ul className="space-y-1 border-t border-gray-200 p-4">
-                  {brands.map((brand) => (
-                    <li key={brand.brandID}>
-                      <label className="inline-flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          value={brand.brandID}
-                          checked={filterData.brands.includes(brand.brandID)} // Kiểm tra xem checkbox có trong danh sách brands đã chọn không
-                          onChange={() => handleBrandChange(brand.brandID)} // Khi chọn hoặc bỏ chọn, gọi hàm handleBrandChange
-                        />
-                        <span className="text-sm font-medium dark:text-white text-gray-900">{brand.brandName}</span>
-                      </label>
-                    </li>
-                  ))}
-
+                  {Array.isArray(categories) && categories.length > 0 ? (
+                    categories.map((category) => (
+                      <li key={category.categoryID}>
+                        <label className="inline-flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={filterData.categoryIDs.includes(category.categoryID)} // Kiểm tra xem category có được chọn không
+                            onChange={() => handleCategoryChange(category.categoryID)} // Gọi hàm handleCategoryChange khi checkbox thay đổi
+                          />
+                          <span className="text-sm font-medium dark:text-white text-gray-900">
+                            {category.name}
+                          </span>
+                        </label>
+                      </li>
+                    ))
+                  ) : (
+                    <li>No categories available</li> // Fallback when no categories exist
+                  )}
                 </ul>
               </div>
             </details>
           </div>
         </div>
+        {/* Lọc theo thương hiệu */}
+
+        <p className="block text-xs font-medium dark:text-white text-gray-900 mt-5">
+          <b>Lọc theo thương hiệu</b>
+        </p>
+
+        <div className="mt-2 space-y-2">
+          <details className="overflow-hidden rounded border border-gray-300">
+            <summary className="flex cursor-pointer items-center justify-between gap-2 p-4 text-gray-900 transition">
+              <span className="text-sm font-medium dark:text-white text-gray-900">
+                Danh sách thương hiệu
+              </span>
+            </summary>
+            <div className="border-t border-gray-200 dark:bg-base-100 bg-white">
+              <ul className="space-y-1 border-t border-gray-200 p-4">
+                {Array.isArray(brands) && brands.length > 0 ? (
+                  brands.map((brand) => (
+                    <li key={brand.brandID}>
+                      <label className="inline-flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          value={brand.brandID}
+                          checked={filterData.brandIDs.includes(brand.brandID)} // Check if the brand is selected
+                          onChange={() => handleBrandChange(brand.brandID)} // Toggle brand selection
+                        />
+                        <span className="text-sm font-medium dark:text-white text-gray-900">
+                          {brand.brandName}
+                        </span>
+                      </label>
+                    </li>
+                  ))
+                ) : (
+                  <li>No brands available</li> // Fallback when no brands exist
+                )}
+              </ul>
+            </div>
+          </details>
+        </div>
       </div>
+
 
       {/* Phần hiển thị sản phẩm */}
       <div className="flex-1 p-4">
-        {products.length > 0 ? (
+        {Array.isArray(products) && products.length > 0 ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {products.map((product, index) =>
               index < 8 ? (
@@ -404,7 +452,7 @@ function Product() {
         )}
         {/* Phân trang */}
         <div className="mt-4 flex justify-center">
-          <div className="join grid grid-cols-2">
+          <div className="join grid grid-cols-2 gap-4">
             <button
               className="join-item btn btn-outline"
               onClick={handlePreviousPage}
