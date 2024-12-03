@@ -163,15 +163,26 @@ const ProductVersionService = {
             throw error;
         }
     },
-    // Lấy danh sách phiên bản sản phẩm đã sắp xếp
+    // Lấy danh sách phiên bản sản phẩm có sắp xếp theo tiêu chí
     getSortedProductVersions: async (sortBy = 'versionName', direction = 'ASC') => {
         try {
             const response = await axios.get(`${BASE_URL}/sorted`, {
-                params: { sortBy, direction }
+                params: { sortBy, direction },
             });
             return response.data;
         } catch (error) {
             console.error("Error fetching sorted product versions:", error);
+            throw error;
+        }
+    },
+
+    // Lọc phiên bản sản phẩm theo điều kiện
+    filterProductVersions: async (filterData) => {
+        try {
+            const response = await axios.post(`${BASE_URL}/filter-product-versions`, filterData);
+            return response.data;
+        } catch (error) {
+            console.error("Error filtering product versions:", error);
             throw error;
         }
     },
