@@ -31,7 +31,7 @@ function Product() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const data = await productVersionService.getAllProductVersions(page, size, sortBy, direction, keyword);
+        const data = await productVersionService.searchProductVersions(page, size, sortBy, direction, keyword);
         setProducts(data.content);
         setTotalPages(data.totalPages); // Cập nhật totalPages từ phản hồi API
       } catch (error) {
@@ -356,7 +356,6 @@ function Product() {
                         </span>
                       </>
                     )}
-
                     <style>
                       {`
                           @keyframes blink {
@@ -365,16 +364,21 @@ function Product() {
                           }
                       `}
                     </style>
-
                     <br />
+                    {/* Hiển thị số lượng đã bán và số lượng còn lại */}
                     <span className="mt-1 text-xs text-gray-400">Đã bán: {product.quantitySold} | </span>
                     <span className="mt-1 text-xs text-gray-400">
-                      Tồn kho:{" "}
-                      <span className={product.quantityAvailable < 10 ? "text-red-600" : "text-gray-400"}>
-                        {product.quantityAvailable}
-                      </span>
+                      Còn:{" "}
+                      {product.quantityAvailable === 0 ? (
+                        <span className="text-red-600">Đã bán hết</span>
+                      ) : (
+                        <span className={product.quantityAvailable < 10 ? "text-red-600" : "text-gray-400"}>
+                          {product.quantityAvailable}
+                        </span>
+                      )}
                     </span>
 
+                    {/* Nút Thêm vào giỏ hàng */}
                     <form
                       className="mt-4"
                       onSubmit={(e) => {
@@ -382,7 +386,11 @@ function Product() {
                         handleAddToCart(product);
                       }}
                     >
-                      <button type="submit" className="w-full rounded btn btn-warning p-2 text-xs">
+                      <button
+                        type="submit"
+                        className="w-full rounded btn btn-warning p-2 text-xs"
+                        disabled={product.quantityAvailable === 0}  // Disable button nếu hết hàng
+                      >
                         Thêm vào giỏ hàng
                       </button>
                     </form>
