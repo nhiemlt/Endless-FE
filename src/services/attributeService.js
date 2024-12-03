@@ -1,4 +1,3 @@
-// src/services/attributeService.js
 import axios from 'axios';
 import constants from '../utils/globalConstantUtil'; // Import constants
 

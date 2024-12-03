@@ -73,12 +73,14 @@ const EditBrandModal = ({ onClose, onBrandUpdated, brand }) => {
                     <h3 className="font-bold text-lg">Cập nhật Thương Hiệu</h3>
                     <form className='mt-4' onSubmit={handleSubmit}>
                         <div className="mb-4">
+                            <label htmlFor="categoryName" className="block text-sm font-medium text-gray-700">Tên thương hiệu</label>
+
                             <input
                                 type="text"
                                 value={brandName}
                                 onChange={(e) => setBrandName(e.target.value)}
                                 placeholder="Tên thương hiệu"
-                                className="input input-bordered w-full"
+                                className="input input-bordered w-full mt-1"
                                 required
                             />
                         </div>

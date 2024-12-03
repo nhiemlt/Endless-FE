@@ -23,14 +23,11 @@ function ProductVersionPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false); // State for confirmation dialog
   const [isAttributesModalOpen, setIsAttributesModalOpen] = useState(false); // State mới để mở modal thuộc tính
-  // Thêm state để lưu trữ phiên bản sản phẩm đang xem chi tiết
   const [selectedVersion, setSelectedVersion] = useState(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10; // Số lượng items hiển thị trên mỗi trang
 
-  // const totalPages = Math.ceil(productVersions.length / itemsPerPage); // Lấy giá trị từ state
-  // Define totalPages state
   const [totalPages, setTotalPages] = useState(0);
 
 
@@ -62,7 +59,6 @@ function ProductVersionPage() {
 
 
   const handleEditProductVersion = (version) => {
-    // console.log("Selected version data:", version); // Kiểm tra dữ liệu được ghi log
     setSelectedVersion(version); // Lưu phiên bản sản phẩm cần chỉnh sửa
     setIsEditModalOpen(true); // Mở modal chỉnh sửa
   };
@@ -90,9 +86,7 @@ function ProductVersionPage() {
         prev.filter((version) => version.productVersionID !== selectedVersion)
       );
       dispatch(showNotification({ message: "Xóa thành công!", status: 1 }));
-      // Tải lại bảng sau khi xóa thành công
       fetchProductVersions();  // Gọi lại hàm fetchProductVersions để tải lại dữ liệu
-      // Tải lại bảng sau khi xóa thành công
     } catch (error) {
       dispatch(showNotification({ message: "Xóa thất bại!", status: 0 }));
     }
@@ -212,8 +206,7 @@ function ProductVersionPage() {
               type="text"
               placeholder="Tìm kiếm..."
               onChange={(e) => {
-                // setSearchKeyword(e.target.value);
-                // setCurrentPage(0);
+
               }}
               className="input input-bordered w-full md:w-50 h-8"
             />
@@ -223,7 +216,6 @@ function ProductVersionPage() {
           </button>
         </div>
 
-        {/* <SearchBar searchText={searchText} setSearchText={applySearch} styleClass="mb-4" /> */}
 
         <div className="overflow-x-auto">
           <table className="table table-xs w-full">
@@ -244,7 +236,6 @@ function ProductVersionPage() {
             <tbody>
               {productVersions.map((version, index) => (
                 <tr key={version.productVersionID}>
-                  {/* Some spacing here could be an issue */}
                   <td>{index + 1}</td>
                   <td>{version.product.name}</td>
                   <td>{version.versionName}</td>
