@@ -101,11 +101,11 @@ const Home = ({ categoryID }) => {
     productsSectionRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-
   return (
     <div>
       <main className="flex flex-col gap-y-20 w-full">
 
+{/* Phần khám giá Endless */}
         <section className="container p-5 mb-2">
           <div className="bg-white dark:bg-base-100 flex relative items-center overflow-hidden">
             <div className="container mx-auto px-6 flex relative py-16">
@@ -142,11 +142,12 @@ const Home = ({ categoryID }) => {
             </div>
           </div>
         </section>
-
+{/* Phần top sản phẩm theo danh mục */}
         <session>
           <TopSellerByCategory></TopSellerByCategory>
         </session>
 
+{/* Phần lọc giá */}
         <section className="p-5 mb-5 dark:bg-base-100  bg-white">
           <div className="container mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-3">
@@ -446,7 +447,6 @@ const Home = ({ categoryID }) => {
             </div>
           </div>
         </section>
-
 
       </main>
     </div>
