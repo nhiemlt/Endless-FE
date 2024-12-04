@@ -12,15 +12,21 @@ import HandThumbUpIcon from '@heroicons/react/24/outline/HandThumbUpIcon';
 import PhoneArrowUpRightIcon from '@heroicons/react/24/outline/PhoneArrowUpRightIcon';
 import productVersionService from "../../services/productVersionService";
 import CartService from "../../services/CartService";
+import TopSellerByCategory from "./components/TopSellByCategory"
 
 
-function Home() {
+const Home = ({ categoryID }) => {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(false); // Trạng thái loading
+  const [products, setProducts] = useState([]); // Danh sách sản phẩm
+  const [productByCategories, setProductByCategories] = useState([]); // Danh sách sản phẩm
   const productsSectionRef = useRef(null);
+  const productsSection = useRef(null);
+  const [productCount, setProductCount] = useState(null);
+  const [brandCount, setBrandCount] = useState(null);
 
   useEffect(() => {
     // Lấy top sản phẩm bán chạy
@@ -28,7 +34,6 @@ function Home() {
       try {
         const data = await productVersionService.getTopSellingProductVersionsAllTime();
         setProducts(data.content);  // Giả sử response là một mảng
-        console.log(data.content)
       } catch (error) {
         console.error("Error fetching top-selling products:", error);
       }
@@ -36,6 +41,32 @@ function Home() {
 
     fetchTopSellingProducts();
   }, []);
+
+  useEffect(() => {
+    // Lấy số lượng sản phẩm từ service
+    const fetchProductCount = async () => {
+      try {
+        const data = await productVersionService.getProductCount();
+        setProductCount(parseInt(data.replace(/\D/g, ''), 10)); // Lưu số lượng sản phẩm vào state
+      } catch (error) {
+        console.error("Error fetching product count:", error);
+      }
+    };
+
+    // Lấy số lượng thương hiệu từ service
+    const fetchBrandCount = async () => {
+      try {
+        const data = await productVersionService.getBrandCount(); // Giả sử có service brandService
+        setBrandCount(parseInt(data.replace(/\D/g, ''), 10)); // Lưu số lượng thương hiệu vào state
+      } catch (error) {
+        console.error("Error fetching brand count:", error);
+      }
+    };
+
+    // Gọi các hàm khi component được render
+    fetchProductCount();
+    fetchBrandCount();
+  }, []); // Chạy khi component mount lần đầu tiên
 
   const formatCurrency = (amount) => {
     return amount.toLocaleString("vi-VN", {
@@ -70,11 +101,11 @@ function Home() {
     productsSectionRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-
   return (
     <div>
       <main className="flex flex-col gap-y-20 w-full">
 
+{/* Phần khám giá Endless */}
         <section className="container p-5 mb-2">
           <div className="bg-white dark:bg-base-100 flex relative items-center overflow-hidden">
             <div className="container mx-auto px-6 flex relative py-16">
@@ -111,45 +142,12 @@ function Home() {
             </div>
           </div>
         </section>
+{/* Phần top sản phẩm theo danh mục */}
+        <session>
+          <TopSellerByCategory></TopSellerByCategory>
+        </session>
 
-        <section className="p-5 mb-5 dark:bg-base-100  bg-white">
-          <div className="mx-auto max-w-screen-xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
-            <div className="mx-auto max-w-3xl text-center">
-              <h2 className="text-3xl font-bold dark:text-white text-gray-900 sm:text-2xl">Được tin cậy bởi các doanh nghiệp thương mại điện tử</h2>
-
-              <p className="mt-4 dark:text-white text-gray-900 sm:text-sm">
-                ENDLESS tự hào cung cấp cho các doanh nghiệp thương mại điện tử những sản phẩm chất lượng, dịch vụ chăm sóc khách hàng tận tâm và các giải pháp công nghệ tiên tiến. Chúng tôi cam kết mang đến cho khách hàng một trải nghiệm mua sắm tuyệt vời, giúp họ phát triển mạnh mẽ trong thế giới số.
-              </p>
-            </div>
-
-            <dl className="mt-6 grid grid-cols-1 gap-4 sm:mt-8 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="flex flex-col rounded-lg bg-blue-50 px-4 py-8 text-center">
-                <dt className="order-last text-lg font-medium text-gray-500">Tổng thương hiệu hợp tác</dt>
-
-                <dd className="text-4xl font-extrabold text-blue-600 md:text-5xl">$4.8m</dd>
-              </div>
-
-              <div className="flex flex-col rounded-lg bg-blue-50 px-4 py-8 text-center">
-                <dt className="order-last text-lg font-medium text-gray-500">Tổng số lượng sản phẩm</dt>
-
-                <dd className="text-4xl font-extrabold text-blue-600 md:text-5xl">24</dd>
-              </div>
-
-              <div className="flex flex-col rounded-lg bg-blue-50 px-4 py-8 text-center">
-                <dt className="order-last text-lg font-medium text-gray-500">Tổng số sản phẩm</dt>
-
-                <dd className="text-4xl font-extrabold text-blue-600 md:text-5xl">86</dd>
-              </div>
-
-              <div className="flex flex-col rounded-lg bg-blue-50 px-4 py-8 text-center">
-                <dt className="order-last text-lg font-medium text-gray-500">Số lượt tải về</dt>
-
-                <dd className="text-4xl font-extrabold text-blue-600 md:text-5xl">86k</dd>
-              </div>
-            </dl>
-          </div>
-        </section>
-
+{/* Phần lọc giá */}
         <section className="p-5 mb-5 dark:bg-base-100  bg-white">
           <div className="container mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-3">
@@ -413,24 +411,33 @@ function Home() {
                       </style>
                       <br />
                       <span className="mt-1 text-xs text-gray-400">Đã bán: {product.quantitySold} | </span>
-                      <span className="mt-1 text-xs text-gray-400">
-                        Tồn kho:{" "}
+                    <span className="mt-1 text-xs text-gray-400">
+                      Còn:{" "}
+                      {product.quantityAvailable === 0 ? (
+                        <span className="text-red-600">Đã bán hết</span>
+                      ) : (
                         <span className={product.quantityAvailable < 10 ? "text-red-600" : "text-gray-400"}>
                           {product.quantityAvailable}
                         </span>
-                      </span>
+                      )}
+                    </span>
 
-                      <form
-                        className="mt-4"
-                        onSubmit={(e) => {
-                          e.preventDefault();
-                          handleAddToCart(product);
-                        }}
+                    {/* Nút Thêm vào giỏ hàng */}
+                    <form
+                      className="mt-4"
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        handleAddToCart(product);
+                      }}
+                    >
+                      <button
+                        type="submit"
+                        className="w-full rounded btn btn-warning p-2 text-xs"
+                        disabled={product.quantityAvailable === 0}  // Disable button nếu hết hàng
                       >
-                        <button type="submit" className="w-full rounded btn btn-warning p-2 text-xs">
-                          Thêm vào giỏ hàng
-                        </button>
-                      </form>
+                        Thêm vào giỏ hàng
+                      </button>
+                    </form>
                     </div>
                   </div>
                 ))
@@ -440,7 +447,6 @@ function Home() {
             </div>
           </div>
         </section>
-
 
       </main>
     </div>

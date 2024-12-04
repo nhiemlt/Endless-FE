@@ -20,114 +20,112 @@ function Product() {
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
   const [filterData, setFilterData] = useState({
-    priceMin: '',
-    priceMax: '',
-    categories: [],
-    brands: [],
+    keyword: '',
+    minPrice: '',
+    maxPrice: '',
+    categoryIDs: [],
+    brandIDs: [],
   });
 
-
-  // Gọi API lấy danh sách sản phẩm với phân trang và bộ lọc
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const data = await productVersionService.searchProductVersions(page, size, sortBy, direction, keyword);
-        setProducts(data.content);
-        setTotalPages(data.totalPages); // Cập nhật totalPages từ phản hồi API
-      } catch (error) {
-        console.error("Error fetching products:", error);
-      }
-    };
-    fetchProducts();
-  }, [page, size, sortBy, direction, keyword]);
-
-  // Hàm xử lý khi chuyển sang trang trước đó
-  const handlePreviousPage = () => {
-    if (page > 0) setPage(page - 1);
-  };
-
-  // Hàm xử lý khi chuyển sang trang kế tiếp
-  const handleNextPage = () => {
-    if (page < totalPages - 1) setPage(page + 1);
-  };
-
-  // Gọi API lấy danh sách danh mục
   const fetchCategories = async () => {
     try {
       const response = await CategoryService.getCategories({});
-      setCategories(response.content);
+      setCategories(response.content || []);
     } catch (error) {
       console.error('Error fetching categories:', error);
     }
   };
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
-  // Gọi API lấy danh sách thương hiệu
   const fetchBrands = async () => {
     try {
       const response = await BrandService.getBrands({});
-      setBrands(response.content); // Giả sử API trả về { content: [...], totalPages: ... }
+      setBrands(response.content || []);
     } catch (error) {
       console.error('Error fetching brands:', error);
     }
   };
 
   useEffect(() => {
+    fetchCategories();
     fetchBrands();
   }, []);
 
+  // 2. Gọi API lấy danh sách sản phẩm dựa trên bộ lọc
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const filters = {
+          page,
+          size,
+          sortBy,
+          direction,
+          keyword: filterData.keyword,
+          categoryIDs: filterData.categoryIDs,
+          brandIDs: filterData.brandIDs,
+          minPrice: filterData.minPrice,
+          maxPrice: filterData.maxPrice,
+        };
 
-  // Hàm gọi API lọc sản phẩm
-  const fetchFilteredProducts = async (filterData) => {
+        const response = await productVersionService.filterProductVersions(filters);
+        setProducts(response.content || []);
+        console.log(response.content)
+        setTotalPages(response.totalPages || 1);
+      } catch (error) {
+        console.error('Error fetching filtered products:', error);
+      }
+    };
+
+    fetchProducts();
+  }, [page, size, sortBy, direction, filterData]);
+
+  // Hàm gọi API lấy danh sách sản phẩm đã sắp xếp
+  const fetchSortedProductVersions = async () => {
     try {
-      const filteredData = await productVersionService.filterProductVersions(filterData);
-      // Lưu kết quả lọc vào state
-      setProducts(filteredData);
+      const response = await productVersionService.getSortedProductVersions(sortBy, direction);
+      setProducts(response || []); 
     } catch (error) {
-      console.error("Error fetching filtered products:", error);
+      console.error("Error fetching sorted product versions:", error);
     }
   };
 
   useEffect(() => {
-    console.log("Current filter data:", filterData);  // Kiểm tra dữ liệu lọc
-    fetchFilteredProducts(filterData);                // Gọi API lọc khi `filterData` thay đổi
-  }, [filterData]);
+    fetchSortedProductVersions(); 
+  }, [sortBy, direction]); 
 
 
-  // Thêm console.log để kiểm tra khi cập nhật giá trị
   const handlePriceChange = (e, field) => {
-    setFilterData((prev) => {
-      const newData = { ...prev, [field]: e.target.value };
-      console.log("Updated price filter data:", newData);
-      return newData;
-    });
+    setFilterData((prev) => ({
+      ...prev,
+      [field]: e.target.value,
+    }));
   };
 
   const handleCategoryChange = (categoryID) => {
     setFilterData((prev) => {
-      const newCategories = prev.categories.includes(categoryID)
-        ? prev.categories.filter((id) => id !== categoryID)
-        : [...prev.categories, categoryID];
-      const newData = { ...prev, categories: newCategories };
-      console.log("Updated category filter data:", newData);
-      return newData;
+      const updatedCategories = prev.categoryIDs.includes(categoryID)
+        ? prev.categoryIDs.filter((id) => id !== categoryID)
+        : [...prev.categoryIDs, categoryID];
+      return { ...prev, categoryIDs: updatedCategories };
     });
   };
 
   const handleBrandChange = (brandID) => {
     setFilterData((prev) => {
-      const newBrands = prev.brands.includes(brandID)
-        ? prev.brands.filter((id) => id !== brandID)
-        : [...prev.brands, brandID];
-      const newData = { ...prev, brands: newBrands };
-      console.log("Updated brand filter data:", newData);
-      return newData;
+      const updatedBrands = prev.brandIDs.includes(brandID)
+        ? prev.brandIDs.filter((id) => id !== brandID)
+        : [...prev.brandIDs, brandID];
+      return { ...prev, brandIDs: updatedBrands };
     });
   };
 
+  // 4. Quản lý phân trang
+  const handlePreviousPage = () => {
+    if (page > 0) setPage((prev) => prev - 1);
+  };
+
+  const handleNextPage = () => {
+    if (page < totalPages - 1) setPage((prev) => prev + 1);
+  };
 
   //Hàm định dạng tiền 
   const formatCurrency = (amount) => {
@@ -159,74 +157,99 @@ function Product() {
       <div className="w-1/4 p-4 dark:bg-base-100 bg-white rounded-lg shadow-md">
 
         {/* Phần tìm kiếm */}
-        <div className="mt-3">
-          <label
-            htmlFor="searchKeyword"
-            className="input input-primary flex items-center gap-2 text-xs font-medium"
-          >
-            <input
-              id="searchKeyword"
-              type="text"
-              value={keyword}
-              onChange={(e) => setKeyword(e.target.value)}
-              className="grow h-10 text-xs dark:bg-base-100"
-              placeholder="Tìm kiếm"
-
-            />
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 16 16"
-              fill="currentColor"
-              className="h-4 w-4"
-            >
-              <path
-                fillRule="evenodd"
-                d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
-                clipRule="evenodd"
-              />
-            </svg>
+        <div>
+          <label htmlFor="SortBy" className="block text-xs font-medium dark:text-white text-gray-900 mt-3">
+            <b>Tìm kiếm sản phẩm</b>
           </label>
+          <div className="mt-3">
+            <label
+              htmlFor="searchKeyword"
+              className="input input-primary flex items-center gap-2 text-xs font-medium"
+            >
+              <input
+                id="searchKeyword"
+                type="text"
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
+                className="grow h-10 text-xs dark:bg-base-100"
+                placeholder="Tìm kiếm"
+
+              />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 16 16"
+                fill="currentColor"
+                className="h-4 w-4"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </label>
+          </div>
         </div>
 
         {/* Dropdown Sort By */}
         <div>
-          <label htmlFor="SortBy" className="block text-xs font-medium dark:text-white text-gray-900 mt-5"><b>Sắp xếp</b></label>
-          <select id="SortBy" value={`${sortBy}, ${direction}`} onChange={(e) => {
-            const [field, dir] = e.target.value.split(', ');
-            setSortBy(field);
-            setDirection(dir);
-          }} className="mt-1 rounded border-gray-300 text-sm select select-secondary w-full max-w-xs dark:text-white text-gray-900">
-            <option value="versionName, ASC">Tên sản phẩm - Tăng dần</option>
-            <option value="versionName, DESC">Tên sản phẩm - Giảm dần</option>
-            <option value="price, ASC">Tiền - Tăng dần</option>
-            <option value="price, DESC">Tiền - Giảm dần</option>
+          <label htmlFor="SortBy" className="block text-xs font-medium dark:text-white text-gray-900 mt-5">
+            <b>Sắp xếp</b>
+          </label>
+          <select
+            id="SortBy"
+            value={`${sortBy}, ${direction}`}
+            onChange={(e) => {
+              const [field, dir] = e.target.value.split(", ");
+              setSortBy(field);
+              setDirection(dir);
+            }}
+            className="mt-3 rounded border-gray-300 text-sm select select-secondary w-full max-w-xs dark:text-white text-gray-900"
+          >
+            <option value="discountPrice, ASC">Giá khuyến mãi - Tăng dần</option>
+            <option value="discountPrice, DESC">Giá khuyến mãi - Giảm dần</option>
+            <option value="numberOfReviews, ASC">Lượt đánh giá - Tăng dần</option>
+            <option value="numberOfReviews, DESC">Lượt đánh giá - Giảm dần</option>
+            <option value="quantitySold, ASC">Lượt bán - Tăng dần</option>
+            <option value="quantitySold, DESC">Lượt bán - Giảm dần</option>
           </select>
         </div>
 
-        {/* Phần lọc khoảng giá */}
-        <div className="flex items-center gap-2 mt-5">
-          <input
-            type="number"
-            min="0"
-            placeholder="Giá thấp"
-            className="input input-success w-full h-10 max-w-xs text-xs"
-            value={filterData.priceMin}
-            onChange={(e) => handlePriceChange(e, 'priceMin')}
-          />
-          <span className="text-xl">-</span>
-          <input
-            type="number"
-            min="0"
-            placeholder="Giá cao"
-            className="input input-success w-full h-10 max-w-xs text-xs"
-            value={filterData.priceMax}
-            onChange={(e) => handlePriceChange(e, 'priceMax')}
-          />
+        {/* Phần lọc giá */}
+        <div>
+          <label htmlFor="SortBy" className="block text-xs font-medium dark:text-white text-gray-900 mt-3">
+            <b>Khoảng giá</b>
+          </label>
+          <div className="flex items-center gap-2 mt-3">
+            <input
+              type="number"
+              min="0"
+              placeholder="Giá thấp"
+              className="input input-success w-full h-10 max-w-xs text-xs"
+              value={filterData.minPrice}
+              onChange={(e) => {
+                handlePriceChange(e, 'minPrice');
+              }}
+            />
+            <span className="text-xl">-</span>
+            <input
+              type="number"
+              min="0"
+              placeholder="Giá cao"
+              className="input input-success w-full h-10 max-w-xs text-xs"
+              value={filterData.maxPrice}
+              onChange={(e) => {
+                handlePriceChange(e, 'maxPrice');
+              }}
+            />
+          </div>
         </div>
 
-        {/* Phần lọc theo thương hiệu và danh mục sản phẩm */}
+        {/* Phần lọc theo danh mục */}
         <div>
-          <p className="block text-xs font-medium dark:text-white text-gray-900 mt-5"><b>Lọc theo danh mục</b></p>
+          <p className="block text-xs font-medium dark:text-white text-gray-900 mt-5">
+            <b>Lọc theo danh mục</b>
+          </p>
           <div className="mt-2 space-y-2">
             <details className="overflow-hidden rounded border border-gray-300">
               <summary className="flex cursor-pointer items-center justify-between gap-2 p-4 text-gray-900 transition">
@@ -234,80 +257,108 @@ function Product() {
               </summary>
               <div className="border-t border-gray-200 dark:bg-base-100 bg-white">
                 <ul className="space-y-1 border-t border-gray-200 p-4">
-                  {categories.map((category) => (
-                    <li key={category.categoryID}>
-                      <label className="inline-flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={filterData.categories.includes(category.categoryID)} // Kiểm tra xem category có được chọn không
-                          onChange={() => handleCategoryChange(category.categoryID)} // Gọi hàm handleCategoryChange khi checkbox thay đổi
-                        />
-                        <span className="text-sm font-medium dark:text-white text-gray-900">{category.name}</span>
-                      </label>
-                    </li>
-                  ))}
+                  {Array.isArray(categories) && categories.length > 0 ? (
+                    categories.map((category) => (
+                      <li key={category.categoryID}>
+                        <label className="inline-flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={filterData.categoryIDs.includes(category.categoryID)} // Kiểm tra xem category có được chọn không
+                            onChange={() => {
+                              handleCategoryChange(category.categoryID);
+                              // Lọc lại sản phẩm khi thay đổi danh mục
+                            }}
+                          />
+                          <span className="text-sm font-medium dark:text-white text-gray-900">
+                            {category.name}
+                          </span>
+                        </label>
+                      </li>
+                    ))
+                  ) : (
+                    <li>No categories available</li> // Fallback khi không có danh mục
+                  )}
                 </ul>
               </div>
             </details>
           </div>
+        </div>
 
-          {/* Lọc theo thương hiệu */}
-          <p className="block text-xs font-medium dark:text-white text-gray-900 mt-5"><b>Lọc theo thương hiệu</b></p>
+        {/* Phần lọc theo thương hiệu */}
+        <div>
+          <p className="block text-xs font-medium dark:text-white text-gray-900 mt-5">
+            <b>Lọc theo thương hiệu</b>
+          </p>
           <div className="mt-2 space-y-2">
             <details className="overflow-hidden rounded border border-gray-300">
               <summary className="flex cursor-pointer items-center justify-between gap-2 p-4 text-gray-900 transition">
-                <span className="text-sm font-medium dark:text-white text-gray-900">Danh sách thương hiệu</span>
+                <span className="text-sm font-medium dark:text-white text-gray-900">
+                  Danh sách thương hiệu
+                </span>
               </summary>
               <div className="border-t border-gray-200 dark:bg-base-100 bg-white">
                 <ul className="space-y-1 border-t border-gray-200 p-4">
-                  {brands.map((brand) => (
-                    <li key={brand.brandID}>
-                      <label className="inline-flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          value={brand.brandID}
-                          checked={filterData.brands.includes(brand.brandID)} // Kiểm tra xem checkbox có trong danh sách brands đã chọn không
-                          onChange={() => handleBrandChange(brand.brandID)} // Khi chọn hoặc bỏ chọn, gọi hàm handleBrandChange
-                        />
-                        <span className="text-sm font-medium dark:text-white text-gray-900">{brand.brandName}</span>
-                      </label>
-                    </li>
-                  ))}
-
+                  {Array.isArray(brands) && brands.length > 0 ? (
+                    brands.map((brand) => (
+                      <li key={brand.brandID}>
+                        <label className="inline-flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            value={brand.brandID}
+                            checked={filterData.brandIDs.includes(brand.brandID)} // Kiểm tra xem thương hiệu có được chọn không
+                            onChange={() => {
+                              handleBrandChange(brand.brandID);
+                              // Lọc lại sản phẩm khi thay đổi thương hiệu
+                            }}
+                          />
+                          <span className="text-sm font-medium dark:text-white text-gray-900">
+                            {brand.brandName}
+                          </span>
+                        </label>
+                      </li>
+                    ))
+                  ) : (
+                    <li>No brands available</li> // Fallback khi không có thương hiệu
+                  )}
                 </ul>
               </div>
             </details>
           </div>
         </div>
       </div>
-
       {/* Phần hiển thị sản phẩm */}
       <div className="flex-1 p-4">
-        {products.length > 0 ? (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {Array.isArray(products) && products.length > 0 ? (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 w-full min-h-max">
             {products.map((product, index) =>
               index < 8 ? (
                 <div
                   key={product.productVersionID}
-                  className="group relative block overflow-hidden"
+                  className="group relative block overflow-hidden bg-white"
                 >
-                  <img
-                    src={product.image}
-                    className="h-30 w-full object-cover transition duration-500 group-hover:scale-105"
-                    onClick={() => handleImageClick(product)}
-                    alt={product.product.name}
-                  />
-                  {/* Chỉ hiển thị giảm giá nếu product.discountPercentage > 0 */}
-                  {product.discountPercentage > 0 && (
-                    <p className="absolute top-2 left-2 bg-red-600 text-white font-semibold text-xs px-2 py-1 rounded-md shadow-md">
-                      - {product.discountPercentage}%
-                    </p>
-                  )}
+                  {/* Hình ảnh sản phẩm */}
+                  <div className="relative w-full h-48">
+                    <img
+                      src={product.image}
+                      className="absolute inset-0 w-full h-full object-cover transition duration-500 group-hover:scale-105"
+                      onClick={() => handleImageClick(product)}
+                      alt={product.product.name}
+                    />
+                    {/* Giảm giá */}
+                    {product.discountPercentage > 0 && (
+                      <p className="absolute top-2 left-2 bg-red-600 text-white font-semibold text-xs px-2 py-1 rounded-md shadow-md">
+                        - {product.discountPercentage}%
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Thông tin sản phẩm */}
                   <div className="relative border border-gray-100 bg-white p-4">
-                    <p className="mt-1 text-sm text-gray-900 h-8 overflow-hidden text-ellipsis whitespace-nowrap transform scale-95">
+                    <p className="text-sm text-gray-900 h-8 overflow-hidden text-ellipsis whitespace-nowrap transform scale-95">
                       <b>{product.product.name} | {product.versionName}</b>
                     </p>
-                    {/* Hiển thị đánh giá */}
+
+                    {/* Đánh giá sản phẩm */}
                     <div className="flex items-center mt-2">
                       {product.averageRating ? (
                         <>
@@ -324,13 +375,11 @@ function Product() {
                           </p>
                         </>
                       ) : (
-                        <p className="text-sm font-bold text-gray-800 text-dark">
-                          Chưa có đánh giá
-                        </p>
+                        <p className="text-sm text-gray-800 text-dark">Chưa có đánh giá</p>
                       )}
                     </div>
 
-                    {/* Kiểm tra giá để hiển thị giá và hiệu ứng */}
+                    {/* Hiển thị giá */}
                     {formatCurrency(product.price) === formatCurrency(product.discountPrice) ? (
                       <span
                         className="mt-1 text-sm text-red-600"
@@ -356,24 +405,25 @@ function Product() {
                         </span>
                       </>
                     )}
+
                     <style>
                       {`
-                          @keyframes blink {
-                            0%, 100% { opacity: 1; }
-                            50% { opacity: 0; }
-                          }
-                      `}
+                      @keyframes blink {
+                        0%, 100% { opacity: 1; }
+                        50% { opacity: 0; }
+                      }
+                    `}
                     </style>
-                    <br />
-                    {/* Hiển thị số lượng đã bán và số lượng còn lại */}
-                    <span className="mt-1 text-xs text-gray-400">Đã bán: {product.quantitySold} | </span>
+                    <br></br>
+                    {/* Số lượng đã bán và còn lại */}
+                    <span className="mt-1 text-xs text-gray-400">Đã bán: {product.quantitySold}</span><br></br>
                     <span className="mt-1 text-xs text-gray-400">
                       Còn:{" "}
                       {product.quantityAvailable === 0 ? (
                         <span className="text-red-600">Đã bán hết</span>
                       ) : (
                         <span className={product.quantityAvailable < 10 ? "text-red-600" : "text-gray-400"}>
-                          {product.quantityAvailable}
+                          {product.quantityAvailable} sản phẩm
                         </span>
                       )}
                     </span>
@@ -389,7 +439,7 @@ function Product() {
                       <button
                         type="submit"
                         className="w-full rounded btn btn-warning p-2 text-xs"
-                        disabled={product.quantityAvailable === 0}  // Disable button nếu hết hàng
+                        disabled={product.quantityAvailable === 0}
                       >
                         Thêm vào giỏ hàng
                       </button>
@@ -404,7 +454,7 @@ function Product() {
         )}
         {/* Phân trang */}
         <div className="mt-4 flex justify-center">
-          <div className="join grid grid-cols-2">
+          <div className="join grid grid-cols-2 gap-4">
             <button
               className="join-item btn btn-outline"
               onClick={handlePreviousPage}
