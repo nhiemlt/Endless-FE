@@ -5,7 +5,8 @@ import { useSelector, useDispatch } from 'react-redux';
 import { removeNotificationMessage } from "../features/common/headerSlice";
 import { NotificationContainer, NotificationManager } from 'react-notifications';
 import 'react-notifications/lib/notifications.css';
-import RightSidebar from './RightSidebar'
+import RightSidebar from './RightSidebar';
+import FptChatbotButton from './FptChatbotButton'; // Import component chatbot button
 
 function CustomerLayout() {
     const dispatch = useDispatch();
@@ -30,14 +31,17 @@ function CustomerLayout() {
                 <CustomerPageContent />
             </div>
             
-        { /* Right drawer - containing secondary content like notifications list etc.. */ }
-        <RightSidebar />
+            {/* Right drawer - containing secondary content like notifications list etc.. */}
+            <RightSidebar />
 
             {/* Notification layout container */}
             <NotificationContainer />
 
             {/* Modal layout container */}
             <ModalLayout />
+
+            {/* Add FPT chatbot button to the layout */}
+            <FptChatbotButton /> {/* This is where we add the chatbot button */}
         </>
     );
 }
