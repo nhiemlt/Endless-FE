@@ -11,7 +11,7 @@ const attributeService = {
             const response = await axios.get(API_URL, {
                 params: { id, name, page, size },
             });
-            console.log(response.data); // In ra để kiểm tra
+            // console.log(response.data); // In ra để kiểm tra
             return response; // Trả về toàn bộ phản hồi để sau này bạn có thể truy cập vào response.data
         } catch (error) {
             console.error(error); // In ra chi tiết lỗi

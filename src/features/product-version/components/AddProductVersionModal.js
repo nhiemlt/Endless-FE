@@ -87,19 +87,20 @@ const AddProductVersionModal = ({ onClose, onProductAdded }) => {
             }));
             return; // Dừng thực hiện nếu có lỗi
         }
-
-        const selectedAttributes = attributes.filter((attr) => attr.isChecked);
-        console.log("AttributeValue:", selectedAttributes);
-
-        const selectedAttributeValueID = selectedAttributes.map(attr => attr.attributeValueID);
-
+        // Kiểm tra nếu mảng thuộc tính chọn vẫn rỗng
+        if (selectedAttributeValues.length === 0) {
+            dispatch(showNotification({
+                message: 'Danh sách giá trị thuộc tính không hợp lệ. Vui lòng chọn ít nhất 1 giá trị.',
+                status: 0,
+            }));
+            return; // Dừng nếu không có giá trị thuộc tính hợp lệ
+        }
 
         // Thực hiện tải ảnh lên Firebase nếu có ảnh được chọn
         if (previewLogo) {
             try {
                 const downloadURL = await UploadFileService.uploadProductImage(previewLogo); // Upload ảnh lên Firebase
                 setImageUrl(downloadURL); // Lưu URL của ảnh vào state
-                // dispatch(showNotification({ message: 'Tải ảnh lên thành công!', status: 1 }));
             } catch (error) {
                 dispatch(showNotification({ message: 'Lỗi khi tải ảnh lên.', status: 0 }));
                 resetImage(); // Đặt lại ảnh nếu tải lên thất bại
@@ -107,7 +108,7 @@ const AddProductVersionModal = ({ onClose, onProductAdded }) => {
             }
         }
 
-
+        // Tạo dữ liệu productVersionData
         const productVersionData = {
             versionName,
             price: parseFloat(price),
@@ -116,13 +117,12 @@ const AddProductVersionModal = ({ onClose, onProductAdded }) => {
             height: parseFloat(height),
             length: parseFloat(length),
             width: parseFloat(width),
-            attributeValueID: selectedAttributeValueID,
+            attributeValueID: selectedAttributeValues, // Dùng selectedAttributeValues trực tiếp
             productID: selectedProduct,
             image: imageUrl // Thêm hình ảnh vào dữ liệu gửi đi
         };
 
         console.log("Data gửi lên API:", productVersionData);
-
 
         try {
             const result = await ProductVersionService.createProductVersion(productVersionData);
@@ -133,14 +133,20 @@ const AddProductVersionModal = ({ onClose, onProductAdded }) => {
             onClose();
         } catch (error) {
             console.error("Error creating product version:", error.message);
-            if (error.response && error.response.data && error.response.data.message === 'Phiên bản sản phẩm với tên này đã tồn tại') {
-                dispatch(showNotification({ message: 'Tên phiên bản sản phẩm đã tồn tại, vui lòng chọn tên khác.', status: 0 }));
+            if (error.response && error.response.data) {
+                if (error.response.data.message === 'Phiên bản sản phẩm với tên này đã tồn tại') {
+                    dispatch(showNotification({ message: 'Tên phiên bản sản phẩm đã tồn tại, vui lòng chọn tên khác.', status: 0 }));
+                } else {
+                    dispatch(showNotification({ message: 'Tên phiên bản sản phẩm đã tồn tại, vui lòng chọn tên khác.', status: 0 }));
+                }
             } else {
-                dispatch(showNotification({ message: 'Thêm phiên bản sản phẩm thất bại!', status: 0 }));
+                dispatch(showNotification({ message: 'Có lỗi xảy ra khi thêm phiên bản sản phẩm. Vui lòng thử lại.', status: 0 }));
             }
             setError('Có lỗi xảy ra khi thêm phiên bản sản phẩm.');
         }
     };
+
+
 
 
     useEffect(() => {
@@ -207,10 +213,19 @@ const AddProductVersionModal = ({ onClose, onProductAdded }) => {
 
 
     const handleCheckboxChange = (valueID) => {
-        setSelectedAttributeValues((prev) =>
-            prev.includes(valueID) ? prev.filter((id) => id !== valueID) : [...prev, valueID]
-        );
+        setSelectedAttributeValues((prev) => {
+            const newSelectedValues = prev.includes(valueID)
+                ? prev.filter((id) => id !== valueID)
+                : [...prev, valueID];
+
+            // Ghi log các giá trị đã chọn hoặc bỏ chọn
+            console.log("Selected Attribute Values:", newSelectedValues);
+
+            return newSelectedValues;
+        });
     };
+
+
     const handleSelectAllAttributes = () => {
         if (!activeAttribute || !attributesByGroup[activeAttribute]) return;
         const attributeValueIDs = attributesByGroup[activeAttribute].map((value) => value.attributeValueID);
@@ -290,7 +305,7 @@ const AddProductVersionModal = ({ onClose, onProductAdded }) => {
                                     type="number"
                                     placeholder="Giá Bán"
                                     className="input input-bordered w-full"
-                                    value={purchasePrice}
+                                    value={purchasePrice === 0 ? '' : purchasePrice}
                                     onChange={(e) => {
                                         const value = Number(e.target.value);
                                         if (value >= 0 && value <= 1_000_000_000) {
@@ -314,7 +329,7 @@ const AddProductVersionModal = ({ onClose, onProductAdded }) => {
                                     type="number"
                                     placeholder="Giá Gốc"
                                     className="input input-bordered w-full"
-                                    value={price}
+                                    value={price === 0 ? '' : price}
                                     onChange={(e) => {
                                         const value = Number(e.target.value);
                                         if (value >= 0 && value <= 1_000_000_000) {
@@ -341,7 +356,7 @@ const AddProductVersionModal = ({ onClose, onProductAdded }) => {
                                         type="number"
                                         placeholder="Trọng Lượng"
                                         className="input input-bordered w-full"
-                                        value={weight}
+                                        value={weight === 0 ? '' : weight}
                                         onChange={(e) => {
                                             const value = Number(e.target.value);
                                             if (value >= 0 && value <= 1_000_000_000) {
@@ -366,7 +381,7 @@ const AddProductVersionModal = ({ onClose, onProductAdded }) => {
                                         type="number"
                                         placeholder="Chiều Cao"
                                         className="input input-bordered w-full"
-                                        value={height}
+                                        value={height === 0 ? '' : height}
                                         onChange={(e) => {
                                             const value = Number(e.target.value);
                                             if (value >= 0 && value <= 1_000_000_000) {
@@ -391,7 +406,7 @@ const AddProductVersionModal = ({ onClose, onProductAdded }) => {
                                         type="number"
                                         placeholder="Chiều Dài"
                                         className="input input-bordered w-full"
-                                        value={length}
+                                        value={length === 0 ? '' : length}
                                         onChange={(e) => {
                                             const value = Number(e.target.value);
                                             if (value >= 0 && value <= 1_000_000_000) {
@@ -416,7 +431,7 @@ const AddProductVersionModal = ({ onClose, onProductAdded }) => {
                                         type="number"
                                         placeholder="Chiều Rộng"
                                         className="input input-bordered w-full"
-                                        value={width}
+                                        value={width === 0 ? '' : width}
                                         onChange={(e) => {
                                             const value = Number(e.target.value);
                                             if (value >= 0 && value <= 1_000_000_000) {
@@ -449,7 +464,20 @@ const AddProductVersionModal = ({ onClose, onProductAdded }) => {
 
                             {/* Nút chọn tất cả */}
                             <div className="flex justify-between items-center mt-4">
-                                <span className="text-sm text-gray-500">{`Thuộc tính hiện tại: ${activeAttribute}`}</span>
+                                <span className="text-sm text-gray-500">
+                                    {/* Hiển thị các giá trị thuộc tính đã chọn */}
+                                    {`Những giá trị thuộc tính đã chọn: ${selectedAttributeValues.length > 0
+                                        ? selectedAttributeValues
+                                            .map(valueID => {
+                                                // Lấy giá trị thuộc tính từ selectedAttributeValues (lấy từ ID)
+                                                const attribute = Object.values(attributesByGroup)
+                                                    .flat() // Flatten tất cả các thuộc tính
+                                                    .find(attr => attr.attributeValueID === valueID);
+                                                return attribute ? attribute.attributeValue : ''; // Trả về giá trị thuộc tính
+                                            })
+                                            .join(', ') // Nối các giá trị lại với nhau
+                                        : 'Chưa có giá trị nào được chọn'}`}
+                                </span>
                                 <button
                                     type="button" // Thêm thuộc tính này
                                     className="btn btn-sm btn-outline btn-accent"
@@ -458,6 +486,7 @@ const AddProductVersionModal = ({ onClose, onProductAdded }) => {
                                     {`Chọn tất cả (${activeAttribute})`}
                                 </button>
                             </div>
+
                         </div>
 
 
