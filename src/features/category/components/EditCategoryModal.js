@@ -40,12 +40,13 @@ const EditCategoryModal = ({ onClose, onCategoryUpdated, category }) => {
                     <h3 className="font-bold text-lg">Cập nhật Danh Mục</h3>
                     <form className='mt-4' onSubmit={handleSubmit}>
                         <div className="mb-4">
+                            <label htmlFor="categoryName" className="block text-sm font-medium text-gray-700">Tên danh mục</label>
                             <input
                                 type="text"
                                 value={categoryName}
                                 onChange={(e) => setCategoryName(e.target.value)}
                                 placeholder="Tên danh mục"
-                                className="input input-bordered w-full"
+                                className="input input-bordered w-full mt-1"
                                 required
                             />
                         </div>

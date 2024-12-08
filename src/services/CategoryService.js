@@ -23,12 +23,23 @@ const CategoryService = {
             const response = await axios.post(BASE_URL, categoryData);
             return response.data;
         } catch (error) {
-            if (error.response && error.response.status === 409) { // 409 Conflict
-                throw new Error(error.response.data); // Ném lại lỗi cho frontend
+            if (error.response) {
+                // Nếu có lỗi từ server (ví dụ lỗi 409)
+                if (error.response.status === 409) {
+                    throw new Error(error.response.data.message || "Tên danh mục đã tồn tại.");
+                }
+                // Kiểm tra lỗi 400 (Bad Request)
+                if (error.response.status === 400) {
+                    throw new Error(error.response.data.message || "Thông tin không hợp lệ.");
+                }
+                // Xử lý các lỗi khác nếu có
+                throw new Error("Đã xảy ra lỗi, vui lòng thử lại sau.");
             }
-            throw error; // Ném lại lỗi khác
+            // Nếu không có response, có thể là lỗi mạng hoặc server không phản hồi
+            throw new Error("Lỗi kết nối với máy chủ.");
         }
     },
+
 
     // Cập nhật danh mục
     updateCategory: async (id, categoryData) => {

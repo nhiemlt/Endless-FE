@@ -100,9 +100,11 @@ function ProductPage() {
   };
 
   // New function to handle product addition
-  const handleProductAdded = () => {
-    fetchProducts(); // Refresh the product list
+  const handleProductAdded = (newProduct) => {
+    setProducts((prevProducts) => [newProduct, ...prevProducts]); // Thêm sản phẩm mới vào đầu danh sách
   };
+
+
 
   const handlePrevPage = () => {
     if (currentPage > 0) {
