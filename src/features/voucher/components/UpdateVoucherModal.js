@@ -7,13 +7,17 @@ const UpdateVoucherModal = ({ voucher, onClose, onReload }) => {
     const dispatch = useDispatch();
 
     const formatDate = (dateString) => {
+        // Kiểm tra nếu dateString có giá trị
         if (dateString) {
-            const [day, month, year] = dateString.split("-"); // Tách chuỗi ngày
-            const date = new Date(year, month, day); // Tạo đối tượng ngày, tháng bắt đầu từ 0
-            return isNaN(date.getTime()) ? "" : date.toISOString().split("T")[0]; // Chuyển đổi sang định dạng ISO
+            // Tách chuỗi ngày tháng và giờ ra từng phần
+            const [day, month, year, hours, minutes] = dateString.split(/[- :]/);
+    
+            // Chuyển đổi thành định dạng yyyy-MM-ddTHH:mm
+            return `${year}-${month}-${day}T${hours}:${minutes}`;
         }
         return ""; // Nếu không có giá trị, trả về chuỗi rỗng
     };
+    
 
     const today = new Date().toISOString().split("T")[0];
 
@@ -23,8 +27,8 @@ const UpdateVoucherModal = ({ voucher, onClose, onReload }) => {
         leastDiscount: voucher.leastDiscount,
         biggestDiscount: voucher.biggestDiscount,
         leastBill: voucher.leastBill,
-        startDate: formatDate(voucher.startDate), // Sử dụng formatDate ở đây
-        endDate: formatDate(voucher.endDate),     // Sử dụng formatDate ở đây
+        startDate: voucher.startDate ? formatDate(voucher.startDate) : "", // Định dạng theo "DD-MM-yyyy HH:mm"
+        endDate: voucher.endDate ? formatDate(voucher.endDate) : "",       // Định dạng theo "DD-MM-yyyy HH:mm"
     });
 
     console.log(formState)
@@ -38,8 +42,19 @@ const UpdateVoucherModal = ({ voucher, onClose, onReload }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // Chuyển đổi lại ngày từ định dạng dd-mm-yyyy HH:mm sang yyyy-mm-ddTHH:mm
+        const startDate = formState.startDate.split(" ")[0].split("-").reverse().join("-") + "T" + formState.startDate.split(" ")[1];
+        const endDate = formState.endDate.split(" ")[0].split("-").reverse().join("-") + "T" + formState.endDate.split(" ")[1];
+
+        const updatedVoucher = {
+            ...formState,
+            startDate,
+            endDate,
+        };
+        console.log(updatedVoucher);
         try {
-            await VoucherService.updateVoucher(voucher.voucherID, formState);
+            await VoucherService.updateVoucher(voucher.voucherID, updatedVoucher);
             dispatch(showNotification({ message: "Cập nhật voucher thành công", status: 1 }));
             onClose();
             onReload();
@@ -47,6 +62,7 @@ const UpdateVoucherModal = ({ voucher, onClose, onReload }) => {
             dispatch(showNotification({ message: "Lỗi khi cập nhật voucher", status: 0 }));
         }
     };
+
 
     return (
         <>
@@ -64,7 +80,6 @@ const UpdateVoucherModal = ({ voucher, onClose, onReload }) => {
                                 value={formState.voucherCode}
                                 onChange={handleChange}
                                 className="input input-bordered w-full"
-                                readOnly
                             />
                         </div>
 
@@ -78,37 +93,10 @@ const UpdateVoucherModal = ({ voucher, onClose, onReload }) => {
                                     value={formState.discountLevel}
                                     onChange={handleChange}
                                     className="input input-bordered w-full"
-                                    required
                                 />
                             </div>
 
                             {/* Giá giảm tối thiểu */}
-                            <div className="w-full md:w-1/2 pl-2 mb-4">
-                                <label className="block text-sm font-medium text-gray-700 mb-3">Giá giảm tối thiểu</label>
-                                <input
-                                    type="number"
-                                    name="leastDiscount"
-                                    value={formState.leastDiscount}
-                                    onChange={handleChange}
-                                    className="input input-bordered w-full"
-                                    required
-                                />
-                            </div>
-
-                            {/* Giá giảm tối đa */}
-                            <div className="w-full md:w-1/2 pr-2 mb-4">
-                                <label className="block text-sm font-medium text-gray-700 mb-3">Giá giảm tối đa</label>
-                                <input
-                                    type="number"
-                                    name="biggestDiscount"
-                                    value={formState.biggestDiscount}
-                                    onChange={handleChange}
-                                    className="input input-bordered w-full"
-                                    required
-                                />
-                            </div>
-
-                            {/* Hóa đơn tối thiểu */}
                             <div className="w-full md:w-1/2 pl-2 mb-4">
                                 <label className="block text-sm font-medium text-gray-700 mb-3">Hóa đơn tối thiểu</label>
                                 <input
@@ -117,7 +105,30 @@ const UpdateVoucherModal = ({ voucher, onClose, onReload }) => {
                                     value={formState.leastBill}
                                     onChange={handleChange}
                                     className="input input-bordered w-full"
-                                    required
+                                />
+                            </div>
+
+                            {/* Giá giảm tối đa */}
+                            <div className="w-full md:w-1/2 pr-2 mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-3">Giá giảm tối thiểu</label>
+                                <input
+                                    type="number"
+                                    name="leastDiscount"
+                                    value={formState.leastDiscount}
+                                    onChange={handleChange}
+                                    className="input input-bordered w-full"
+                                />
+                            </div>
+
+                            {/* Hóa đơn tối thiểu */}
+                            <div className="w-full md:w-1/2 pl-2 mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-3">Giá giảm tối đa</label>
+                                <input
+                                    type="number"
+                                    name="biggestDiscount"
+                                    value={formState.biggestDiscount}
+                                    onChange={handleChange}
+                                    className="input input-bordered w-full"
                                 />
                             </div>
 
@@ -125,13 +136,12 @@ const UpdateVoucherModal = ({ voucher, onClose, onReload }) => {
                             <div className="w-full md:w-1/2 pr-2 mb-4">
                                 <label className="block text-sm font-medium text-gray-700 mb-3">Ngày bắt đầu</label>
                                 <input
-                                    type="date"
+                                    type="datetime-local"
                                     name="startDate"
                                     min={today}
-                                    value={formState.startDate} // Giá trị lấy từ formState
+                                    value={formState.startDate || ""} // Đảm bảo giá trị là đúng định dạng yyyy-MM-ddTHH:mm
                                     onChange={handleChange}
                                     className="input input-bordered w-full"
-                                    required
                                 />
                             </div>
 
@@ -139,15 +149,15 @@ const UpdateVoucherModal = ({ voucher, onClose, onReload }) => {
                             <div className="w-full md:w-1/2 pl-2 mb-4">
                                 <label className="block text-sm font-medium text-gray-700 mb-3">Ngày kết thúc</label>
                                 <input
-                                    type="date"
+                                    type="datetime-local"
                                     name="endDate"
                                     min={today}
-                                    value={formState.endDate} // Giá trị lấy từ formState
+                                    value={formState.endDate || ""} // Đảm bảo giá trị là đúng định dạng yyyy-MM-ddTHH:mm
                                     onChange={handleChange}
                                     className="input input-bordered w-full"
-                                    required
                                 />
                             </div>
+
                         </div>
 
                         <div className="modal-action">
@@ -155,7 +165,6 @@ const UpdateVoucherModal = ({ voucher, onClose, onReload }) => {
                             <button type="button" className="btn btn-outline btn-sm" onClick={onClose}>Đóng</button>
                         </div>
                     </form>
-
                 </div>
             </dialog>
         </>

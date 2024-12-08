@@ -82,6 +82,7 @@ const CreateVoucherModal = ({ onClose, onReload }) => {
                                 <label className="block text-sm font-medium text-gray-700 mb-3">Mã Voucher</label>
                                 <div className="join w-full">
                                     <input
+                                        autoComplete="off"
                                         type="text"
                                         name="voucherCode"
                                         value={formState.voucherCode}
@@ -108,37 +109,10 @@ const CreateVoucherModal = ({ onClose, onReload }) => {
                                         value={formState.discountLevel}
                                         onChange={handleChange}
                                         className="input input-bordered w-full"
-                                        required
                                     />
                                 </div>
 
                                 {/* Giá giảm tối thiểu */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-3">Giá giảm tối thiểu</label>
-                                    <input
-                                        type="number"
-                                        name="leastDiscount"
-                                        value={formState.leastDiscount}
-                                        onChange={handleChange}
-                                        className="input input-bordered w-full"
-                                        required
-                                    />
-                                </div>
-
-                                {/* Giá giảm tối đa */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-3">Giá giảm tối đa</label>
-                                    <input
-                                        type="number"
-                                        name="biggestDiscount"
-                                        value={formState.biggestDiscount}
-                                        onChange={handleChange}
-                                        className="input input-bordered w-full"
-                                        required
-                                    />
-                                </div>
-
-                                {/* Hóa đơn tối thiểu */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-3">Hóa đơn tối thiểu</label>
                                     <input
@@ -147,7 +121,30 @@ const CreateVoucherModal = ({ onClose, onReload }) => {
                                         value={formState.leastBill}
                                         onChange={handleChange}
                                         className="input input-bordered w-full"
-                                        required
+                                    />
+                                </div>
+
+                                {/* Giá giảm tối đa */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-3">Giá giảm tối thiểu</label>
+                                    <input
+                                        type="number"
+                                        name="leastDiscount"
+                                        value={formState.leastDiscount}
+                                        onChange={handleChange}
+                                        className="input input-bordered w-full"
+                                    />
+                                </div>
+
+                                {/* Hóa đơn tối thiểu */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-3">Giá giảm tối đa</label>
+                                    <input
+                                        type="number"
+                                        name="biggestDiscount"
+                                        value={formState.biggestDiscount}
+                                        onChange={handleChange}
+                                        className="input input-bordered w-full"
                                     />
                                 </div>
 
@@ -155,13 +152,12 @@ const CreateVoucherModal = ({ onClose, onReload }) => {
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-3">Ngày bắt đầu</label>
                                     <input
-                                        type="date"
+                                        type="datetime-local"
                                         name="startDate"
                                         min={today}
                                         value={formState.startDate}
                                         onChange={handleChange}
                                         className="input input-bordered w-full"
-                                        required
                                     />
                                 </div>
 
@@ -169,13 +165,12 @@ const CreateVoucherModal = ({ onClose, onReload }) => {
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-3">Ngày kết thúc</label>
                                     <input
-                                        type="date"
+                                        type="datetime-local"
                                         name="endDate"
                                         min={today}
                                         value={formState.endDate}
                                         onChange={handleChange}
                                         className="input input-bordered w-full"
-                                        required
                                     />
                                 </div>
                             </div>

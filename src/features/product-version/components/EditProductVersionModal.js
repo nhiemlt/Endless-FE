@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import ProductVersionService from '../../../services/productVersionService';
-import AttributeSelectionModal from './AttributeSelectionModal'; // Nhập modal thuộc tính ở đây
 import UploadFileService from '../../../services/UploadFileService';
 import { showNotification } from '../../common/headerSlice';
 import ProductService from '../../../services/ProductService';
+import attributeService from '../../../services/attributeService';
 
 const EditProductVersionModal = ({ productVersion, onClose, onProductUpdated }) => {
-    const [isAttributeModalOpen, setAttributeModalOpen] = useState(false);
 
     const [productID, setProductID] = useState('');
     const [versionName, setVersionName] = useState('');
@@ -23,8 +22,9 @@ const EditProductVersionModal = ({ productVersion, onClose, onProductUpdated }) 
     const [error, setError] = useState('');
     const dispatch = useDispatch();
     const [products, setProducts] = useState([]); // State để lưu danh sách sản phẩm
-
-
+    const [attributesByGroup, setAttributesByGroup] = useState({});
+    const [activeAttribute, setActiveAttribute] = useState('');
+    const [selectedAttributeValues, setSelectedAttributeValues] = useState([]);
 
     // Gọi API để lấy danh sách sản phẩm
     useEffect(() => {
@@ -44,7 +44,6 @@ const EditProductVersionModal = ({ productVersion, onClose, onProductUpdated }) 
     useEffect(() => {
         if (productVersion) {
 
-            console.log("Product Version data:", productVersion); // Kiểm tra dữ liệu đầu vào
             setProductID(productVersion.product?.productID || '');
             setVersionName(productVersion.versionName || '');
             setPrice(productVersion.price || 0);
@@ -54,16 +53,14 @@ const EditProductVersionModal = ({ productVersion, onClose, onProductUpdated }) 
             setLength(productVersion.length || 0);
             setWidth(productVersion.width || 0);
             setImage(productVersion.image || '');
-            // setAttributes(productVersion.attributes || []);
 
-            setAttributes(
-                productVersion.versionAttributes?.map(attr => ({
-                    attributeName: attr.attributeName,
-                    attributeValue: attr.attributeValue,
-                    attributeValueID: attr.attributeValueID,
-                    isChecked: true // hoặc false nếu mặc định là chưa chọn
-                })) || []
-            );
+
+            const selectedValues = productVersion.versionAttributes?.map(attr => attr.attributeValueID) || [];
+            console.log("Selected Values from productVersion:", selectedValues); // Kiểm tra giá trị từ productVersion
+            setSelectedAttributeValues(selectedValues);
+
+
+
             // Cập nhật ảnh xem trước nếu có ảnh từ productVersion
             setPreviewLogo(productVersion.image || '');
         }
@@ -90,30 +87,6 @@ const EditProductVersionModal = ({ productVersion, onClose, onProductUpdated }) 
             }
         }
     };
-    const openAttributeModal = () => {
-        setAttributeModalOpen(true);
-    };
-
-    const handleAddAttribute = (newAttribute) => {
-        // console.log("Adding new attribute:", newAttribute); // Kiểm tra dữ liệu thuộc tính thêm mới
-        const existingAttribute = attributes.find(
-            (attr) => attr.attributeName === newAttribute.attributeName
-        );
-        if (existingAttribute) {
-            setError(`Thuộc tính ${newAttribute.attributeName} đã được thêm.`);
-        } else {
-            // Thêm thuộc tính mới với attributeValueID
-            setAttributes((prevAttributes) => [
-                ...prevAttributes,
-                {
-                    ...newAttribute,
-                    isChecked: false,
-                    attributeValueID: newAttribute.attributeValueID // Lưu lại attributeValueID
-                }]);
-            setAttributeModalOpen(false);
-            setError('');
-        }
-    };
 
     const resetImage = () => {
         setPreviewLogo(null);
@@ -131,13 +104,7 @@ const EditProductVersionModal = ({ productVersion, onClose, onProductUpdated }) 
             return; // Dừng thực hiện nếu có lỗi
         }
 
-        const selectedAttributes = attributes.filter((attr) => attr.isChecked);
-        const selectedAttributeValueID = selectedAttributes.map(attr => attr.attributeValueID);
-
-        // if (selectedAttributes.length === 0) {
-        //     setError('Vui lòng chọn ít nhất một thuộc tính');
-        //     return;
-        // }
+        const selectedAttributeValueID = selectedAttributeValues;  // Không cần phải lọc lại attributes
 
         // Upload ảnh nếu có thay đổi
         if (previewLogo) {
@@ -164,7 +131,7 @@ const EditProductVersionModal = ({ productVersion, onClose, onProductUpdated }) 
             attributeValueID: selectedAttributeValueID,
             image: image,
         };
-        console.log("Updated data to submit:", updatedProductVersionData); // Xác nhận dữ liệu
+
 
         try {
             const result = await ProductVersionService.updateProductVersion(productVersion.productVersionID, updatedProductVersionData);
@@ -178,15 +145,89 @@ const EditProductVersionModal = ({ productVersion, onClose, onProductUpdated }) 
             } else {
                 dispatch(showNotification({ message: 'Cập nhật phiên bản sản phẩm thất bại!', status: 0 }));
             }
-            // dispatch(showNotification({ message: 'Cập nhật phiên bản sản phẩm thất bại!', status: 0 }));
-            // setError('Có lỗi xảy ra khi cập nhật phiên bản sản phẩm.');
-            // console.error("Error updating product version:", error.response?.data || error.message);
             setError('Có lỗi xảy ra khi cập nhật phiên bản sản phẩm.');
 
         }
-        console.log(productVersion.productVersionID);
 
     };
+    useEffect(() => {
+        const fetchAttributes = async () => {
+            try {
+                const response = await attributeService.getAttributes();
+                const attributes = response?.data || [];
+
+                const groupedAttributes = attributes.reduce((acc, attr) => {
+                    const groupName = attr?.attributeName ?? 'Khác';
+                    if (!acc[groupName]) acc[groupName] = [];
+                    acc[groupName] = [...acc[groupName], ...(attr.attributeValues || [])];
+                    return acc;
+                }, {});
+
+                setAttributesByGroup(groupedAttributes); // Cập nhật state attributesByGroup
+                setActiveAttribute(Object.keys(groupedAttributes)[0] || ''); // Đặt active tab
+            } catch (error) {
+                console.error('Lỗi khi lấy danh sách thuộc tính:', error);
+                dispatch(showNotification({ message: 'Lỗi khi lấy danh sách thuộc tính!', status: 0 }));
+            }
+        };
+
+        fetchAttributes();
+    }, []); // Chạy khi component mount lần đầu
+
+
+    const renderAttributeTabs = () => {
+        return Object.keys(attributesByGroup).map((attributeName, index) => (
+            <button
+                key={index}
+                className={`tab ${activeAttribute === attributeName ? 'tab-active' : ''}`}
+                onClick={(e) => handleTabClick(e, attributeName)}
+            >
+                {attributeName}
+            </button>
+        ));
+    };
+
+    const renderAttributeValues = () => {
+        if (!activeAttribute || !attributesByGroup[activeAttribute]) return null;
+
+        return attributesByGroup[activeAttribute].map((valueObj, index) => (
+            <label key={`${valueObj.attributeValueID}-${index}`} className="flex items-center space-x-2">
+                <input
+                    type="checkbox"
+                    checked={selectedAttributeValues.includes(valueObj.attributeValueID)}  // Kiểm tra lại điều kiện này
+                    onChange={() => handleCheckboxChange(valueObj.attributeValueID)}
+                />
+                <span>{valueObj.attributeValue}</span>
+            </label>
+        ));
+    };
+
+    const handleTabClick = (e, attributeName) => {
+        e.preventDefault(); // Ngăn chặn reload trang
+        setActiveAttribute(attributeName);
+    };
+
+    const handleCheckboxChange = (valueID) => {
+        setSelectedAttributeValues((prev) => {
+            // Lấy thuộc tính đang được chọn
+            const currentAttributeValues = attributesByGroup[activeAttribute] || [];
+
+            // Kiểm tra nếu chỉ có một giá trị được chọn
+            const isAlreadySelected = prev.includes(valueID);
+
+            if (!isAlreadySelected) {
+                // Bỏ chọn tất cả các giá trị của thuộc tính hiện tại
+                const newSelectedValues = prev.filter((id) => !currentAttributeValues.some(attr => attr.attributeValueID === id));
+                return [...newSelectedValues, valueID];
+            } else {
+                // Nếu giá trị đã được chọn, thì bỏ chọn nó
+                return prev.filter((id) => id !== valueID);
+            }
+        });
+    };
+
+
+
 
     return (
         <>
@@ -195,39 +236,55 @@ const EditProductVersionModal = ({ productVersion, onClose, onProductUpdated }) 
                 <div className="modal-box w-11/12 max-w-4xl">
                     <h3 className="font-bold text-lg">Chỉnh Sửa Phiên Bản Sản Phẩm</h3>
                     <form className="mt-4" onSubmit={handleSubmit}>
-                        <div className="grid grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Hình ảnh */}
+                            <div className="mb-4">
+                                <input id="logoInput" type="file" onChange={handleImageChange} className="hidden" />
+                                <div className="h-40 flex justify-center items-center rounded-lg bg-cover cursor-pointer"
+                                    onClick={() => document.getElementById('logoInput').click()}>
+                                    {previewLogo ? (
+                                        <img src={previewLogo} alt="Tải ảnh thất bại" className="h-full object-cover rounded-lg" />
+                                    ) : (
+                                        <span className="text-gray-400 opacity-75"> <img
+                                            className="w-24"
+                                            src="https://icons.veryicon.com/png/o/miscellaneous/user-interface-flat-multicolor/5725-select-image.png"
+                                            alt="Tải lên hình ảnh"
+                                        /></span>
+                                    )}
+                                </div>
+                            </div>
+                            <div>
+                                <label >
+                                    <span className="block text-sm font-medium mb-2">Chọn Sản Phẩm</span>
+                                    <select
+                                        className="select select-bordered w-full"
+                                        required
+                                        value={productID}
+                                        onChange={(e) => setProductID(e.target.value)}
+                                    >
+                                        <option value="">Chọn Sản Phẩm</option>
+                                        {products.map((product, index) => (
+                                            <option key={product.productID || index} value={product.productID}>
+                                                {product.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </label>
 
-                            <label >
-                                <span className="block text-sm font-medium mb-2">Chọn Sản Phẩm</span>
-                                <select
-                                    className="select select-bordered w-full"
-                                    required
-                                    value={productID}
-                                    onChange={(e) => setProductID(e.target.value)}
-                                >
-                                    <option value="">Chọn Sản Phẩm</option>
-                                    {products.map((product, index) => (
-                                        <option key={product.productID || index} value={product.productID}>
-                                            {product.name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </label>
-
-                            {/* Tên Phiên Bản */}
-                            <label>
-                                <span className="block text-sm font-medium mb-2">Tên Phiên Bản</span>
-                                <input
-                                    type="text"
-                                    placeholder="Tên Phiên Bản"
-                                    className={`input input-bordered w-full ${error && versionName && error.includes("Tên phiên bản") ? "border-red-500" : ""
-                                        }`}
-                                    value={versionName}
-                                    onChange={(e) => setVersionName(e.target.value)}
-                                    required
-                                />
-                            </label>
-
+                                {/* Tên Phiên Bản */}
+                                <label>
+                                    <span className="block text-sm font-medium mb-2">Tên Phiên Bản</span>
+                                    <input
+                                        type="text"
+                                        placeholder="Tên Phiên Bản"
+                                        className={`input input-bordered w-full ${error && versionName && error.includes("Tên phiên bản") ? "border-red-500" : ""
+                                            }`}
+                                        value={versionName}
+                                        onChange={(e) => setVersionName(e.target.value)}
+                                        required
+                                    />
+                                </label>
+                            </div>
                             {/* Giá Bán */}
                             <label>
                                 <span className="block text-sm font-medium mb-2">Giá Gốc</span>
@@ -277,155 +334,144 @@ const EditProductVersionModal = ({ productVersion, onClose, onProductUpdated }) 
                                     required
                                 />
                             </label>
+                            <div className="grid grid-cols-4 gap-6 col-span-2">
 
-                            {/* Trọng Lượng */}
-                            <label>
-                                <span className="block text-sm font-medium mb-2">Trọng Lượng</span>
-                                <input
-                                    type="number"
-                                    placeholder="Trọng Lượng"
-                                    className="input input-bordered w-full"
-                                    value={weight}
-                                    onChange={(e) => {
-                                        const value = Number(e.target.value);
-                                        if (value >= 0 && value <= 1_000_000_000) {
-                                            setWeight(value);
-                                        } else {
-                                            dispatch(
-                                                showNotification({
-                                                    message: "Trọng lượng phải lớn hơn hoặc bằng 0 và không vượt quá 1 tỷ",
-                                                    status: 0,
-                                                })
-                                            );
-                                        }
-                                    }}
-                                    required
-                                />
-                            </label>
+                                {/* Trọng Lượng */}
+                                <label>
+                                    <span className="block text-sm font-medium mb-2">Trọng Lượng</span>
+                                    <input
+                                        type="number"
+                                        placeholder="Trọng Lượng"
+                                        className="input input-bordered w-full"
+                                        value={weight}
+                                        onChange={(e) => {
+                                            const value = Number(e.target.value);
+                                            if (value >= 0 && value <= 1_000_000_000) {
+                                                setWeight(value);
+                                            } else {
+                                                dispatch(
+                                                    showNotification({
+                                                        message: "Trọng lượng phải lớn hơn hoặc bằng 0 và không vượt quá 1 tỷ",
+                                                        status: 0,
+                                                    })
+                                                );
+                                            }
+                                        }}
+                                        required
+                                    />
+                                </label>
+                                {/* Chiều Cao */}
+                                <label>
+                                    <span className="block text-sm font-medium mb-2">Chiều Cao</span>
+                                    <input
+                                        type="number"
+                                        placeholder="Chiều Cao"
+                                        className="input input-bordered w-full"
+                                        value={height}
+                                        onChange={(e) => {
+                                            const value = Number(e.target.value);
+                                            if (value >= 0 && value <= 1_000_000_000) {
+                                                setHeight(value);
+                                            } else {
+                                                dispatch(
+                                                    showNotification({
+                                                        message: "Chiều cao phải lớn hơn hoặc bằng 0 và không vượt quá 1 tỷ",
+                                                        status: 0,
+                                                    })
+                                                );
+                                            }
+                                        }}
+                                        required
+                                    />
+                                </label>
 
-                            {/* Chiều Cao */}
-                            <label>
-                                <span className="block text-sm font-medium mb-2">Chiều Cao</span>
-                                <input
-                                    type="number"
-                                    placeholder="Chiều Cao"
-                                    className="input input-bordered w-full"
-                                    value={height}
-                                    onChange={(e) => {
-                                        const value = Number(e.target.value);
-                                        if (value >= 0 && value <= 1_000_000_000) {
-                                            setHeight(value);
-                                        } else {
-                                            dispatch(
-                                                showNotification({
-                                                    message: "Chiều cao phải lớn hơn hoặc bằng 0 và không vượt quá 1 tỷ",
-                                                    status: 0,
-                                                })
-                                            );
-                                        }
-                                    }}
-                                    required
-                                />
-                            </label>
+                                {/* Chiều Dài */}
+                                <label>
+                                    <span className="block text-sm font-medium mb-2">Chiều Dài</span>
+                                    <input
+                                        type="number"
+                                        placeholder="Chiều Dài"
+                                        className="input input-bordered w-full"
+                                        value={length}
+                                        onChange={(e) => {
+                                            const value = Number(e.target.value);
+                                            if (value >= 0 && value <= 1_000_000_000) {
+                                                setLength(value);
+                                            } else {
+                                                dispatch(
+                                                    showNotification({
+                                                        message: "Chiều dài phải lớn hơn hoặc bằng 0 và không vượt quá 1 tỷ",
+                                                        status: 0,
+                                                    })
+                                                );
+                                            }
+                                        }}
+                                        required
+                                    />
+                                </label>
 
-                            {/* Chiều Dài */}
-                            <label>
-                                <span className="block text-sm font-medium mb-2">Chiều Dài</span>
-                                <input
-                                    type="number"
-                                    placeholder="Chiều Dài"
-                                    className="input input-bordered w-full"
-                                    value={length}
-                                    onChange={(e) => {
-                                        const value = Number(e.target.value);
-                                        if (value >= 0 && value <= 1_000_000_000) {
-                                            setLength(value);
-                                        } else {
-                                            dispatch(
-                                                showNotification({
-                                                    message: "Chiều dài phải lớn hơn hoặc bằng 0 và không vượt quá 1 tỷ",
-                                                    status: 0,
-                                                })
-                                            );
-                                        }
-                                    }}
-                                    required
-                                />
-                            </label>
+                                {/* Chiều Rộng */}
+                                <label>
+                                    <span className="block text-sm font-medium mb-2">Chiều Rộng</span>
+                                    <input
+                                        type="number"
+                                        placeholder="Chiều Rộng"
+                                        className="input input-bordered w-full"
+                                        value={width}
+                                        onChange={(e) => {
+                                            const value = Number(e.target.value);
+                                            if (value >= 0 && value <= 1_000_000_000) {
+                                                setWidth(value);
+                                            } else {
+                                                dispatch(
+                                                    showNotification({
+                                                        message: "Chiều rộng phải lớn hơn hoặc bằng 0 và không vượt quá 1 tỷ",
+                                                        status: 0,
+                                                    })
+                                                );
+                                            }
+                                        }}
+                                        required
+                                    />
+                                </label>
 
-                            {/* Chiều Rộng */}
-                            <label>
-                                <span className="block text-sm font-medium mb-2">Chiều Rộng</span>
-                                <input
-                                    type="number"
-                                    placeholder="Chiều Rộng"
-                                    className="input input-bordered w-full"
-                                    value={width}
-                                    onChange={(e) => {
-                                        const value = Number(e.target.value);
-                                        if (value >= 0 && value <= 1_000_000_000) {
-                                            setWidth(value);
-                                        } else {
-                                            dispatch(
-                                                showNotification({
-                                                    message: "Chiều rộng phải lớn hơn hoặc bằng 0 và không vượt quá 1 tỷ",
-                                                    status: 0,
-                                                })
-                                            );
-                                        }
-                                    }}
-                                    required
-                                />
-                            </label>
-                            {/* Hình ảnh */}
-                            <div className="mb-4">
-                                <input id="logoInput" type="file" onChange={handleImageChange} className="hidden" />
-                                <div className="h-40 flex justify-center items-center rounded-lg bg-cover cursor-pointer"
-                                    onClick={() => document.getElementById('logoInput').click()}>
-                                    {previewLogo ? (
-                                        <img src={previewLogo} alt="Tải ảnh thất bại" className="h-full object-cover rounded-lg" />
-                                    ) : (
-                                        <span className="text-gray-400 opacity-75"> <img
-                                            className="w-24"
-                                            src="https://icons.veryicon.com/png/o/miscellaneous/user-interface-flat-multicolor/5725-select-image.png"
-                                            alt="Tải lên hình ảnh"
-                                        /></span>
-                                    )}
-                                </div>
                             </div>
 
-                            {/* Chọn thuộc tính */}
-                            <div className="mb-4">
-                                <h4 className="font-bold">Chọn Thuộc Tính:</h4>
-                                <div className="grid grid-cols-2 gap-4">
-                                    {attributes.map((attr, index) => (
-                                        <div key={index} className="flex items-center">
-                                            <input
-                                                type="checkbox"
-                                                checked={attr.isChecked}
-                                                onChange={() => {
-                                                    const updatedAttributes = [...attributes];
-                                                    updatedAttributes[index] = {
-                                                        ...updatedAttributes[index],
-                                                        isChecked: !updatedAttributes[index].isChecked,
-                                                    };
-                                                    setAttributes(updatedAttributes);
-                                                }}
-                                                className="mr-2"
-                                            />
-                                            <span>{`${attr.attributeName}: ${attr.attributeValue}`}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                                {error && <p className="text-red-500">{error}</p>}
-                            </div>
 
                         </div>
 
+                        {/* Chọn thuộc tính */}
+                        <div className="border border-gray-300 shadow-lg rounded-lg p-5 mt-5 bg-base-100">
+                            {/* Tabs */}
+                            <div role="tablist" className="tabs tabs-boxed mb-5 overflow-x-auto whitespace-nowrap">
+                                {renderAttributeTabs()}
+                            </div>
+
+                            {/* Hiển thị giá trị của thuộc tính */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {renderAttributeValues()}
+                            </div>
+
+                            {/* Nút chọn tất cả */}
+                            <div className="flex justify-between items-center mt-4">
+                                <span className="text-sm text-gray-500">
+                                    {/* Hiển thị các giá trị thuộc tính đã chọn */}
+                                    {`Những giá trị thuộc tính đã chọn: ${selectedAttributeValues.length > 0
+                                        ? selectedAttributeValues
+                                            .map(valueID => {
+                                                // Lấy giá trị thuộc tính từ selectedAttributeValues (lấy từ ID)
+                                                const attribute = Object.values(attributesByGroup)
+                                                    .flat() // Flatten tất cả các thuộc tính
+                                                    .find(attr => attr.attributeValueID === valueID);
+                                                return attribute ? attribute.attributeValue : ''; // Trả về giá trị thuộc tính
+                                            })
+                                            .join(', ') // Nối các giá trị lại với nhau
+                                        : 'Chưa có giá trị nào được chọn'}`}
+                                </span>
+                            </div>
+                        </div>
+
                         <div className="modal-action mt-4">
-                            <button type="button" className="btn btn-outline btn-sm btn-primary" onClick={() => setAttributeModalOpen(true)}>
-                                Thêm thuộc tính
-                            </button>
                             <button type="submit" className="btn btn-outline btn-sm btn-primary">Cập nhật</button>
                             <button type="button" className="btn btn-outline btn-sm btn-secondary" onClick={onClose}>Đóng</button>
                         </div>
@@ -433,13 +479,7 @@ const EditProductVersionModal = ({ productVersion, onClose, onProductUpdated }) 
                 </div>
             </dialog>
 
-            {isAttributeModalOpen && (
-                <AttributeSelectionModal
-                    isOpen={isAttributeModalOpen}
-                    onClose={() => setAttributeModalOpen(false)}
-                    onAddAttribute={handleAddAttribute}
-                />
-            )}
+
         </>
     );
 };

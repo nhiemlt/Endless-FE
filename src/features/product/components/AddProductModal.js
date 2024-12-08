@@ -72,9 +72,6 @@ const AddProductModal = ({ onClose, onProductAdded }) => {
 
 
 
-
-
-
     const resetForm = () => {
         setProductName('');
         setDescription('');

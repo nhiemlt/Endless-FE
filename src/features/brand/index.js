@@ -47,13 +47,14 @@ function BrandPage() {
   }, [currentPage, size, searchKeyword]);
 
   const handleBrandAdded = (newBrand) => {
-    setBrands([...brands, newBrand]);
-    loadBrands();
+    // Thêm thương hiệu mới vào đầu danh sách
+    setBrands([newBrand, ...brands]);
+    // loadBrands(); // Tải lại danh sách thương hiệu từ server
   };
+
 
   const handleBrandUpdated = (updatedBrand) => {
     setBrands(brands.map(b => (b.brandID === updatedBrand.brandID ? updatedBrand : b)));
-    loadBrands();
   };
 
   const confirmDelete = (brand) => {

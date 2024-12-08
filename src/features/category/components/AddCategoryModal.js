@@ -2,9 +2,8 @@ import React, { useState } from 'react';
 import CategoryService from '../../../services/CategoryService'; // Đường dẫn dịch vụ danh mục
 import { showNotification } from '../../common/headerSlice'; // Đường dẫn đúng
 import { useDispatch } from 'react-redux';
-
 const AddCategoryModal = ({ onClose, onCategoryAdded }) => {
-    const [categoryName, setCategoryName] = useState(''); // Chỉ giữ lại trường tên danh mục
+    const [categoryName, setCategoryName] = useState('');
     const dispatch = useDispatch();
 
     const handleSubmit = async (e) => {
@@ -13,6 +12,7 @@ const AddCategoryModal = ({ onClose, onCategoryAdded }) => {
             dispatch(showNotification({ message: 'Tên danh mục không được để trống!', status: 0 }));
             return;
         }
+
         try {
             const newCategory = { name: categoryName };
             const createdCategory = await CategoryService.createCategory(newCategory);
@@ -23,17 +23,18 @@ const AddCategoryModal = ({ onClose, onCategoryAdded }) => {
         } catch (error) {
             console.error("Lỗi khi thêm danh mục:", error);
 
-            // Xử lý thông báo cụ thể
             if (error.message.includes("Tên danh mục đã tồn tại")) {
                 dispatch(showNotification({ message: 'Tên danh mục đã tồn tại!', status: 0 }));
+            } else if (error.message.includes("Thông tin không hợp lệ")) {
+                dispatch(showNotification({ message: 'Thông tin không hợp lệ, vui lòng kiểm tra lại!', status: 0 }));
             } else {
-                dispatch(showNotification({ message: 'Thêm danh mục không thành công!', status: 0 }));
+                dispatch(showNotification({ message: 'Thêm danh mục không thành công, vui lòng thử lại!', status: 0 }));
             }
         }
     };
 
     const resetForm = () => {
-        setCategoryName(''); // Đặt lại tên danh mục
+        setCategoryName('');
     };
 
     return (
@@ -44,12 +45,13 @@ const AddCategoryModal = ({ onClose, onCategoryAdded }) => {
                     <h3 className="font-bold text-lg">Thêm Danh Mục</h3>
                     <form className='mt-4' onSubmit={handleSubmit}>
                         <div className="mb-4">
+                            <label htmlFor="categoryName" className="block text-sm font-medium text-gray-700">Tên danh mục</label>
                             <input
                                 type="text"
                                 value={categoryName}
                                 onChange={(e) => setCategoryName(e.target.value)}
                                 placeholder="Tên danh mục"
-                                className="input input-bordered w-full"
+                                className="input input-bordered w-full mt-1"
                                 required
                             />
                         </div>
@@ -64,5 +66,6 @@ const AddCategoryModal = ({ onClose, onCategoryAdded }) => {
         </>
     );
 };
+
 
 export default AddCategoryModal;

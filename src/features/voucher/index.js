@@ -34,12 +34,12 @@ function Vouchers() {
 
             const fetchedVouchers = response.content;
             setTotalPages(response.totalPages);
-
+            console.log(response);
             if (Array.isArray(fetchedVouchers)) {
                 const formattedVouchers = fetchedVouchers.map((voucher) => ({
                     ...voucher,
-                    startDate: moment(voucher.startDate).format("DD-MM-YYYY"),
-                    endDate: moment(voucher.endDate).format("DD-MM-YYYY"),
+                    startDate: moment(voucher.startDate).format("DD-MM-yyyy HH:mm"),
+                    endDate: moment(voucher.endDate).format("DD-MM-yyyy HH:mm"),
 
                 }));
                 setVouchers(formattedVouchers);
