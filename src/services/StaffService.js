@@ -18,13 +18,6 @@ const StaffService = {
     return response.data;
   },
 
-  getEmployeeById: async (userId) => {
-    const response = await axios.get(
-      `${constants.API_BASE_URL}/api/employees/${userId}`
-    );
-    return response.data;
-  },
-
   addEmployee: async (employeeData) => {
     try {
       const response = await axios.post(
