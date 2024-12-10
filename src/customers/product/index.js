@@ -206,6 +206,7 @@ function Product() {
             }}
             className="mt-3 rounded border-gray-300 text-sm select select-secondary w-full max-w-xs dark:text-white text-gray-900"
           >
+            <option value="">-- Chọn sắp xếp  --</option>
             <option value="discountPrice, ASC">Giá khuyến mãi - Tăng dần</option>
             <option value="discountPrice, DESC">Giá khuyến mãi - Giảm dần</option>
             <option value="numberOfReviews, ASC">Lượt đánh giá - Tăng dần</option>

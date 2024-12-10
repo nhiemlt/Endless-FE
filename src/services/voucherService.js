@@ -63,6 +63,24 @@ const VoucherService = {
         if (error.response) {
             // Lỗi từ server (có phản hồi từ phía server)
             console.error('Error response:', error.response.data);
+
+            // Kiểm tra nếu phản hồi từ backend là một Map<String, String> (thường là các lỗi xác thực)
+            if (error.response.data && typeof error.response.data === 'object') {
+                // Nếu là một đối tượng (thường là Map<String, String>), kết hợp thông báo lỗi
+                const errorMessages = Object.entries(error.response.data)
+                    .map(([field, message]) => `${field}: ${message}`)
+                    .join(", ");
+
+                // Thay vì ném lỗi với thông báo chung, trả về lỗi chi tiết
+                throw new Error(errorMessages);
+            }
+
+            // Nếu backend trả về thông báo lỗi là chuỗi đơn giản
+            if (typeof error.response.data === 'string') {
+                throw new Error(error.response.data);  // Lỗi trả về đơn giản (ví dụ: "Đã xảy ra lỗi trong quá trình xử lý yêu cầu")
+            }
+
+            // Nếu không có lỗi chi tiết từ backend, ném thông báo lỗi mặc định
             throw new Error(error.response.data.message || 'An error occurred on the server');
         } else if (error.request) {
             // Không có phản hồi từ server
@@ -74,6 +92,7 @@ const VoucherService = {
             throw new Error('An error occurred while setting up the request');
         }
     },
+
 };
 
 export default VoucherService;

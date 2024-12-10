@@ -11,13 +11,13 @@ const UpdateVoucherModal = ({ voucher, onClose, onReload }) => {
         if (dateString) {
             // Tách chuỗi ngày tháng và giờ ra từng phần
             const [day, month, year, hours, minutes] = dateString.split(/[- :]/);
-    
+
             // Chuyển đổi thành định dạng yyyy-MM-ddTHH:mm
             return `${year}-${month}-${day}T${hours}:${minutes}`;
         }
         return ""; // Nếu không có giá trị, trả về chuỗi rỗng
     };
-    
+
 
     const today = new Date().toISOString().split("T")[0];
 
@@ -53,16 +53,25 @@ const UpdateVoucherModal = ({ voucher, onClose, onReload }) => {
             endDate,
         };
         console.log(updatedVoucher);
+
         try {
             await VoucherService.updateVoucher(voucher.voucherID, updatedVoucher);
             dispatch(showNotification({ message: "Cập nhật voucher thành công", status: 1 }));
             onClose();
             onReload();
         } catch (error) {
-            dispatch(showNotification({ message: "Lỗi khi cập nhật voucher", status: 0 }));
+            // Hiển thị lỗi chi tiết từ backend
+            const errorMessage = error.message || "Lỗi khi cập nhật voucher";
+            if (errorMessage.includes(':')) {
+                const errorMessages = errorMessage.split(', ').map((msg) => msg.trim());
+                errorMessages.forEach((msg) => {
+                    dispatch(showNotification({ message: `Lỗi: ${msg}`, status: 0 }));
+                });
+            } else {
+                dispatch(showNotification({ message: `Lỗi: ${errorMessage}`, status: 0 }));
+            }
         }
     };
-
 
     return (
         <>
