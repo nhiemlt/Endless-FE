@@ -19,21 +19,18 @@ function Header() {
     useCurrentUser();
 
     // Hàm long polling
-    const longPolling = async (isPolling) => {
-        while (isPolling.current) {
-            await dispatch(fetchUnreadCount());
+    const longPolling = async () => {
+        while (true) {
+            dispatch(fetchUnreadCount());
             await new Promise(resolve => setTimeout(resolve, 5000));
         }
     };
     
     useEffect(() => {
-        const isPolling = { current: true };
-        longPolling(isPolling);
-    
-        return () => {
-            isPolling.current = false; // Dừng polling khi component unmount
-        };
-    }, [dispatch]);
+        if (userInfo) { // Chỉ chạy longPolling nếu người dùng đã đăng nhập
+            longPolling();
+        }
+    }, [dispatch, userInfo]);
 
     // Hàm để thay đổi theme
     const toggleTheme = () => {

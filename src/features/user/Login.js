@@ -99,9 +99,9 @@ function Login() {
                 if (token) {
                     const expires = new Date();
                     if (loginObj.remember) {
-                        expires.setTime(expires.getTime() + 24 * 60 * 60 * 1000); // 1 ngày
+                        expires.setTime(expires.getTime() + 15 * 24 * 60 * 60 * 1000); // 1 ngày
                     } else {
-                        expires.setTime(expires.getTime() + 30 * 60 * 1000); // 30 phút
+                        expires.setTime(expires.getTime() + 60 * 60 * 1000); // 30 phút
                     }
                     document.cookie = `token=${token}; path=/; expires=${expires.toUTCString()};`;
                     setAlert({ type: "success", message: "Đăng nhập thành công!" });
@@ -161,13 +161,13 @@ function Login() {
                     setTimeout(() => {
                         navigate("/app/welcome");
                         window.location.reload();
-                    }, 50);
+                    }, 100);
                 }
                 else {
                     setTimeout(() => {
                         navigate("/home");
                         window.location.reload();
-                    }, 50);
+                    }, 100);
                 }
                 window.location.reload();
             }

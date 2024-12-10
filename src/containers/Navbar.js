@@ -21,7 +21,7 @@ function Navbar() {
 
     const longPolling = async () => {
         while (true) {
-            await dispatch(fetchUnreadCount());
+            dispatch(fetchUnreadCount());
             await new Promise(resolve => setTimeout(resolve, 5000));
         }
     };
@@ -54,7 +54,7 @@ function Navbar() {
         deleteCookie("token");
         window.location.href = '/login';
     };
-
+    
     useEffect(() => {
         // Hàm gọi API để lấy tổng số lượng sản phẩm
         const fetchTotalCartQuantity = async () => {
@@ -65,13 +65,16 @@ function Navbar() {
                 console.error("Lỗi khi lấy số lượng sản phẩm trong giỏ hàng:", error);
             }
         };
-
-        // Gọi hàm fetchTotalCartQuantity mỗi 3 giây
-        const intervalId = setInterval(fetchTotalCartQuantity, 1000);
-
-        // Xóa interval khi component unmount
-        return () => clearInterval(intervalId);
-    }, []);
+    
+        // Chỉ thực hiện polling nếu người dùng đã đăng nhập
+        if (userInfo) {
+            // Gọi hàm fetchTotalCartQuantity mỗi 3 giây
+            const intervalId = setInterval(fetchTotalCartQuantity, 3000);
+    
+            // Xóa interval khi component unmount
+            return () => clearInterval(intervalId);
+        }
+    }, [userInfo]); // Thêm `userInfo` vào dependency array    
 
     return (
         <div className="lg:px-32 navbar bg-base-100 sticky top-0 z-10 shadow-md">
