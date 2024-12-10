@@ -46,18 +46,21 @@ function CategoryPage() {
       setLoading(false);
     }
   };
-
   const handleCategoryAdded = (newCategory) => {
-    setCategories([...categories, newCategory]);
+    setCategories([newCategory, ...categories]); // Đưa category mới vào đầu danh sách
     setShowAddModal(false);
-    fetchCategories();
   };
+
 
   const handleCategoryUpdated = (updatedCategory) => {
-    setCategories(categories.map(c => (c.categoryID === updatedCategory.categoryID ? updatedCategory : c)));
-    setShowEditModal(false);
-    fetchCategories();
+    setCategories((prevCategories) =>
+      prevCategories.map((category) =>
+        category.categoryID === updatedCategory.categoryID ? updatedCategory : category
+      )
+    );
+    setShowEditModal(false); // Đóng modal chỉnh sửa
   };
+
 
   const handleDelete = (id) => {
     setDeleteCategoryId(id);

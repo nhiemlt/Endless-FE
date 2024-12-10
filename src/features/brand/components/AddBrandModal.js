@@ -32,6 +32,11 @@ const AddBrandModal = ({ onClose, onBrandAdded }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        // Kiểm tra nếu chưa chọn logo
+        if (!brandLogo) {
+            dispatch(showNotification({ message: 'Vui lòng nhập logo cho thương hiệu!', status: 0 }));
+            return; // Dừng lại nếu không có logo
+        }
         try {
             if (!brandLogo) {
                 throw new Error("Logo is required");
@@ -69,12 +74,14 @@ const AddBrandModal = ({ onClose, onBrandAdded }) => {
                     <h3 className="font-bold text-lg">Thêm Thương Hiệu</h3>
                     <form className='mt-4' onSubmit={handleSubmit}>
                         <div className="mb-4">
+                            <label htmlFor="categoryName" className="block text-sm font-medium text-gray-700">Tên thương hiệu</label>
+
                             <input
                                 type="text"
                                 value={brandName}
                                 onChange={(e) => setBrandName(e.target.value)}
                                 placeholder="Tên thương hiệu"
-                                className="input input-bordered w-full"
+                                className="input input-bordered w-full mt-1"
                                 required
                             />
                         </div>
