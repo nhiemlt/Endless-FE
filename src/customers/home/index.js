@@ -13,6 +13,8 @@ import PhoneArrowUpRightIcon from '@heroicons/react/24/outline/PhoneArrowUpRight
 import productVersionService from "../../services/productVersionService";
 import CartService from "../../services/CartService";
 import TopSellerByCategory from "./components/TopSellByCategory"
+import TopSellingProducts from './components/getTopSellingProductVersions';
+
 
 
 const Home = ({ categoryID }) => {
@@ -100,16 +102,16 @@ const Home = ({ categoryID }) => {
     // Cuộn tới phần tử có ref 'productsSectionRef'
     productsSectionRef.current?.scrollIntoView({ behavior: "smooth" });
   };
-
   return (
     <div>
       <main className="flex flex-col gap-y-20 w-full">
 
-{/* Phần khám giá Endless */}
+        {/* Khám Phá Endless Section */}
         <section className="container p-5 mb-2">
           <div className="bg-white dark:bg-base-100 flex relative items-center overflow-hidden">
-            <div className="container mx-auto px-6 flex relative py-16">
-              <div className="sm:w-2/3 lg:w-2/5 flex flex-col relative">
+            <div className="container mx-auto px-6 py-16 flex relative">
+              {/* Left Section: Text Content */}
+              <div className="sm:w-1/2 lg:w-1/2 flex flex-col relative">
                 <h4 className="font-bebas-neue uppercase text-5xl sm:text-5xl font-black flex flex-col leading-none dark:text-white text-gray-900">
                   Khám Phá
                   <span className="text-7xl sm:text-7xl">ENDLESS</span>
@@ -126,28 +128,27 @@ const Home = ({ categoryID }) => {
                       e.preventDefault();
                       scrollToProducts(); // Gọi hàm cuộn xuống
                     }}
-                    className="uppercase py-2 px-4 rounded-lg bg-pink-500 border-2 border-transparent text-white text-md mr-4 hover:bg-pink-400"
+                    className="uppercase py-2 px-4 rounded-lg bg-pink-500 border-2 border-transparent font-bold text-white text-md mr-4 hover:bg-pink-400"
                   >
                     Bắt đầu ngay
                   </a>
                 </div>
               </div>
-              <div className="hidden sm:block sm:w-1/3 lg:w-3/5 relative">
-                <img
-                  src="https://www.tailwind-kit.com/images/object/10.png"
-                  className="max-w-xs md:max-w-sm m-auto"
-                  alt="Watch"
-                />
+
+              {/* Right Section: TopSellingProducts Component */}
+              <div className="sm:w-1/2 lg:w-1/2 relative">
+                <TopSellingProducts />
               </div>
             </div>
           </div>
         </section>
-{/* Phần top sản phẩm theo danh mục */}
+
+        {/* Phần top sản phẩm theo danh mục */}
         <session>
           <TopSellerByCategory></TopSellerByCategory>
         </session>
 
-{/* Phần lọc giá */}
+        {/* Phần lọc giá */}
         <section className="p-5 mb-5 dark:bg-base-100  bg-white">
           <div className="container mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-3">
@@ -411,33 +412,33 @@ const Home = ({ categoryID }) => {
                       </style>
                       <br />
                       <span className="mt-1 text-xs text-gray-400">Đã bán: {product.quantitySold} | </span>
-                    <span className="mt-1 text-xs text-gray-400">
-                      Còn:{" "}
-                      {product.quantityAvailable === 0 ? (
-                        <span className="text-red-600">Đã bán hết</span>
-                      ) : (
-                        <span className={product.quantityAvailable < 10 ? "text-red-600" : "text-gray-400"}>
-                          {product.quantityAvailable}
-                        </span>
-                      )}
-                    </span>
+                      <span className="mt-1 text-xs text-gray-400">
+                        Còn:{" "}
+                        {product.quantityAvailable === 0 ? (
+                          <span className="text-red-600">Đã bán hết</span>
+                        ) : (
+                          <span className={product.quantityAvailable < 10 ? "text-red-600" : "text-gray-400"}>
+                            {product.quantityAvailable}
+                          </span>
+                        )}
+                      </span>
 
-                    {/* Nút Thêm vào giỏ hàng */}
-                    <form
-                      className="mt-4"
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        handleAddToCart(product);
-                      }}
-                    >
-                      <button
-                        type="submit"
-                        className="w-full rounded btn btn-warning p-2 text-xs"
-                        disabled={product.quantityAvailable === 0}  // Disable button nếu hết hàng
+                      {/* Nút Thêm vào giỏ hàng */}
+                      <form
+                        className="mt-4"
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          handleAddToCart(product);
+                        }}
                       >
-                        Thêm vào giỏ hàng
-                      </button>
-                    </form>
+                        <button
+                          type="submit"
+                          className="w-full rounded btn btn-warning p-2 text-xs"
+                          disabled={product.quantityAvailable === 0}  // Disable button nếu hết hàng
+                        >
+                          Thêm vào giỏ hàng
+                        </button>
+                      </form>
                     </div>
                   </div>
                 ))
