@@ -281,14 +281,29 @@ const EditPromotionModal = ({ isOpen, onClose, onPromotionUpdated, promotion }) 
                                 )}
                             </div>
                         </div>
-                        <div className="mb-4">
+                        <div className="border border-gray-300 shadow-lg rounded-lg p-5 mt-5 bg-base-100">
+
+
                             <div className="tabs tabs-boxed">
                                 {renderTabs()}
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {renderProductsCheckboxes()}
                             </div>
+                            {/* Nút chọn tất cả */}
+                            <div className="flex justify-between items-center mt-4">
+                                <span className="text-sm text-gray-500">{`Thương hiệu: ${activeBrand}`}</span>
+                                <button
+                                    type="button" // Thêm thuộc tính này
+                                    className="btn btn-sm btn-outline btn-accent"
+                                    onClick={handleSelectAll}
+                                >
+                                    {`Chọn tất cả (${activeBrand})`}
+                                </button>
+                            </div>
+
                         </div>
+
                         <div className="modal-action">
                             <button type="button" className="btn" onClick={onClose}>Hủy</button>
                             <button type="submit" className="btn btn-primary">Cập nhật</button>

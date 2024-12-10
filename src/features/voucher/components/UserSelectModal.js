@@ -5,9 +5,9 @@ import { showNotification } from "../../common/headerSlice";
 import { useDispatch } from "react-redux";
 
 function UserSelectModal({ showModal, closeModal,
-    biggestDiscount, discountForm,startDate, voucherCode,
-    discountLevel, endDate , leastBill, leastDiscount,
-    close }) {
+  biggestDiscount, discountForm, startDate, voucherCode,
+  discountLevel, endDate, leastBill, leastDiscount,
+  close }) {
   const dispatch = useDispatch();
   const [users, setUsers] = useState([]);
   const [selectedUserIds, setSelectedUserIds] = useState([]);
@@ -49,8 +49,8 @@ function UserSelectModal({ showModal, closeModal,
   const handleSendVoucher = async () => {
     try {
       await VoucherService.addVoucherVoucherUsers({
-        biggestDiscount, discountForm,startDate, voucherCode,
-        discountLevel, endDate , leastBill, leastDiscount,
+        biggestDiscount, discountForm, startDate, voucherCode,
+        discountLevel, endDate, leastBill, leastDiscount,
         userIds: selectedUserIds,
       });
       dispatch(showNotification({ message: 'Voucher đã được gửi thành công!', status: 1 }));
@@ -58,7 +58,17 @@ function UserSelectModal({ showModal, closeModal,
       close();
     } catch (error) {
       console.error("Lỗi khi gửi voucher:", error);
-      dispatch(showNotification({ message: 'Đã xảy ra lỗi khi gửi voucher.', type: 'error' }));
+
+      // Hiển thị lỗi chi tiết từ backend
+      const errorMessage = error.message || "Đã xảy ra lỗi khi gửi voucher";
+      if (errorMessage.includes(':')) {
+        const errorMessages = errorMessage.split(', ').map((msg) => msg.trim());
+        errorMessages.forEach((msg) => {
+          dispatch(showNotification({ message: `Lỗi: ${msg}`, status: 0 }));
+        });
+      } else {
+        dispatch(showNotification({ message: `Lỗi: ${errorMessage}`, status: 0 }));
+      }
     }
   };
 
@@ -142,10 +152,10 @@ function UserSelectModal({ showModal, closeModal,
                     {users.map(user => (
                       <tr key={user.userID}>
                         <td>
-                          <input 
-                            type="checkbox" 
-                            checked={selectedUserIds.includes(user.userID)} 
-                            onChange={() => handleCheckboxChange(user.userID)} 
+                          <input
+                            type="checkbox"
+                            checked={selectedUserIds.includes(user.userID)}
+                            onChange={() => handleCheckboxChange(user.userID)}
                           />
                         </td>
                         <td>
@@ -169,7 +179,7 @@ function UserSelectModal({ showModal, closeModal,
                 {renderPagination()}
               </div>
             )}
-            
+
             <div className="modal-action">
               <button className="btn btn-primary" onClick={handleSendVoucher}>
                 Gửi Voucher

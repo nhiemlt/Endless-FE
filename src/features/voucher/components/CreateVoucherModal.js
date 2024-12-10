@@ -9,7 +9,7 @@ const CreateVoucherModal = ({ onClose, onReload }) => {
     const dispatch = useDispatch();
 
     const today = new Date().toISOString().split("T")[0];
-    
+
     const [formState, setFormState] = useState({
         voucherCode: "",
         discountLevel: 0,
@@ -50,7 +50,22 @@ const CreateVoucherModal = ({ onClose, onReload }) => {
             onClose();
             onReload();
         } catch (error) {
-            dispatch(showNotification({ message: "Lỗi khi thêm voucher cho tất cả", status: 0 }));
+            // Lỗi từ service đã được xử lý trong handleError và sẽ có thông báo lỗi chi tiết
+            const errorMessage = error.message || "Lỗi khi thêm voucher cho tất cả";
+
+            // Kiểm tra xem lỗi có phải là chuỗi chứa thông báo lỗi chi tiết không
+            if (errorMessage.includes(':')) {
+                // Nếu lỗi có nhiều phần tử, bạn có thể tách ra và thông báo theo từng lỗi một
+                const errorMessages = errorMessage.split(', ').map((msg) => msg.trim());
+
+                // Gửi thông báo cho từng lỗi riêng biệt
+                errorMessages.forEach((msg) => {
+                    dispatch(showNotification({ message: `Lỗi: ${msg}`, status: 0 }));
+                });
+            } else {
+                // Nếu chỉ có một lỗi chung, hiển thị thông báo này
+                dispatch(showNotification({ message: `Lỗi: ${errorMessage}`, status: 0 }));
+            }
         }
     };
 
@@ -64,7 +79,7 @@ const CreateVoucherModal = ({ onClose, onReload }) => {
 
     return (
         <>
-       <div className="fixed inset-0 bg-black bg-opacity-50 z-40"></div>
+            <div className="fixed inset-0 bg-black bg-opacity-50 z-40"></div>
             <dialog id="add_voucher_modal" className="modal" open>
                 <div className="modal-box w-11/12 max-w-5xl relative">
                     <button
