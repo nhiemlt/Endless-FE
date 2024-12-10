@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
+import { CheckCircleIcon } from "@heroicons/react/24/solid";
 
 function AboutUs() {
   return (
@@ -26,25 +27,19 @@ function AboutUs() {
               </p>
               <ul className="mt-4 space-y-4">
                 <li className="flex items-center">
-                  <span className="text-blue-600 dark:text-blue-400 mr-2">
-                    ✔️
-                  </span>
+                  <CheckCircleIcon className="w-6 h-6 text-blue-600 dark:text-blue-400 mr-2" />
                   <span className="text-gray-600 dark:text-gray-300">
                     Sản phẩm chất lượng cao
                   </span>
                 </li>
                 <li className="flex items-center">
-                  <span className="text-blue-600 dark:text-blue-400 mr-2">
-                    ✔️
-                  </span>
+                  <CheckCircleIcon className="w-6 h-6 text-blue-600 dark:text-blue-400 mr-2" />
                   <span className="text-gray-600 dark:text-gray-300">
                     Dịch vụ khách hàng tận tâm
                   </span>
                 </li>
                 <li className="flex items-center">
-                  <span className="text-blue-600 dark:text-blue-400 mr-2">
-                    ✔️
-                  </span>
+                  <CheckCircleIcon className="w-6 h-6 text-blue-600 dark:text-blue-400 mr-2" />
                   <span className="text-gray-600 dark:text-gray-300">
                     Nỗ lực đáp ứng nhu cầu khách hàng
                   </span>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import {
   CheckCircleIcon,
   TruckIcon,
@@ -6,6 +7,8 @@ import {
   CurrencyDollarIcon,
   ClipboardDocumentCheckIcon,
   ShieldCheckIcon,
+  XCircleIcon,
+  StarIcon,
 } from "@heroicons/react/24/solid";
 import OrderService from "../../services/OrderService";
 import ConfirmCancelModal from "./components/ConfirmCancelModal";
@@ -24,6 +27,7 @@ function PurchaseHistory() {
   const [size, setSize] = useState(5);
   const [totalPages, setTotalPages] = useState(0);
   const [orderToCancel, setOrderToCancel] = useState(null);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("");
   const [confirmCancelModalIsOpen, setConfirmCancelModalIsOpen] =
     useState(false);
 
@@ -97,6 +101,7 @@ function PurchaseHistory() {
   const closeModal = () => {
     setModalIsOpen(false);
     setSelectedOrder(null);
+    setSelectedPaymentMethod("");
   };
 
   const openConfirmCancelModal = (order) => {
@@ -111,28 +116,39 @@ function PurchaseHistory() {
 
   const confirmCancelOrder = async () => {
     if (!orderToCancel) return;
-    try {
-      await OrderService.cancelOrder(orderToCancel.orderID);
-      setOrders((prevOrders) =>
-        prevOrders.map((order) =>
-          order.orderID === orderToCancel.orderID
-            ? { ...order, status: "Đã hủy" }
-            : order
-        )
-      );
 
-      dispatch(
-        showNotification({
-          message: "Đơn hàng đã được hủy thành công!",
-          status: 1,
-        })
-      );
+    try {
+      const response = await OrderService.cancelOrder(orderToCancel.orderID);
+
+      if (response.status === 200) {
+        setOrders((prevOrders) =>
+          prevOrders.map((order) =>
+            order.orderID === orderToCancel.orderID
+              ? { ...order, status: "Đã hủy" }
+              : order
+          )
+        );
+
+        dispatch(
+          showNotification({
+            message: `Đơn hàng #${orderToCancel.orderID} đã được hủy thành công.`,
+            status: 1,
+          })
+        );
+      } else {
+        dispatch(
+          showNotification({
+            message: `Không thể hủy đơn hàng #${orderToCancel.orderID}. Vui lòng thử lại sau.`,
+            status: 0,
+          })
+        );
+      }
     } catch (error) {
       console.error("Lỗi khi hủy đơn hàng:", error);
 
       dispatch(
         showNotification({
-          message: "Lỗi khi hủy đơn hàng. Vui lòng thử lại.",
+          message: `Có lỗi xảy ra khi hủy đơn hàng. Có thể đơn hàng đã được xử lý và không thể hủy nữa. Vui lòng kiểm tra lại trạng thái đơn hàng.`,
           status: 0,
         })
       );
@@ -140,6 +156,65 @@ function PurchaseHistory() {
       closeConfirmCancelModal();
     }
   };
+
+  const handlePayment = async () => {
+    try {
+      // Sử dụng ID hóa đơn hiện tại
+      const orderID = selectedOrder.id;
+  
+      if (selectedPaymentMethod === "zalopay") {
+        const zaloPaymentData = await OrderService.createPayment(orderID);
+        console.log("ZaloPay Response:", zaloPaymentData);
+  
+        if (zaloPaymentData.returncode === 1 && zaloPaymentData.orderurl) {
+          dispatch(
+            showNotification({
+              message: "Chuyển hướng đến ZaloPay...",
+              status: 1,
+            })
+          );
+          window.location.href = zaloPaymentData.orderurl;
+        } else {
+          dispatch(
+            showNotification({
+              message: "Không tìm thấy URL thanh toán ZaloPay.",
+              status: 0,
+            })
+          );
+        }
+      } else if (selectedPaymentMethod === "vnpay") {
+        const vnpayPaymentData = await OrderService.createVNPayPaymentUrl(orderID);
+  
+        if (typeof vnpayPaymentData === "string") {
+          dispatch(
+            showNotification({
+              message: "Chuyển hướng đến VNPay...",
+              status: 1,
+            })
+          );
+          window.location.href = vnpayPaymentData;
+        } else {
+          dispatch(
+            showNotification({
+              message: "Không tìm thấy URL thanh toán VNPay.",
+              status: 0,
+            })
+          );
+        }
+      }
+    } catch (error) {
+      console.error("Error during payment process:", error);
+      dispatch(
+        showNotification({
+          message: "Không thể xử lý thanh toán, vui lòng thử lại.",
+          status: 0,
+        })
+      );
+    } finally {
+      closeModal();
+    }
+  };
+
 
   const renderPagination = () => {
     const pages = [];
@@ -220,7 +295,6 @@ function PurchaseHistory() {
 
   const handleMarkAsDelivered = async (orderId) => {
     try {
-      const updatedOrder = await OrderService.markOrderAsDelivered(orderId);
       setOrders((prevOrders) =>
         prevOrders.map((order) =>
           order.orderID === orderId
@@ -245,6 +319,10 @@ function PurchaseHistory() {
         })
       );
     }
+  };
+
+  const handlePaymentMethodChange = (event) => {
+    setSelectedPaymentMethod(event.target.value);
   };
 
   return (
@@ -309,7 +387,6 @@ function PurchaseHistory() {
                   alt={order.orderDetails[0].productName}
                   className="w-20 h-20 object-cover rounded-lg"
                 />
-
                 <div className="flex flex-col justify-between flex-1">
                   <h2 className="text-lg font-semibold">
                     {order.orderDetails[0].productName}
@@ -318,7 +395,7 @@ function PurchaseHistory() {
                     {order.orderDetails[0].productVersionName}
                   </p>
 
-                  <div className="flex justify-between items-center">
+                  <div className="flex justify-between items-center mt-4">
                     <p className="text-sm text-gray-600 dark:text-gray-300">
                       Số lượng: {order.orderDetails[0].quantity}
                     </p>
@@ -360,32 +437,31 @@ function PurchaseHistory() {
                       e.stopPropagation();
                       openConfirmCancelModal(order);
                     }}
-                    className="btn btn-error w-auto text-sm"
+                    className="btn btn-error w-auto text-sm mb-2"
                   >
                     Hủy Đơn Hàng
                   </button>
                 )}
-                {/* {order.status === "Chờ thanh toán" && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handlePayment(order.orderID);
-                    }}
-                    className="btn btn-primary w-auto text-sm"
-                  >
-                    Thanh toán
-                  </button>
-                )} */}
                 {order.status === "Đang giao hàng" && (
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       handleMarkAsDelivered(order.orderID);
                     }}
-                    className="btn btn-success w-auto text-sm"
+                    className="btn btn-success w-auto text-sm mb-2"
                   >
                     Đã nhận hàng
                   </button>
+                )}
+                {order.status === "Đã giao hàng" && (
+                  <Link
+                    to={`/rating?orderID=${order.orderID}`}
+                    className="flex items-center gap-2 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold rounded-lg w-auto text-sm shadow-md"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <StarIcon className="w-6 h-6 text-white" />
+                    Đánh giá
+                  </Link>
                 )}
               </div>
             </div>
@@ -401,12 +477,18 @@ function PurchaseHistory() {
 
       {modalIsOpen && selectedOrder && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-11/12 sm:w-3/4 md:w-2/3 lg:w-1/2 xl:w-1/2">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-11/12 sm:w-3/4 md:w-2/3 lg:w-1/2 xl:w-1/2 relative">
+            <button
+              onClick={closeModal}
+              className="absolute top-2 right-2 text-2xl text-gray-500 hover:text-gray-700"
+            >
+              <XCircleIcon className="w-6 h-6" />
+            </button>
             <h2 className="text-2xl font-bold mb-4 text-center text-gray-900 dark:text-white">
               Thông Tin Hóa Đơn
             </h2>
 
-            {/* Order ID display */}
+            {/* Mã hóa đơn */}
             <p className="text-sm text-center text-gray-600 dark:text-gray-300 mb-4">
               Mã hóa đơn:{" "}
               <span className="font-semibold">{selectedOrder.orderID}</span>
@@ -565,44 +647,122 @@ function PurchaseHistory() {
               </p>
             </div>
 
-            <div className="mt-6 space-y-4">
-              <h3 className="text-xl font-semibold">Thông tin thanh toán:</h3>
+            {/* Phương thức thanh toán */}
+            {selectedOrder.status === "Chờ thanh toán" && (
+              <div className="space-y-4 mt-6">
+                <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Chọn phương thức thanh toán:
+                </h4>
+
+                <div className="flex flex-wrap gap-4">
+                  {/* Thanh toán VNPay */}
+                  <label
+                    className={`flex items-center space-x-4 p-4 rounded-lg border cursor-pointer ${
+                      selectedPaymentMethod === "vnpay"
+                        ? "bg-blue-100 border-blue-500"
+                        : "bg-gray-50 border-gray-300 dark:bg-gray-800 dark:border-gray-700"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      id="vnpay"
+                      name="selectedPaymentMethod"
+                      value="vnpay"
+                      className="h-4 w-4"
+                      onChange={handlePaymentMethodChange}
+                      checked={selectedPaymentMethod === "vnpay"}
+                    />
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      Thanh toán VNPay
+                    </span>
+                    <img
+                      src="./logo-vnpay-payment.png"
+                      alt="VNPay Logo"
+                      className="w-16"
+                    />
+                  </label>
+
+                  {/* Thanh toán ZaloPay */}
+                  <label
+                    className={`flex items-center space-x-4 p-4 rounded-lg border cursor-pointer ${
+                      selectedPaymentMethod === "zalopay"
+                        ? "bg-blue-100 border-blue-500"
+                        : "bg-gray-50 border-gray-300 dark:bg-gray-800 dark:border-gray-700"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      id="zalopay"
+                      name="selectedPaymentMethod"
+                      value="zalopay"
+                      className="h-4 w-4"
+                      onChange={handlePaymentMethodChange}
+                      checked={selectedPaymentMethod === "zalopay"}
+                    />
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      Thanh toán ZaloPay
+                    </span>
+                    <img
+                      src="./logo-zalopay-payment.png"
+                      alt="ZaloPay Logo"
+                      className="w-16"
+                    />
+                  </label>
+                </div>
+              </div>
+            )}
+
+            {/* Thông tin thanh toán - giữ lại chỉ một lần */}
+            <div className="mt-8 space-y-4 border-t pt-4">
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                Thông tin thanh toán:
+              </h3>
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <p className="text-lg font-semibold">Tổng tiền:</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
+                    Tổng tiền:
+                  </p>
                   <p className="text-lg font-semibold text-gray-900 dark:text-white">
                     {formatMoney(selectedOrder.totalProductPrice)}
                   </p>
                 </div>
                 <div className="flex justify-between">
-                  <p className="text-lg font-semibold">Phí vận chuyển:</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
+                    Phí vận chuyển:
+                  </p>
                   <p className="text-lg font-semibold text-gray-900 dark:text-white">
                     {formatMoney(selectedOrder.shipFee)}
                   </p>
                 </div>
                 {selectedOrder.voucherDiscount > 0 && (
                   <div className="flex justify-between">
-                    <p className="text-lg font-semibold">Giảm giá voucher:</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                      Giảm giá voucher:
+                    </p>
                     <p className="text-lg font-semibold text-gray-900 dark:text-white">
                       -{formatMoney(selectedOrder.voucherDiscount)}
                     </p>
                   </div>
                 )}
-                <div className="flex justify-between border-t pt-4">
-                  <p className="text-lg font-semibold">Tổng thanh toán:</p>
-                  <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                <div className="flex justify-between items-center border-t pt-4">
+                  <p className="text-lg font-bold">Tổng thanh toán:</p>
+                  <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                     {formatMoney(selectedOrder.totalMoney)}
                   </p>
                 </div>
               </div>
-            </div>
 
-            <button
-              onClick={closeModal}
-              className="btn w-full bg-gray-800 text-white hover:bg-gray-700 py-2 rounded-lg dark:bg-gray-600 dark:text-gray-300 dark:hover:bg-gray-500 mt-4"
-            >
-              Đóng
-            </button>
+              {/* Nút thanh toán */}
+              {selectedPaymentMethod &&
+                selectedOrder.status === "Chờ thanh toán" && (
+                  <button
+                    onClick={handlePayment}
+                    className="btn btn-primary w-full py-2 rounded-lg mt-6"
+                  >
+                    Thanh toán ngay
+                  </button>
+                )}
+            </div>
           </div>
         </div>
       )}
