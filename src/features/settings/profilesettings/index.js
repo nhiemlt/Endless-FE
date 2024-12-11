@@ -10,44 +10,33 @@ import roleService from "../../../services/roleService";
 import TrashIcon from '@heroicons/react/24/outline/TrashIcon';
 
 function ProfileSettings() {
+    const [profileData, setProfileData] = useState({});
     const dispatch = useDispatch();
-
-    // State quản lý dữ liệu profile
-    const [profileData, setProfileData] = useState({
-        userID: "",
-        username: "",
-        fullname: "",
-        phone: "",
-        email: "",
-        avatar: "",
-    });
 
     const [formData, setFormData] = useState({ ...profileData });
     const [avatarFile, setAvatarFile] = useState(null); // Quản lý file avatar người dùng đã chọn
     const [activeTab, setActiveTab] = useState("info"); // Quản lý tab hiện tại
 
     // Lấy thông tin người dùng khi component mount
-    useEffect(() => {
-        const fetchUserData = async () => {
-            try {
-                // Lấy dữ liệu người dùng từ API
-                const userData = await ProfileService.fetchCurrentUser();
-                setProfileData({
-                    userID: userData.userID,
-                    username: userData.username,
-                    fullname: userData.fullname || "",
-                    phone: userData.phone || "",
-                    email: userData.email,
-                    avatar: userData.avatar || "",
-                });
-            } catch (error) {
-                // Thông báo lỗi nếu không lấy được dữ liệu
-                dispatch(showNotification({ message: "Không lấy được dữ liệu", status: 0 }));
-            }
-        };
+    const fetchUserData = async () => {
+        try {
+            const userData = await ProfileService.fetchCurrentUser();
+            setProfileData({
+                userID: userData.userID,
+                username: userData.username,
+                fullname: userData.fullname || "",
+                phone: userData.phone || "",
+                email: userData.email,
+                avatar: userData.avatar || "",
+            });
+        } catch (error) {
+            dispatch(showNotification({ message: "Không lấy được dữ liệu", status: 0 }));
+        }
+    };
 
+    useEffect(() => {
         fetchUserData();
-    }, [dispatch]);
+    }, []);
 
     // Hàm xử lý khi có thay đổi dữ liệu trong form
     const handleInputChange = (e) => {
@@ -107,15 +96,11 @@ function ProfileSettings() {
             // Hiển thị thông báo thành công và cập nhật lại giao diện
             dispatch(showNotification({ message: "Cập nhật thông tin thành công", status: 1 }));
 
-            // Tải lại dữ liệu người dùng (nếu cần) thay vì reload trang
-            setProfileData(updatedData);
+            await fetchUserData();
         } catch (error) {
             dispatch(showNotification({ message: `Cập nhật thông tin thất bại: ${error.message}`, status: 0 }));
             console.error("Lỗi khi cập nhật thông tin người dùng:", error);
         }
-
-        window.location.reload(); // Reload trang để hiển thị thông tin mới
-
 
     };
 

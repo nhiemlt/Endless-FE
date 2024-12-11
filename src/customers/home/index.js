@@ -14,7 +14,7 @@ import productVersionService from "../../services/productVersionService";
 import CartService from "../../services/CartService";
 import TopSellerByCategory from "./components/TopSellByCategory"
 import TopSellingProducts from './components/getTopSellingProductVersions';
-
+import FptChatbotButton from './components/FptChatbotButton';
 
 
 const Home = ({ categoryID }) => {
@@ -450,6 +450,11 @@ const Home = ({ categoryID }) => {
         </section>
 
       </main>
+
+
+
+      {/* Add FPT chatbot button to the layout */}
+      <FptChatbotButton /> {/* This is where we add the chatbot button */}
     </div>
   )
 }

@@ -16,7 +16,7 @@ function Product() {
   const [totalPages, setTotalPages] = useState(0);
   const [sortBy, setSortBy] = useState('versionName');
   const [direction, setDirection] = useState('ASC');
-  const [keyword, setKeyword] = useState('');
+  const [keyword, setKeyword] = useState("");
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
   const [filterData, setFilterData] = useState({
@@ -50,7 +50,6 @@ function Product() {
     fetchBrands();
   }, []);
 
-  // 2. Gọi API lấy danh sách sản phẩm dựa trên bộ lọc
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -59,39 +58,24 @@ function Product() {
           size,
           sortBy,
           direction,
-          keyword: filterData.keyword,
+          keyword,
           categoryIDs: filterData.categoryIDs,
           brandIDs: filterData.brandIDs,
           minPrice: filterData.minPrice,
           maxPrice: filterData.maxPrice,
         };
-
+  
         const response = await productVersionService.filterProductVersions(filters);
-        setProducts(response.content || []);
-        console.log(response.content)
-        setTotalPages(response.totalPages || 1);
+        setProducts(response.content || []);  // Fallback to empty array if no content
+        setTotalPages(response.totalPages || 1); // Fallback to 1 if no totalPages
       } catch (error) {
         console.error('Error fetching filtered products:', error);
       }
     };
-
+  
     fetchProducts();
-  }, [page, size, sortBy, direction, filterData]);
-
-  // Hàm gọi API lấy danh sách sản phẩm đã sắp xếp
-  const fetchSortedProductVersions = async () => {
-    try {
-      const response = await productVersionService.getSortedProductVersions(sortBy, direction);
-      setProducts(response || []); 
-    } catch (error) {
-      console.error("Error fetching sorted product versions:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchSortedProductVersions(); 
-  }, [sortBy, direction]); 
-
+  }, [keyword, page, size, sortBy, direction, filterData]);
+  
 
   const handlePriceChange = (e, field) => {
     setFilterData((prev) => ({
@@ -170,10 +154,9 @@ function Product() {
                 id="searchKeyword"
                 type="text"
                 value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
+                onChange={(e) => setKeyword(e.target.value)} // Cập nhật state keyword
                 className="grow h-10 text-xs dark:bg-base-100"
                 placeholder="Tìm kiếm"
-
               />
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -191,7 +174,7 @@ function Product() {
           </div>
         </div>
 
-        {/* Dropdown Sort By */}
+        {/* Phần Sắp xếp */}
         <div>
           <label htmlFor="SortBy" className="block text-xs font-medium dark:text-white text-gray-900 mt-5">
             <b>Sắp xếp</b>
@@ -215,6 +198,7 @@ function Product() {
             <option value="quantitySold, DESC">Lượt bán - Giảm dần</option>
           </select>
         </div>
+
 
         {/* Phần lọc giá */}
         <div>

@@ -6,8 +6,6 @@ import { removeNotificationMessage } from "../features/common/headerSlice";
 import { NotificationContainer, NotificationManager } from 'react-notifications';
 import 'react-notifications/lib/notifications.css';
 import RightSidebar from './RightSidebar';
-import FptChatbotButton from './FptChatbotButton'; // Import component chatbot button
-
 function CustomerLayout() {
     const dispatch = useDispatch();
     const { newNotificationMessage, newNotificationStatus } = useSelector(state => state.header);
@@ -39,9 +37,6 @@ function CustomerLayout() {
 
             {/* Modal layout container */}
             <ModalLayout />
-
-            {/* Add FPT chatbot button to the layout */}
-            <FptChatbotButton /> {/* This is where we add the chatbot button */}
         </>
     );
 }

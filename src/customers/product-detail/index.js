@@ -16,7 +16,7 @@ function ProductDetail() {
   const { product } = location.state || {};
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [ratings, setRatings] = useState([]);  // State to store all the ratings
-  const [selectedTab, setSelectedTab] = useState(5); // Default to 5 stars tab
+  const [selectedTab, setSelectedTab] = useState("all"); // Default to 5 stars tab
 
   useEffect(() => {
     if (product && product?.productVersionID) {
@@ -185,9 +185,8 @@ function ProductDetail() {
               <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 d-block">
                 Đánh giá ({ratings.length})
               </h3>
-
-              {/* Các tab 5 sao, 4 sao, 3 sao, 2 sao, 1 sao và "Tất cả" */}
-              <div role="tablist" className="tabs tabs-bordered mt-4 w-full">
+\
+              <div role="tablist" className="tabs font-bold tabs-bordered mt-4 w-full">
                 <a
                   role="tab"
                   className={`tab ${selectedTab === 'all' ? 'tab-active text-red-600' : ''} w-full md:w-auto`}
@@ -246,6 +245,7 @@ function ProductDetail() {
                       </div>
                       <p className="text-sm mt-4 text-gray-800 dark:text-gray-100">{rating?.comment}</p>
                     </div>
+                    <hr />
                   </div>
                 ))}
               </div>
