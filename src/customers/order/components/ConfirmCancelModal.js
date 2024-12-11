@@ -5,7 +5,7 @@ function ConfirmCancelModal({ isOpen, onClose, onConfirm }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg shadow-lg p-4 w-10/12 sm:w-2/3 md:w-1/3 max-w-md">
+      <div className="bg-white dark:bg-base-100 rounded-lg shadow-lg p-4 w-10/12 sm:w-2/3 md:w-1/3 max-w-md">
         <h2 className="text-lg font-bold mb-3">
           Xác nhận hủy đơn hàng
         </h2>
@@ -14,12 +14,12 @@ function ConfirmCancelModal({ isOpen, onClose, onConfirm }) {
         </p>
         <div className="flex justify-end gap-3">
           <button
-            className="btn btn-error px-4 py-2 text-sm"
+            className="btn btn-success text-white px-4 py-2 text-sm"
             onClick={onConfirm}
           >
             Xác nhận
           </button>
-          <button className="btn px-4 py-2 text-sm" onClick={onClose}>
+          <button className="btn btn-neutral px-4 py-2 text-sm" onClick={onClose}>
             Thoát
           </button>
         </div>

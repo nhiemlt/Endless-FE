@@ -7,7 +7,6 @@ import {
   CurrencyDollarIcon,
   ClipboardDocumentCheckIcon,
   ShieldCheckIcon,
-  XCircleIcon,
   StarIcon,
 } from "@heroicons/react/24/solid";
 import OrderService from "../../services/OrderService";
@@ -325,7 +324,7 @@ function PurchaseHistory() {
         {orderStatuses.map((status) => (
           <a
             key={status}
-            className={`tab tab-lifted ${
+            className={`tab tab-lifted font-semibold ${
               activeTab === status ? "tab-active" : ""
             }`}
             onClick={() => setActiveTab(status)}
@@ -360,12 +359,12 @@ function PurchaseHistory() {
                 <span
                   className={`text-sm font-semibold px-2 py-1 rounded ${
                     order.status === "Chờ xác nhận"
-                      ? "bg-yellow-300 text-yellow-800"
+                      ? "bg-yellow-400 text-white"
                       : order.status === "Đã giao hàng"
-                      ? "bg-green-300 text-green-800"
+                      ? "bg-green-500 text-white"
                       : order.status === "Đã hủy"
-                      ? "bg-red-300 text-red-800"
-                      : "bg-gray-300 text-gray-800"
+                      ? "bg-red-500 text-white"
+                      : "bg-pink-400 text-white"
                   }`}
                 >
                   {order.status}
@@ -420,13 +419,19 @@ function PurchaseHistory() {
                 </span>
               </div>
 
-              {order.status === "Đã giao hàng" && !order.isRated && (
+              {order.status === "Đã giao hàng" && order?.rated && (
                 <button className="absolute top-2 right-2 text-sm font-medium text-yellow-500">
                   Đánh giá đơn hàng
                 </button>
               )}
 
-              <div className="flex justify-between items-center mt-4">
+              {order.status === "Đã giao hàng" && !order?.rated && (
+                <button className="absolute top-4 right-5 text-sm font-medium btn-outline">
+                  Đánh giá đơn hàng
+                </button>
+              )}
+
+              <div className="flex justify-end items-center mt-4">
                 {(order.status === "Chờ xác nhận" ||
                   order.status === "Chờ thanh toán") && (
                   <button
@@ -434,7 +439,7 @@ function PurchaseHistory() {
                       e.stopPropagation();
                       openConfirmCancelModal(order);
                     }}
-                    className="btn btn-error w-auto text-sm mb-2"
+                    className="btn btn-error w-auto text-sm text-white mb-2"
                   >
                     Hủy Đơn Hàng
                   </button>
@@ -641,10 +646,23 @@ function PurchaseHistory() {
                         pathname: "/rating",
                       }}
                       state={{ orderDetailID: item.orderDetailID }}
-                      className="flex items-center gap-2 px-4 py-2 btn btn-outline btn-warning"
+                      className={`flex items-center gap-2 px-4 py-2 btn btn-outline ${
+                        item.isRated === undefined || item.isRated === false
+                          ? "btn-warning"
+                          : "btn-disabled bg-gray-300 cursor-not-allowed"
+                      }`}
+                      onClick={(e) => {
+                        if (item.rated) {
+                          e.preventDefault();
+                        }
+                      }}
                     >
-                      <StarIcon className="w-6 h-6 text-danger" />
-                      Đánh giá
+                      <StarIcon
+                        className={`w-6 h-6 ${
+                          item.rated ? "text-gray-400" : "text-danger"
+                        }`}
+                      />
+                      {item.rated ? "Đã Đánh Giá" : "Đánh Giá"}
                     </Link>
                   )}
                 </li>
