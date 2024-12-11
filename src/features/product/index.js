@@ -24,6 +24,8 @@ function ProductPage() {
   const [brands, setBrands] = useState([]);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false); // State for confirmation dialog
   const [productIdToDelete, setProductIdToDelete] = useState(null); // State to store the product ID to delete
+  const [sortBy, setSortBy] = useState('');
+
 
   useEffect(() => {
     async function fetchData() {
@@ -44,7 +46,7 @@ function ProductPage() {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const response = await ProductService.getProducts(searchKeyword, currentPage, pageSize);
+      const response = await ProductService.getProducts(searchKeyword, currentPage, pageSize, sortBy); // Truyền sortBy
       setProducts(response.content); // Trả về danh sách sản phẩm
       setTotalPages(response.totalPages); // Lưu số trang tối đa
     } catch (error) {
@@ -53,6 +55,7 @@ function ProductPage() {
       setLoading(false);
     }
   };
+
 
 
   useEffect(() => {
@@ -119,7 +122,7 @@ function ProductPage() {
   };
 
   return (
-    <TitleCard title="Quản lý sản phẩm" topMargin="mt-6">
+    <TitleCard topMargin="mt-6">
       <div className="flex flex-col md:flex-row justify-between items-center w-full mb-4">
         <div className="flex justify-start items-center space-x-2 mb-2 mr-2 md:mb-0">
           <input
@@ -132,6 +135,20 @@ function ProductPage() {
             className="input input-bordered w-full md:w-50 h-8"
           />
         </div>
+        <div className="flex justify-end items-center mb-4">
+          <select
+            className="select select-bordered w-40"
+            onChange={(e) => {
+              setSortBy(e.target.value); // Cập nhật sortBy
+              setCurrentPage(0); // Reset về trang đầu
+            }}
+          >
+            <option value="">Mặc định</option>
+            <option value="categoryID">Danh mục</option>
+            <option value="brandID">Thương hiệu</option>
+          </select>
+        </div>
+
         <button className="btn btn-outline btn-sm btn-primary" onClick={handleAddProduct}>
           Thêm sản phẩm
         </button>

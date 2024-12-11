@@ -7,16 +7,17 @@ const BASE_URL = `${constants.API_BASE_URL}/api/products`; // Thay đổi URL b�
 
 const ProductService = {
     // Lấy danh sách sản phẩm hoặc thông tin chi tiết theo ID
-    getProducts: async (keyword, page = 0, size = 10) => {
+    getProducts: async (keyword, page = 0, size = 10, sortBy = '') => {
         try {
             const response = await axios.get(BASE_URL, {
-                params: { keyword, page, size }
+                params: { keyword, page, size, sortBy } // Thêm sortBy vào params
             });
             return response.data; // Trả về toàn bộ dữ liệu phân trang
         } catch (error) {
             throw error.response ? error.response.data : error.message;
         }
     },
+
 
     // Phương thức để lấy danh sách danh mục
     getCategories: async () => {
