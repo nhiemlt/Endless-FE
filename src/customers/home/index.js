@@ -14,7 +14,7 @@ import productVersionService from "../../services/productVersionService";
 import CartService from "../../services/CartService";
 import TopSellerByCategory from "./components/TopSellByCategory"
 import TopSellingProducts from './components/getTopSellingProductVersions';
-import FptChatbotButton from './components/FptChatbotButton';
+import FptChatbotButton from './components/FptChatbotButton'; // Import component chatbot button
 
 
 const Home = ({ categoryID }) => {
@@ -29,6 +29,9 @@ const Home = ({ categoryID }) => {
   const productsSection = useRef(null);
   const [productCount, setProductCount] = useState(null);
   const [brandCount, setBrandCount] = useState(null);
+
+  const imgElement = document.querySelector('img[alt="logobutton"]');
+
 
   useEffect(() => {
     // Lấy top sản phẩm bán chạy
@@ -457,6 +460,8 @@ const Home = ({ categoryID }) => {
       <FptChatbotButton /> {/* This is where we add the chatbot button */}
     </div>
   )
+
+
 }
 
 export default Home

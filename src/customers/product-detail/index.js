@@ -185,7 +185,6 @@ function ProductDetail() {
               <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 d-block">
                 Đánh giá ({ratings.length})
               </h3>
-\
               <div role="tablist" className="tabs font-bold tabs-bordered mt-4 w-full">
                 <a
                   role="tab"
