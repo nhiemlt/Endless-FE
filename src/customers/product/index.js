@@ -64,32 +64,18 @@ function Product() {
           minPrice: filterData.minPrice,
           maxPrice: filterData.maxPrice,
         };
-
+  
         const response = await productVersionService.filterProductVersions(filters);
-        setProducts(response.content || []);
-        setTotalPages(response.totalPages || 1);
+        setProducts(response.content || []);  // Fallback to empty array if no content
+        setTotalPages(response.totalPages || 1); // Fallback to 1 if no totalPages
       } catch (error) {
         console.error('Error fetching filtered products:', error);
       }
     };
-
+  
     fetchProducts();
   }, [keyword, page, size, sortBy, direction, filterData]);
-
-  // Hàm gọi API lấy danh sách sản phẩm đã sắp xếp
-  const fetchSortedProductVersions = async () => {
-    try {
-      const response = await productVersionService.getSortedProductVersions(sortBy, direction);
-      setProducts(response || []);
-    } catch (error) {
-      console.error("Error fetching sorted product versions:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchSortedProductVersions();
-  }, [sortBy, direction]);
-
+  
 
   const handlePriceChange = (e, field) => {
     setFilterData((prev) => ({
@@ -212,6 +198,7 @@ function Product() {
             <option value="quantitySold, DESC">Lượt bán - Giảm dần</option>
           </select>
         </div>
+
 
         {/* Phần lọc giá */}
         <div>

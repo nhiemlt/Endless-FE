@@ -76,7 +76,8 @@ const RatingService = {
                 return response.data; // Trả về dữ liệu phản hồi
             })
             .catch(error => {
-                throw error.response.data.error || 'Error adding rating'; // Xử lý lỗi
+                console.error('Error details:', error.response?.data || error.message);
+                throw error.response?.data?.error || 'Error adding rating';
             });
     }
 };
