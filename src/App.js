@@ -25,15 +25,15 @@ function App() {
   }, []);
 
 
-useEffect(() => {
-  // Tìm phần tử có id 'fpt_ai_livechat_display_container'
-  const element = document.getElementById('fpt_ai_livechat_display_container');
+// useEffect(() => {
+//   // Tìm phần tử có id 'fpt_ai_livechat_display_container'
+//   const element = document.getElementById('fpt_ai_livechat_display_container');
 
-  // Nếu phần tử tồn tại, xóa nó khỏi DOM
-  if (element) {
-    element.remove();
-  }
-}, []);
+//   // Nếu phần tử tồn tại, xóa nó khỏi DOM
+//   if (element) {
+//     element.remove();
+//   }
+// }, []);
 
   useEffect(() => {
     const checkUserAuth = async () => {

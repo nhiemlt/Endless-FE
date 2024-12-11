@@ -30,6 +30,9 @@ const Home = ({ categoryID }) => {
   const [productCount, setProductCount] = useState(null);
   const [brandCount, setBrandCount] = useState(null);
 
+  const imgElement = document.querySelector('img[alt="logobutton"]');
+
+
   useEffect(() => {
     // Lấy top sản phẩm bán chạy
     const fetchTopSellingProducts = async () => {
@@ -457,6 +460,8 @@ const Home = ({ categoryID }) => {
       <FptChatbotButton /> {/* This is where we add the chatbot button */}
     </div>
   )
+
+
 }
 
 export default Home
