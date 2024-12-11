@@ -1,42 +1,59 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import RatingService from "../../services/ratingService";
 import { StarIcon, PhotoIcon } from "@heroicons/react/24/solid";
+import { showNotification } from "../../features/common/headerSlice";
+import { useDispatch } from "react-redux";
 
 function Rating() {
-  const [rating, setRating] = useState(0);
   const location = useLocation();
-  const queryParams = new URLSearchParams(location.search);
-  const orderID = queryParams.get("orderID");
+  const { orderDetailID } = location.state || {};
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
   const [feedback, setFeedback] = useState("");
-  const [product, setProduct] = useState(null);
   const [pictures, setPictures] = useState([]);
+  const [rating, setRating] = useState(0);
 
   useEffect(() => {
-    const fetchProductData = async () => {
-      try {
-        const response = await RatingService.getRatingById(orderID);
-        setProduct(response.product);
-      } catch (error) {
-        console.error("Lỗi khi lấy thông tin sản phẩm:", error);
-      }
-    };
-
-    fetchProductData();
-  }, [orderID]);
+    if (!orderDetailID) {
+      dispatch(
+        showNotification({
+          message: "Không tìm thấy thông tin đơn hàng để đánh giá.",
+          status: 0,
+        })
+      );
+      navigate("/order");
+    }
+  }, [orderDetailID, dispatch, navigate]);
 
   const handleSubmitRating = async () => {
-    try {
-      const response = await RatingService.addRating(
-        orderID,
-        rating,
-        feedback,
-        pictures
+    if (rating === 0) {
+      dispatch(
+        showNotification({
+          message: "Vui lòng chọn số sao để đánh giá.",
+          status: 0,
+        })
       );
-      alert("Đánh giá thành công!");
+      return;
+    }
+
+    try {
+      await RatingService.addRating(orderDetailID, rating, feedback, pictures);
+      dispatch(
+        showNotification({
+          message: "Cảm ơn bạn đã đánh giá sản phẩm!",
+          status: 1,
+        })
+      );
+      navigate("/order");
     } catch (error) {
-      console.error("Có lỗi khi gửi đánh giá:", error);
-      alert("Có lỗi xảy ra khi gửi đánh giá");
+      dispatch(
+        showNotification({
+          message: "Đã xảy ra lỗi khi gửi đánh giá. Vui lòng thử lại sau.",
+          status: 0,
+        })
+      );
     }
   };
 
@@ -55,31 +72,26 @@ function Rating() {
         Đánh giá sản phẩm
       </h1>
 
-      {product && (
-        <div className="text-center mb-8">
-          <img
-            src={product.imageURL}
-            alt={product.name}
-            className="w-48 h-48 object-cover rounded-lg mx-auto mb-4"
-          />
-          <h3 className="text-xl font-medium text-gray-700">{product.name}</h3>
-        </div>
-      )}
-
+      {/* Đánh giá sao bằng input radio */}
       <div className="mb-4">
         <div className="flex justify-center mt-2">
-          {[1, 2, 3, 4, 5].map((star) => (
-            <StarIcon
-              key={star}
-              className={`w-8 h-8 cursor-pointer mx-2 ${
-                star <= rating ? "text-yellow-500" : "text-gray-400"
-              }`}
-              onClick={() => setRating(star)}
-            />
-          ))}
+          <div className="rating rating-lg">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <input
+                key={star}
+                type="radio"
+                name="rating"
+                className={`mask mask-star-2 bg-orange-400 ${
+                  star <= rating ? "checked" : ""
+                }`}
+                onChange={() => setRating(star)} // Khi người dùng chọn sao
+              />
+            ))}
+          </div>
         </div>
       </div>
 
+      {/* Feedback mô tả thêm */}
       <div className="mb-6">
         <label htmlFor="feedback" className="block text-gray-600 font-medium">
           Mô tả thêm (tùy chọn):
@@ -94,11 +106,9 @@ function Rating() {
         />
       </div>
 
-      <div className="mb-6 items-center">
-        <label
-          htmlFor="pictures"
-          className="block text-gray-600 font-medium mr-4"
-        >
+      {/* Chọn ảnh */}
+      <div className="mb-6">
+        <label htmlFor="pictures" className="block text-gray-600 font-medium">
           Chọn ảnh (tùy chọn):
         </label>
         <div className="flex items-center">
@@ -118,9 +128,10 @@ function Rating() {
           </button>
         </div>
       </div>
-      
+
+      {/* Hiển thị ảnh đã chọn */}
       <div className="flex flex-wrap space-x-4 mt-4">
-        {Array.from(pictures).map((picture, index) => (
+        {pictures.map((picture, index) => (
           <div key={index} className="relative">
             <img
               src={URL.createObjectURL(picture)}
@@ -137,24 +148,10 @@ function Rating() {
         ))}
       </div>
 
-      {pictures.length > 0 && (
-        <div className="mb-6">
-          <div className="flex space-x-4 mt-4">
-            {Array.from(pictures).map((picture, index) => (
-              <img
-                key={index}
-                src={URL.createObjectURL(picture)}
-                alt={`preview-${index}`}
-                className="w-32 h-32 object-cover rounded-md"
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
+      {/* Gửi đánh giá */}
       <button
         onClick={handleSubmitRating}
-        className="w-full py-3 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="w-full py-3 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 mt-6"
       >
         Gửi đánh giá
       </button>
