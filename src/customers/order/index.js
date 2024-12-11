@@ -42,55 +42,52 @@ function PurchaseHistory() {
     "Đã hủy",
   ];
 
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const fetchedOrders = await OrderService.getAllOrderByUserLogin(
-          null,
-          searchText,
-          null,
-          currentPage,
-          size
-        );
+  const fetchOrders = async () => {
+    try {
+      const response = await OrderService.getAllOrderByUserLogin(
+        null,
+        searchText,
+        null,
+        currentPage,
+        size
+      );
 
-        // Set both orders and filtered orders
-        setOrders(fetchedOrders.data.content);
-        setTotalPages(fetchedOrders.data.totalPages);
-        setFilteredOrders(fetchedOrders.data.content);
-      } catch (error) {
-        console.error("Lỗi khi lấy lịch sử mua hàng:", error);
+      if (response?.data?.content) {
+        setOrders(response.data.content);
+        setFilteredOrders(response.data.content);
+        setTotalPages(response.data.totalPages);
+      } else {
+        throw new Error("Dữ liệu không hợp lệ từ API.");
       }
-    };
+    } catch (error) {
+      console.error("Lỗi khi lấy danh sách hóa đơn:", error);
+      dispatch(
+        showNotification({
+          message: "Không thể tải danh sách hóa đơn. Vui lòng thử lại.",
+          status: 0,
+        })
+      );
+    }
+  };
 
+  useEffect(() => {
     fetchOrders();
   }, [searchText, currentPage, size]);
 
   useEffect(() => {
-    if (activeTab === "Tất cả") {
-      setFilteredOrders(
-        orders.filter(
-          (order) =>
-            order.orderID.toLowerCase().includes(searchText.toLowerCase()) ||
-            order.orderDetails.some((item) =>
-              item.productName.toLowerCase().includes(searchText.toLowerCase())
-            )
-        )
-      );
-    } else {
-      setFilteredOrders(
-        orders
-          .filter((order) => order.status === activeTab)
-          .filter(
-            (order) =>
-              order.orderID.toLowerCase().includes(searchText.toLowerCase()) ||
-              order.orderDetails.some((item) =>
-                item.productName
-                  .toLowerCase()
-                  .includes(searchText.toLowerCase())
-              )
-          )
-      );
-    }
+    const filtered = orders.filter((order) => {
+      const matchesStatus =
+        activeTab === "Tất cả" || order.status === activeTab;
+      const matchesSearch =
+        order.orderID.toLowerCase().includes(searchText.toLowerCase()) ||
+        order.orderDetails.some((item) =>
+          item.productName.toLowerCase().includes(searchText.toLowerCase())
+        );
+
+      return matchesStatus && matchesSearch;
+    });
+
+    setFilteredOrders(filtered);
   }, [activeTab, orders, searchText]);
 
   const openModal = (order) => {
@@ -119,8 +116,8 @@ function PurchaseHistory() {
 
     try {
       const response = await OrderService.cancelOrder(orderToCancel.orderID);
-
-      if (response.status === 200) {
+      console.log(response);
+      if (response.success) {
         setOrders((prevOrders) =>
           prevOrders.map((order) =>
             order.orderID === orderToCancel.orderID
@@ -136,19 +133,14 @@ function PurchaseHistory() {
           })
         );
       } else {
-        dispatch(
-          showNotification({
-            message: `Không thể hủy đơn hàng #${orderToCancel.orderID}. Vui lòng thử lại sau.`,
-            status: 0,
-          })
-        );
+        throw new Error("Phản hồi API không thành công.");
       }
     } catch (error) {
       console.error("Lỗi khi hủy đơn hàng:", error);
 
       dispatch(
         showNotification({
-          message: `Có lỗi xảy ra khi hủy đơn hàng. Có thể đơn hàng đã được xử lý và không thể hủy nữa. Vui lòng kiểm tra lại trạng thái đơn hàng.`,
+          message: `Không thể hủy đơn hàng #${orderToCancel.orderID}. Vui lòng thử lại.`,
           status: 0,
         })
       );
@@ -159,14 +151,22 @@ function PurchaseHistory() {
 
   const handlePayment = async () => {
     try {
-      // Sử dụng ID hóa đơn hiện tại
-      const orderID = selectedOrder.id;
-  
+      if (!selectedOrder || !selectedOrder.orderID) {
+        dispatch(
+          showNotification({
+            message: "Đơn hàng không hợp lệ. Vui lòng chọn đơn hàng khác.",
+            status: 0,
+          })
+        );
+        return;
+      }
+
+      const orderID = selectedOrder.orderID; // Lấy ID hóa đơn từ `selectedOrder`
+
       if (selectedPaymentMethod === "zalopay") {
         const zaloPaymentData = await OrderService.createPayment(orderID);
-        console.log("ZaloPay Response:", zaloPaymentData);
-  
-        if (zaloPaymentData.returncode === 1 && zaloPaymentData.orderurl) {
+
+        if (zaloPaymentData?.returncode === 1 && zaloPaymentData?.orderurl) {
           dispatch(
             showNotification({
               message: "Chuyển hướng đến ZaloPay...",
@@ -183,8 +183,10 @@ function PurchaseHistory() {
           );
         }
       } else if (selectedPaymentMethod === "vnpay") {
-        const vnpayPaymentData = await OrderService.createVNPayPaymentUrl(orderID);
-  
+        const vnpayPaymentData = await OrderService.createVNPayPaymentUrl(
+          orderID
+        );
+
         if (typeof vnpayPaymentData === "string") {
           dispatch(
             showNotification({
@@ -201,9 +203,16 @@ function PurchaseHistory() {
             })
           );
         }
+      } else {
+        dispatch(
+          showNotification({
+            message: "Phương thức thanh toán không hợp lệ.",
+            status: 0,
+          })
+        );
       }
     } catch (error) {
-      console.error("Error during payment process:", error);
+      console.error("Lỗi trong quá trình thanh toán:", error);
       dispatch(
         showNotification({
           message: "Không thể xử lý thanh toán, vui lòng thử lại.",
@@ -215,31 +224,8 @@ function PurchaseHistory() {
     }
   };
 
-
   const renderPagination = () => {
-    const pages = [];
-    const maxPages = totalPages - 1;
-
-    if (totalPages <= 5) {
-      for (let i = 0; i <= maxPages; i++) {
-        pages.push(i);
-      }
-    } else {
-      pages.push(0, 1);
-
-      if (currentPage > 3) pages.push("...");
-
-      const startPage = Math.max(2, currentPage - 1);
-      const endPage = Math.min(maxPages - 2, currentPage + 1);
-
-      for (let page = startPage; page <= endPage; page++) {
-        pages.push(page);
-      }
-
-      if (currentPage < maxPages - 3) pages.push("...");
-
-      pages.push(maxPages - 1, maxPages);
-    }
+    const pages = Array.from({ length: totalPages }, (_, index) => index);
 
     return (
       <div className="join mt-4 flex justify-center w-full">
@@ -251,28 +237,22 @@ function PurchaseHistory() {
           Trước
         </button>
 
-        {pages.map((page, index) =>
-          page === "..." ? (
-            <span key={index} className="join-item btn disabled">
-              ...
-            </span>
-          ) : (
-            <button
-              key={page}
-              onClick={() => handlePageChange(page)}
-              className={`join-item btn ${
-                currentPage === page ? "btn-primary" : ""
-              }`}
-            >
-              {page + 1}
-            </button>
-          )
-        )}
+        {pages.map((page) => (
+          <button
+            key={page}
+            onClick={() => handlePageChange(page)}
+            className={`join-item btn ${
+              currentPage === page ? "btn-primary" : ""
+            }`}
+          >
+            {page + 1}
+          </button>
+        ))}
 
         <button
           onClick={() => handlePageChange(currentPage + 1)}
           className="join-item btn"
-          disabled={currentPage === maxPages}
+          disabled={currentPage === totalPages - 1}
         >
           Tiếp
         </button>
@@ -295,26 +275,37 @@ function PurchaseHistory() {
 
   const handleMarkAsDelivered = async (orderId) => {
     try {
-      setOrders((prevOrders) =>
-        prevOrders.map((order) =>
-          order.orderID === orderId
-            ? { ...order, status: "Đã giao hàng" }
-            : order
-        )
-      );
+      const response = await OrderService.markOrderAsDelivered(orderId);
 
-      dispatch(
-        showNotification({
-          message: "Đơn hàng đã được nhận!",
-          status: 1,
-        })
-      );
+      if (response.success) {
+        setOrders((prevOrders) =>
+          prevOrders.map((order) =>
+            order.orderID === orderId
+              ? { ...order, status: "Đã giao hàng" }
+              : order
+          )
+        );
+
+        dispatch(
+          showNotification({
+            message: `Đơn hàng #${orderId} đã được cập nhật thành 'Đã giao hàng'.`,
+            status: 1,
+          })
+        );
+      } else {
+        dispatch(
+          showNotification({
+            message: `Không thể cập nhật trạng thái đơn hàng #${orderId}.`,
+            status: 0,
+          })
+        );
+      }
     } catch (error) {
-      console.error("Failed to mark order as delivered:", error);
+      console.error("Lỗi khi cập nhật trạng thái đơn hàng:", error);
 
       dispatch(
         showNotification({
-          message: "Lỗi khi cập nhật trạng thái đơn hàng.",
+          message: "Có lỗi xảy ra trong quá trình cập nhật trạng thái.",
           status: 0,
         })
       );
@@ -429,6 +420,12 @@ function PurchaseHistory() {
                 </span>
               </div>
 
+              {order.status === "Đã giao hàng" && !order.isRated && (
+                <button className="absolute top-2 right-2 text-sm font-medium text-yellow-500">
+                  Đánh giá đơn hàng
+                </button>
+              )}
+
               <div className="flex justify-between items-center mt-4">
                 {(order.status === "Chờ xác nhận" ||
                   order.status === "Chờ thanh toán") && (
@@ -453,16 +450,6 @@ function PurchaseHistory() {
                     Đã nhận hàng
                   </button>
                 )}
-                {order.status === "Đã giao hàng" && (
-                  <Link
-                    to={`/rating?orderID=${order.orderID}`}
-                    className="flex items-center gap-2 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold rounded-lg w-auto text-sm shadow-md"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <StarIcon className="w-6 h-6 text-white" />
-                    Đánh giá
-                  </Link>
-                )}
               </div>
             </div>
           ))
@@ -479,10 +466,23 @@ function PurchaseHistory() {
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-11/12 sm:w-3/4 md:w-2/3 lg:w-1/2 xl:w-1/2 relative">
             <button
+              className="btn btn-square absolute top-2 right-2 text-2xl"
               onClick={closeModal}
-              className="absolute top-2 right-2 text-2xl text-gray-500 hover:text-gray-700"
             >
-              <XCircleIcon className="w-6 h-6" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
             </button>
             <h2 className="text-2xl font-bold mb-4 text-center text-gray-900 dark:text-white">
               Thông Tin Hóa Đơn
@@ -617,7 +617,8 @@ function PurchaseHistory() {
                     </p>
                     <p className="text-sm text-gray-600 dark:text-gray-300">
                       Số lượng: {item.quantity} | Giá:{" "}
-                      {item.discountPrice ? (
+                      {item.discountPrice &&
+                      item.discountPrice !== item.price ? (
                         <>
                           <span className="line-through text-gray-500">
                             {formatMoney(item.price)}
@@ -633,19 +634,22 @@ function PurchaseHistory() {
                       )}
                     </p>
                   </div>
+
+                  {selectedOrder.status === "Đã giao hàng" && (
+                    <Link
+                      to={{
+                        pathname: "/rating",
+                      }}
+                      state={{ orderDetailID: item.orderDetailID }}
+                      className="flex items-center gap-2 px-4 py-2 btn btn-outline btn-warning"
+                    >
+                      <StarIcon className="w-6 h-6 text-danger" />
+                      Đánh giá
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>
-
-            <div className="mb-6">
-              <h3 className="text-xl font-semibold mb-2">Địa chỉ giao hàng:</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-300">
-                {selectedOrder.orderAddress}
-              </p>
-              <p className="text-sm text-gray-600 dark:text-gray-300">
-                {selectedOrder.orderPhone}
-              </p>
-            </div>
 
             {/* Phương thức thanh toán */}
             {selectedOrder.status === "Chờ thanh toán" && (
