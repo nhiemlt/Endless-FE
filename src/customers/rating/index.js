@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import RatingService from "../../services/ratingService";
-import { StarIcon, PhotoIcon } from "@heroicons/react/24/solid";
+import { PlusIcon } from "@heroicons/react/24/solid"; // Import PlusIcon từ Heroicons
+import { XMarkIcon } from "@heroicons/react/24/solid"; // Icon X cho nút xóa
 import { showNotification } from "../../features/common/headerSlice";
 import { useDispatch } from "react-redux";
 
@@ -119,12 +120,12 @@ function Rating() {
             onChange={handlePictureChange}
             className="hidden"
           />
+          {/* Nút dấu + */}
           <button
             onClick={() => document.getElementById("pictures").click()}
-            className="flex items-center bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none"
+            className="flex items-center justify-center bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none"
           >
-            <PhotoIcon className="w-5 h-5 mr-2" />
-            Chọn ảnh
+            <PlusIcon className="w-6 h-6" />
           </button>
         </div>
       </div>
@@ -136,13 +137,14 @@ function Rating() {
             <img
               src={URL.createObjectURL(picture)}
               alt={`preview-${index}`}
-              className="w-32 h-32 object-cover rounded-md"
+              className="w-32 h-32 object-cover rounded-md mb-2"
             />
+            {/* Nút dấu + ở bên cạnh ảnh */}
             <button
               onClick={() => handleRemovePicture(index)}
-              className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
+              className="absolute top-0 right-0 bg-white text-red-500 rounded-full p-1"
             >
-              X
+              <PlusIcon className="w-6 h-6" />
             </button>
           </div>
         ))}
