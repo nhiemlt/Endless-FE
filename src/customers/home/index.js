@@ -14,7 +14,7 @@ import productVersionService from "../../services/productVersionService";
 import CartService from "../../services/CartService";
 import TopSellerByCategory from "./components/TopSellByCategory"
 import TopSellingProducts from './components/getTopSellingProductVersions';
-import FptChatbotButton from './components/FptChatbotButton';
+import FptChatbotButton from './components/FptChatbotButton'; // Import component chatbot button
 
 
 const Home = ({ categoryID }) => {
