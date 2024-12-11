@@ -52,8 +52,18 @@ function PurchaseHistory() {
       );
 
       if (response?.data?.content) {
-        setOrders(response.data.content);
-        setFilteredOrders(response.data.content);
+        const updatedOrders = response.data.content.map((order) => {
+          const hasPendingRatings = order.orderDetails.some(
+            (detail) => !detail.rated
+          );
+          return {
+            ...order,
+            hasPendingRatings,
+          };
+        });
+
+        setOrders(updatedOrders);
+        setFilteredOrders(updatedOrders);
         setTotalPages(response.data.totalPages);
       } else {
         throw new Error("Dữ liệu không hợp lệ từ API.");
@@ -384,12 +394,10 @@ function PurchaseHistory() {
                   <p className="text-sm text-gray-600 dark:text-gray-300">
                     {order.orderDetails[0].productVersionName}
                   </p>
-
                   <div className="flex justify-between items-center mt-4">
                     <p className="text-sm text-gray-600 dark:text-gray-300">
                       Số lượng: {order.orderDetails[0].quantity}
                     </p>
-
                     <div className="flex justify-between items-center space-x-2 mt-4">
                       {order.orderDetails[0].discountPrice &&
                       order.orderDetails[0].discountPrice !==
@@ -419,17 +427,12 @@ function PurchaseHistory() {
                 </span>
               </div>
 
-              {order.status === "Đã giao hàng" && order?.rated && (
-                <button className="absolute top-2 right-2 text-sm font-medium text-yellow-500">
-                  Đánh giá đơn hàng
-                </button>
-              )}
-
-              {order.status === "Đã giao hàng" && !order?.rated && (
-                <button className="absolute top-4 right-5 text-sm font-medium btn-outline">
-                  Đánh giá đơn hàng
-                </button>
-              )}
+              {order.status === "Đã giao hàng" &&
+                !order.orderDetails.every((detail) => detail.rated) && (
+                  <p className="text-yellow-500 text-sm mt-2 font-medium animate-pulse">
+                    Bạn có sản phẩm chưa đánh giá kìa
+                  </p>
+                )}
 
               <div className="flex justify-end items-center mt-4">
                 {(order.status === "Chờ xác nhận" ||
