@@ -55,7 +55,7 @@ const EditProductModal = ({ product, categories, brands, onClose, onProductUpdat
                     <h3 className="font-bold text-lg">Cập nhật sản phẩm</h3>
                     <form className="mt-4" onSubmit={handleSubmit}>
                         <div className="grid grid-cols-1 gap-4">
-                            <label>Tên sản phẩm</label>
+                            <label className='font-semibold'>Tên sản phẩm</label>
                             <input
                                 type="text"
                                 placeholder="Nhập tên sản phẩm..."
@@ -65,33 +65,39 @@ const EditProductModal = ({ product, categories, brands, onClose, onProductUpdat
                                 required
                             />
                             <div className="grid grid-cols-2 gap-4">
-                                <select
-                                    value={category}
-                                    onChange={(e) => setCategory(e.target.value)}
-                                    className="select select-bordered w-full"
-                                    required
-                                >
-                                    <option value="">Chọn danh mục</option>
-                                    {categories.map((cat) => (
-                                        <option key={cat.categoryID} value={cat.categoryID}>
-                                            {cat.name}
-                                        </option>
-                                    ))}
-                                </select>
+                                <div>
+                                    <label className='font-semibold'>Danh mục:</label>
+                                    <select
+                                        value={category}
+                                        onChange={(e) => setCategory(e.target.value)}
+                                        className="select select-bordered w-full"
+                                        required
+                                    >
+                                        <option value="">Chọn danh mục</option>
+                                        {categories.map((cat) => (
+                                            <option key={cat.categoryID} value={cat.categoryID}>
+                                                {cat.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className='font-semibold'>Thương hiệu</label>
+                                    <select
+                                        value={brand}
+                                        onChange={(e) => setBrand(e.target.value)}
+                                        className="select select-bordered w-full"
+                                        required
+                                    >
+                                        <option value="">Chọn thương hiệu</option>
+                                        {brands.map((b) => (
+                                            <option key={b.brandID} value={b.brandID}>
+                                                {b.brandName}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
 
-                                <select
-                                    value={brand}
-                                    onChange={(e) => setBrand(e.target.value)}
-                                    className="select select-bordered w-full"
-                                    required
-                                >
-                                    <option value="">Chọn thương hiệu</option>
-                                    {brands.map((b) => (
-                                        <option key={b.brandID} value={b.brandID}>
-                                            {b.brandName}
-                                        </option>
-                                    ))}
-                                </select>
                             </div>
                             <label>Mô tả</label>
                             <textarea

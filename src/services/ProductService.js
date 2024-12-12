@@ -7,12 +7,20 @@ const BASE_URL = `${constants.API_BASE_URL}/api/products`; // Thay đổi URL b�
 
 const ProductService = {
     // Lấy danh sách sản phẩm hoặc thông tin chi tiết theo ID
-    getProducts: async (keyword, page = 0, size = 10, sortBy = '') => {
+    getProducts: async (keyword = '', page = 0, size = 10, sortBy = 'createDate', direction = 'asc', categoryID = '', brandID = '') => {
         try {
-            const response = await axios.get(BASE_URL, {
-                params: { keyword, page, size, sortBy } // Thêm sortBy vào params
-            });
-            return response.data; // Trả về toàn bộ dữ liệu phân trang
+            const params = {
+                keyword,
+                page,
+                size,
+                sortBy,
+                direction,
+                categoryID: categoryID || undefined,  // Đảm bảo tham số là 'categoryID' không phải 'categoryId'
+                brandID: brandID || undefined         // Tương tự với 'brandID'
+            };
+
+            const response = await axios.get(BASE_URL, { params });
+            return response.data;
         } catch (error) {
             throw error.response ? error.response.data : error.message;
         }

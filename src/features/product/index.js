@@ -13,19 +13,19 @@ function ProductPage() {
   const dispatch = useDispatch();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [currentProduct, setCurrentProduct] = useState(null);
+  const [categories, setCategories] = useState([]);
+  const [brands, setBrands] = useState([]);
   const [searchKeyword, setSearchKeyword] = useState('');
+  const [categoryID, setCategoryID] = useState('');
+  const [brandID, setBrandID] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
-  const [categories, setCategories] = useState([]);
-  const [brands, setBrands] = useState([]);
-  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false); // State for confirmation dialog
-  const [productIdToDelete, setProductIdToDelete] = useState(null); // State to store the product ID to delete
-  const [sortBy, setSortBy] = useState('');
-
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [currentProduct, setCurrentProduct] = useState(null);
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+  const [productIdToDelete, setProductIdToDelete] = useState(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -46,21 +46,43 @@ function ProductPage() {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const response = await ProductService.getProducts(searchKeyword, currentPage, pageSize, sortBy); // Truyền sortBy
-      setProducts(response.content); // Trả về danh sách sản phẩm
-      setTotalPages(response.totalPages); // Lưu số trang tối đa
+      const response = await ProductService.getProducts(
+        searchKeyword,    // Từ khóa tìm kiếm
+        currentPage,      // Trang hiện tại
+        pageSize,         // Số lượng sản phẩm mỗi trang
+        'createDate',     // Thuộc tính sắp xếp
+        'asc',             // Hướng sắp xếp
+        categoryID || undefined, // Truyền undefined nếu không có categoryId
+        brandID || undefined    // Truyền undefined nếu không có brandId
+      );
+      setProducts(response.content);  // Cập nhật danh sách sản phẩm
+      setTotalPages(response.totalPages);  // Cập nhật số trang tối đa
     } catch (error) {
       dispatch(showNotification({ message: 'Lấy dữ liệu sản phẩm thất bại!', type: 'error' }));
     } finally {
       setLoading(false);
     }
   };
+  console.log('categoryId:', categoryID);
+  console.log('brandId:', brandID);
 
 
+  // Remove the fetchProducts call from handleCategoryChange and handleBrandChange
+  const handleCategoryChange = (e) => {
+    setCategoryID(e.target.value);
+    setCurrentPage(0);  // Reset trang khi thay đổi bộ lọc
+  };
+
+  const handleBrandChange = (e) => {
+    setBrandID(e.target.value);
+    setCurrentPage(0);  // Reset trang khi thay đổi bộ lọc
+  };
 
   useEffect(() => {
-    fetchProducts();
-  }, [searchKeyword, currentPage, pageSize, dispatch]);
+    fetchProducts();  // Gọi lại fetchProducts mỗi khi các giá trị lọc thay đổi
+  }, [searchKeyword, currentPage, pageSize, categoryID, brandID, dispatch]);
+
+
 
   const handleAddProduct = () => {
     setIsAddModalOpen(true);
@@ -121,6 +143,10 @@ function ProductPage() {
     }
   };
 
+
+
+
+
   return (
     <TitleCard topMargin="mt-6">
       <div className="flex flex-col md:flex-row justify-between items-center w-full mb-4">
@@ -135,19 +161,40 @@ function ProductPage() {
             className="input input-bordered w-full md:w-50 h-8"
           />
         </div>
-        <div className="flex justify-end items-center mb-4">
-          <select
-            className="select select-bordered w-40"
-            onChange={(e) => {
-              setSortBy(e.target.value); // Cập nhật sortBy
-              setCurrentPage(0); // Reset về trang đầu
-            }}
-          >
-            <option value="">Mặc định</option>
-            <option value="categoryID">Danh mục</option>
-            <option value="brandID">Thương hiệu</option>
-          </select>
+
+        {/* Danh mục và Thương hiệu */}
+        <div className="flex justify-start items-center space-x-4 w-full md:w-auto mb-2 md:mb-0">
+          <div className="flex items-center space-x-2">
+            <label className="whitespace-nowrap font-medium">Danh mục:</label>
+            <select
+              className="select select-bordered select-xs w-full  md:w-38 h-10 px-3"
+              onChange={handleCategoryChange}
+            >
+              <option value="">Tất cả</option>
+              {categories.map((category, index) => (
+                <option key={`category-${category.categoryID || index}`} value={category.categoryID}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <label className="whitespace-nowrap font-medium">Thương hiệu:</label>
+            <select
+              className="select select-bordered select-xs w-full w-full md:w-48 h-10 px-3"
+              onChange={handleBrandChange}
+            >
+              <option value="">Tất cả</option>
+              {brands.map((brand, index) => (
+                <option key={`brand-${brand.brandID || index}`} value={brand.brandID}>
+                  {brand.brandName}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
+
 
         <button className="btn btn-outline btn-sm btn-primary" onClick={handleAddProduct}>
           Thêm sản phẩm

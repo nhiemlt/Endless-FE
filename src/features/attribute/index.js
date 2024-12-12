@@ -20,7 +20,8 @@ function AttributePage() {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [confirmDialogVisible, setConfirmDialogVisible] = useState(false); // Hiển thị ConfirmDialog
   const [attributeToDelete, setAttributeToDelete] = useState(null); // Lưu thuộc tính cần xóa
-
+  const [currentPage, setCurrentPage] = useState(0);
+  const [size, setSize] = useState(10);
   const fetchAttributes = async () => {
     try {
       const response = await attributeService.getAttributes();
@@ -80,7 +81,7 @@ function AttributePage() {
 
   return (
     <div className="p-4">
-      <TitleCard title="Quản Lý Thuộc Tính">
+      <TitleCard >
         <div className="flex flex-col md:flex-row justify-between items-center w-full mb-4">
           <div className="flex justify-start items-center space-x-2 mb-2 mr-2 md:mb-0">
             <SearchBar searchText={searchKeyword} setSearchText={applySearch} styleClass="mb-4" />
@@ -92,6 +93,7 @@ function AttributePage() {
           <table className="table table-xs w-full">
             <thead>
               <tr>
+                <th>STT</th>
                 <th>Tên thuộc tính</th>
                 <th>Giá trị</th>
                 <th colSpan={2} className="text-center">Hành động</th>
@@ -99,8 +101,9 @@ function AttributePage() {
             </thead>
             <tbody>
               {filteredAttributesList.length > 0 ? (
-                filteredAttributesList.map((attribute) => (
+                filteredAttributesList.map((attribute, index) => (
                   <tr key={attribute.attributeID}>
+                    <td>{currentPage * size + index + 1}</td> {/* Hiển thị STT tính theo trang */}
                     <td>{attribute.attributeName}</td>
                     <td>
                       {Array.isArray(attribute.attributeValues) && attribute.attributeValues.length > 0
@@ -130,10 +133,11 @@ function AttributePage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="3" className="text-center">Không có thuộc tính nào!</td>
+                  <td colSpan="4" className="text-center">Không có thuộc tính nào!</td>
                 </tr>
               )}
             </tbody>
+
           </table>
         </div>
       </TitleCard>
