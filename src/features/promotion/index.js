@@ -65,29 +65,34 @@ function PromotionList() {
 
 
   const loadPromotions = async () => {
-    setIsLoading(true); // Hiển thị trạng thái đang tải
+    setIsLoading(true);
     try {
-      // Gọi hàm getAllPromotions từ PromotionService
       const response = await PromotionService.getAllPromotions(
-        { keyword: searchKeyword, }, // Bộ lọc tìm kiếm
-        currentPage, // Trang hiện tại
-        size, // Số lượng bản ghi mỗi trang
-        'createDate', // Tiêu chí sắp xếp
-        'desc' // Hướng sắp xếp
+        {
+          keyword: searchKeyword,
+          startDate: startDate ? new Date(startDate).toISOString() : '', // Chuyển đổi startDate thành ISO format (bao gồm giờ)
+          endDate: endDate ? new Date(endDate).toISOString() : '',       // Chuyển đổi endDate thành ISO format (bao gồm giờ)
+        },
+        currentPage,
+        size,
+        'createDate',
+        'desc'
       );
-
-      // Cập nhật danh sách và tổng số trang
-      setPromotions(response.content); // Nội dung khuyến mãi
-      setTotalPages(response.totalPages); // Tổng số trang
+      setPromotions(response.content);
+      setTotalPages(response.totalPages);
     } catch (error) {
       console.error("Lỗi khi tải dữ liệu khuyến mãi:", error);
     } finally {
-      setIsLoading(false); // Tắt trạng thái đang tải
+      setIsLoading(false);
     }
   };
+
+
+
   useEffect(() => {
-    loadPromotions(); // Tải dữ liệu mỗi khi dependency thay đổi
-  }, [searchKeyword, currentPage, size]);
+    loadPromotions(); // Chỉ gọi lại API khi ngày thay đổi
+  }, [searchKeyword, currentPage, size, startDate, endDate]);
+
 
 
 
@@ -169,12 +174,9 @@ function PromotionList() {
 
   return (
     <>
-      {/* Tabs */}
-
-
       {/* Promotions Table */}
       {activeTab === 'promotions' && (
-        <TitleCard title="Quản lý khuyến mãi">
+        <TitleCard >
           <div className="flex flex-col md:flex-row justify-between items-center w-full mb-4">
             <div className="flex justify-start items-center space-x-2 mb-2 mr-2 md:mb-0">
               {/* Search Input */}
@@ -187,9 +189,36 @@ function PromotionList() {
                 }}
                 className="input input-bordered w-full md:w-50 h-8"
               />
-
-
             </div>
+            {/* Bộ lọc theo ngày và giờ */}
+            <div className="flex justify-start items-center space-x-2 mb-2 mr-2 md:mb-0">
+              <label htmlFor="startDate" className="whitespace-nowrap">Từ ngày:</label>
+              <input
+                id="startDate"
+                type="datetime-local"
+                value={startDate}
+                onChange={(e) => {
+                  setStartDate(e.target.value);
+                  setCurrentPage(0);
+                }}
+                className="input input-bordered w-full md:w-30 h-8"
+                placeholder="Ngày bắt đầu"
+              />
+              <label htmlFor="endDate" className="whitespace-nowrap">Đến ngày:</label>
+              <input
+                id="endDate"
+                type="datetime-local"
+                value={endDate}
+                onChange={(e) => {
+                  setEndDate(e.target.value);
+                  setCurrentPage(0);
+                }}
+                className="input input-bordered w-full md:w-30 h-8"
+                placeholder="Ngày kết thúc"
+              />
+            </div>
+
+
 
             <button className="btn btn-outline btn-sm btn-primary" onClick={openAddPromotionModal}>
               Thêm Khuyến Mãi

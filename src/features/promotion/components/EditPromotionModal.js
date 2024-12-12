@@ -18,6 +18,8 @@ const EditPromotionModal = ({ isOpen, onClose, onPromotionUpdated, promotion }) 
     const [endDate, setEndDate] = useState('');
     const dispatch = useDispatch();
     const dialogRef = useRef(null);
+    const [isLoading, setIsLoading] = useState(false);
+
 
     // Reset form khi đóng modal
     const resetForm = () => {
@@ -87,10 +89,25 @@ const EditPromotionModal = ({ isOpen, onClose, onPromotionUpdated, promotion }) 
         const validImageTypes = ['image/jpeg', 'image/png', 'image/gif'];
 
         if (file && validImageTypes.includes(file.type)) {
-            setPromotionPoster(file);
-            setPreviewPoster(URL.createObjectURL(file));
+            const img = new Image();
+            img.onload = () => {
+                if (img.width >= img.height * 2) {
+                    setPromotionPoster(file);
+                    setPreviewPoster(URL.createObjectURL(file));
+                } else {
+                    dispatch(showNotification({
+                        message: 'Hình ảnh phải có chiều rộng lớn gấp đôi hoặc hơn chiều cao!',
+                        status: 0
+                    }));
+                    resetImage();
+                }
+            };
+            img.src = URL.createObjectURL(file);
         } else {
-            dispatch(showNotification({ message: 'Định dạng tệp không hợp lệ! Vui lòng chọn hình ảnh (JPEG, PNG, GIF) và sẽ sử dụng ảnh cũ.', status: 0 }));
+            dispatch(showNotification({
+                message: 'Định dạng tệp không hợp lệ! Vui lòng chọn hình ảnh (JPEG, PNG, GIF).',
+                status: 0
+            }));
             resetImage();
         }
     };
@@ -100,31 +117,28 @@ const EditPromotionModal = ({ isOpen, onClose, onPromotionUpdated, promotion }) 
         setPreviewPoster(null);
     };
 
+
     const handleUpdatePromotion = async (e) => {
         e.preventDefault();
 
-        // Kiểm tra thông tin khuyến mãi
         if (!promotionName || !percentDiscount || !startDate || !endDate || selectedProducts.length === 0) {
             dispatch(showNotification({ message: 'Vui lòng điền đầy đủ thông tin!', status: 0 }));
             return;
         }
 
+        setIsLoading(true); // Bắt đầu trạng thái cập nhật
         try {
             let uploadedImageUrl = null;
 
-            // Kiểm tra và tải lên hình ảnh khuyến mãi, nếu có
             if (promotionPoster) {
                 uploadedImageUrl = await UploadFileService.uploadPromotionImage(promotionPoster);
             } else if (promotion.poster) {
-                // Nếu không có hình ảnh mới, sử dụng hình ảnh cũ
                 uploadedImageUrl = promotion.poster;
             }
 
-            // Chuyển đổi startDate và endDate sang dạng UTC
             const startInstant = new Date(startDate).toISOString();
             const endInstant = new Date(endDate).toISOString();
 
-            // Chuẩn bị dữ liệu khuyến mãi
             const promotionData = {
                 name: promotionName,
                 percentDiscount: parseFloat(percentDiscount),
@@ -134,26 +148,22 @@ const EditPromotionModal = ({ isOpen, onClose, onPromotionUpdated, promotion }) 
                 poster: uploadedImageUrl || null,
             };
 
-            // Gửi yêu cầu cập nhật khuyến mãi
             const response = await PromotionService.updatePromotion(promotion.promotionID, promotionData);
 
             dispatch(showNotification({ message: 'Khuyến mãi được cập nhật thành công!', status: 1 }));
 
-            // Cập nhật lại danh sách khuyến mãi và đóng modal
             onPromotionUpdated(response);
             resetForm();
             onClose();
         } catch (error) {
-            if (error.response && error.response.data) {
-                // Xử lý lỗi trả về từ backend (ví dụ: lỗi dữ liệu không hợp lệ, sản phẩm không tồn tại...)
-                dispatch(showNotification({ message: `Lỗi: ${error.response.data}`, status: 0 }));
-            } else {
-                // Xử lý các lỗi khác (lỗi hệ thống, kết nối mạng, v.v...)
-                dispatch(showNotification({ message: 'Lỗi khi cập nhật khuyến mãi!', status: 0 }));
-            }
+            const errorMessage = error.response?.data || 'Lỗi khi cập nhật khuyến mãi!';
+            dispatch(showNotification({ message: `Lỗi: ${errorMessage}`, status: 0 }));
             console.error('Lỗi khi cập nhật khuyến mãi:', error);
+        } finally {
+            setIsLoading(false); // Kết thúc trạng thái cập nhật
         }
     };
+
 
     const handleTabClick = (e, brandName) => {
         e.preventDefault();
@@ -306,8 +316,15 @@ const EditPromotionModal = ({ isOpen, onClose, onPromotionUpdated, promotion }) 
 
                         <div className="modal-action">
                             <button type="button" className="btn" onClick={onClose}>Hủy</button>
-                            <button type="submit" className="btn btn-primary">Cập nhật</button>
+                            <button
+                                type="submit"
+                                className={`btn btn-primary ${isLoading ? 'btn-disabled loading' : ''}`}
+                                disabled={isLoading}
+                            >
+                                {isLoading ? 'Đang cập nhật...' : 'Cập nhật'}
+                            </button>
                         </div>
+
                     </form>
                 </div>
             </dialog>

@@ -8,28 +8,28 @@ const PromotionService = {
     // Lấy danh sách khuyến mãi (với hỗ trợ tìm kiếm, phân trang, và sắp xếp)
     getAllPromotions: async (filters = {}, page = 0, size = 10, sortBy = 'createDate', direction = 'asc') => {
         try {
-            const { keyword } = filters; // Lấy keyword từ bộ lọc (nếu có)
+            const { keyword, startDate, endDate } = filters; // Lấy từ khóa và ngày từ bộ lọc
 
             // Tạo các tham số để gửi đến backend
             const params = {
-                keyword: keyword || '',      // Từ khóa tìm kiếm (nếu không có thì rỗng)
-                page: page || 0,            // Trang hiện tại (mặc định là 0)
-                size: size || 10,           // Số lượng bản ghi mỗi trang (mặc định là 10)
-                sortBy: sortBy || 'createDate', // Tiêu chí sắp xếp (mặc định theo createDate)
-                direction: direction || 'asc', // Hướng sắp xếp (mặc định là asc)
+                keyword: keyword || '',        // Từ khóa tìm kiếm
+                startDate: startDate ? new Date(startDate).toISOString() : '',  // Chuyển đổi startDate thành ISO format (bao gồm giờ)
+                endDate: endDate ? new Date(endDate).toISOString() : '',        // Chuyển đổi endDate thành ISO format (bao gồm giờ)
+                page: page || 0,               // Trang hiện tại
+                size: size || 10,              // Số lượng bản ghi mỗi trang
+                sortBy: sortBy || 'createDate', // Tiêu chí sắp xếp
+                direction: direction || 'asc',  // Hướng sắp xếp
             };
 
-            // Gọi API với các tham số đã cấu hình
-            const response = await axios.get(API_URL, {
-                params: params, // Truyền tham số vào trong params
-            });
+            const response = await axios.get(API_URL, { params });
 
-            return response.data; // Trả về dữ liệu từ API
+            return response.data;
         } catch (error) {
             console.error("Lỗi khi lấy danh sách khuyến mãi:", error);
             throw error; // Ném lỗi để xử lý ở cấp cao hơn
         }
     },
+
 
     // Lấy thông tin khuyến mãi theo ID
     getPromotionById: async (promotionID) => {

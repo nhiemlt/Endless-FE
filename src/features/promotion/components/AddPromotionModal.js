@@ -36,13 +36,30 @@ const AddPromotionModal = ({ isOpen, onClose, onPromotionAdded }) => {
         const validImageTypes = ['image/jpeg', 'image/png', 'image/gif'];
 
         if (file && validImageTypes.includes(file.type)) {
-            setPromotionPoster(file);
-            setPreviewPoster(URL.createObjectURL(file));
+            const img = new Image();
+            img.onload = () => {
+                if (img.width >= img.height * 2) {
+                    setPromotionPoster(file);
+                    setPreviewPoster(URL.createObjectURL(file));
+                } else {
+                    dispatch(showNotification({
+                        message: 'Ảnh không hợp lệ! Chiều rộng lớn gấp đôi hoặc hơn chiều cao!',
+                        status: 0
+                    }));
+                    resetImage();
+                }
+            };
+            img.src = URL.createObjectURL(file);
         } else {
-            dispatch(showNotification({ message: 'Định dạng tệp không hợp lệ! Vui lòng chọn hình ảnh (JPEG, PNG, GIF).', status: 0 }));
+            dispatch(showNotification({
+                message: 'Định dạng tệp không hợp lệ! Vui lòng chọn hình ảnh (JPEG, PNG, GIF).',
+                status: 0
+            }));
             resetImage();
         }
     };
+
+
 
     const resetImage = () => {
         setPromotionPoster(null);
