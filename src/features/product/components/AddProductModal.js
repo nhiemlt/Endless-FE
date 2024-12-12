@@ -88,7 +88,7 @@ const AddProductModal = ({ onClose, onProductAdded }) => {
                     <form className='mt-4' onSubmit={handleSubmit}>
                         <div className="grid grid-cols-1 gap-4">
                             {/* Input tên sản phẩm trên một hàng */}
-                            <label>Tên sản phẩm</label>
+                            <label className='font-semibold'>Tên sản phẩm</label>
 
                             <input
                                 type="text"
@@ -100,39 +100,39 @@ const AddProductModal = ({ onClose, onProductAdded }) => {
                             />
                             {/* Hai combobox đứng cùng một hàng */}
                             <div className="grid grid-cols-2 gap-4">
-                                <select
-                                    value={category}
-                                    onChange={(e) => {
-                                        setCategory(e.target.value);
-                                    }}
-                                    className="select select-bordered w-full"
-                                    required
-                                >
-                                    <option value="">Chọn danh mục</option>
-                                    {categories.map((cat, index) => (
-                                        <option key={`${cat.categoryID}-${index}`} value={cat.categoryID}>{cat.name}</option>
-                                    ))}
-                                </select>
-
-                                <select
-                                    value={brand}
-                                    onChange={(e) => {
-                                        setBrand(e.target.value);
-                                    }}
-                                    className="select select-bordered w-full"
-                                    required
-                                >
-                                    <option value="">Chọn thương hiệu</option>
-                                    {brands.map((b, index) => (
-                                        <option key={`${b.brandID}-${index}`} value={b.brandID}>{b.brandName}</option>
-                                    ))}
-                                </select>
-
+                                <div>
+                                    <label className='font-semibold'>Danh mục:</label>
+                                    <select
+                                        value={category}
+                                        onChange={(e) => {
+                                            setCategory(e.target.value);
+                                        }}
+                                        className="select select-bordered w-full" >
+                                        <option value="">Chọn danh mục</option>
+                                        {categories.map((cat, index) => (
+                                            <option key={`${cat.categoryID}-${index}`} value={cat.categoryID}>{cat.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className='font-semibold'>Thương hiệu</label>
+                                    <select
+                                        value={brand}
+                                        onChange={(e) => {
+                                            setBrand(e.target.value);
+                                        }}
+                                        className="select select-bordered w-full">
+                                        <option value="">Chọn thương hiệu</option>
+                                        {brands.map((b, index) => (
+                                            <option key={`${b.brandID}-${index}`} value={b.brandID}>{b.brandName}</option>
+                                        ))}
+                                    </select>
+                                </div>
 
 
                             </div>
                             {/* Mô tả sản phẩm trên một hàng */}
-                            <label>Mô tả:</label>
+                            <label className='font-semibold'>Mô tả:</label>
                             <textarea
                                 placeholder="Nhập mô tả..."
                                 value={description}
