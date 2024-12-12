@@ -85,7 +85,7 @@ const routes = [
       {
         path: '/app/statistical-product', //url
         icon: <InboxIcon className={submenuIconClasses} />, // icon component
-        name: 'Thống kê sản phẩm', // name that appear in Sidebar
+        name: 'Thống kê xuất nhập', // name that appear in Sidebar
       },
       {
         path: '/app/statistical-inventory', //url

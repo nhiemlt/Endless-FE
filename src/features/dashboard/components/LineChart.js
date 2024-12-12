@@ -8,9 +8,9 @@ import {
   Tooltip,
   Filler,
   Legend,
-} from 'chart.js';
-import { Line } from 'react-chartjs-2';
-import TitleCard from '../../../components/Cards/TitleCard';
+} from "chart.js";
+import { Line } from "react-chartjs-2";
+import TitleCard from "../../../components/Cards/TitleCard";
 
 ChartJS.register(
   CategoryScale,
@@ -23,40 +23,52 @@ ChartJS.register(
   Legend
 );
 
-function LineChart(){
-
+function LineChart() {
   const options = {
     responsive: true,
     plugins: {
       legend: {
-        position: 'top',
+        position: "top",
       },
     },
   };
 
-  
-  const labels = ['January', 'February', 'March', 'April', 'May', 'June', 'July'];
+  const labels = [
+    "Tháng 1",
+    "Tháng 2",
+    "Tháng 3",
+    "Tháng 4",
+    "Tháng 5",
+    "Tháng 6",
+    "Tháng 7",
+    "Tháng 8",
+    "Tháng 9",
+    "Tháng 10",
+    "Tháng 11",
+    "Tháng 12",
+  ];
 
   const data = {
-  labels,
-  datasets: [
-    {
-      fill: true,
-      label: 'MAU',
-      data: labels.map(() => { return Math.random() * 100 + 500 }),
-      borderColor: 'rgb(53, 162, 235)',
-      backgroundColor: 'rgba(53, 162, 235, 0.5)',
-    },
-  ],
-};
-  
+    labels,
+    datasets: [
+      {
+        fill: true,
+        label: "MAU",
+        data: labels.map(() => {
+          return Math.random() * 100 + 500;
+        }),
+        borderColor: "rgb(53, 162, 235)",
+        backgroundColor: "rgba(53, 162, 235, 0.5)",
+      },
+    ],
+  };
 
-    return(
-      <TitleCard title={"Montly Active Users (in K)"}>
-          <Line data={data} options={options}/>
-      </TitleCard>
-    )
+  return (
+    <div className="w-full min-h-[100px] p-6 bg-gray-100">
+      {/* Đảm bảo chiều cao cố định cho biểu đồ */}
+      <Line options={options} data={data}/>
+    </div>
+  );
 }
 
-
-export default LineChart
+export default LineChart;
