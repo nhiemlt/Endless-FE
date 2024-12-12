@@ -251,7 +251,6 @@ function Product() {
                             checked={filterData.categoryIDs.includes(category.categoryID)} // Kiểm tra xem category có được chọn không
                             onChange={() => {
                               handleCategoryChange(category.categoryID);
-                              // Lọc lại sản phẩm khi thay đổi danh mục
                             }}
                           />
                           <span className="text-sm font-medium dark:text-white text-gray-900">
@@ -293,7 +292,6 @@ function Product() {
                             checked={filterData.brandIDs.includes(brand.brandID)} // Kiểm tra xem thương hiệu có được chọn không
                             onChange={() => {
                               handleBrandChange(brand.brandID);
-                              // Lọc lại sản phẩm khi thay đổi thương hiệu
                             }}
                           />
                           <span className="text-sm font-medium dark:text-white text-gray-900">
