@@ -1,20 +1,20 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import RatingService from "../../services/ratingService";
-import { PlusIcon } from "@heroicons/react/24/solid"; // Import PlusIcon từ Heroicons
-import { XMarkIcon } from "@heroicons/react/24/solid"; // Icon X cho nút xóa
+import { PlusIcon } from "@heroicons/react/24/solid";
+import { XMarkIcon } from "@heroicons/react/24/solid";
 import { showNotification } from "../../features/common/headerSlice";
 import { useDispatch } from "react-redux";
+import UploadFileService from "../../services/UploadFileService";
 
 function Rating() {
   const location = useLocation();
   const { orderDetailID } = location.state || {};
   const navigate = useNavigate();
   const dispatch = useDispatch();
-
   const [feedback, setFeedback] = useState("");
   const [pictures, setPictures] = useState([]);
-  const [rating, setRating] = useState(0);
+  const [rating, setRating] = useState(5);
 
   useEffect(() => {
     if (!orderDetailID) {
@@ -40,7 +40,33 @@ function Rating() {
     }
 
     try {
-      await RatingService.addRating(orderDetailID, rating, feedback, pictures);
+      // Mảng lưu trữ URL ảnh đã tải lên Firebase
+      const uploadedPictures = [];
+
+      // Tải ảnh lên Firebase
+      for (let file of pictures) {
+        try {
+          // Tải ảnh lên Firebase và lấy URL của ảnh
+          const uploadedImageUrl = await UploadFileService.uploadRating(file);
+          uploadedPictures.push(uploadedImageUrl); // Lưu URL của ảnh đã tải lên Firebase
+        } catch (error) {
+          dispatch(
+            showNotification({
+              message: "Đã xảy ra lỗi khi tải ảnh lên.",
+              status: 0,
+            })
+          );
+          return;
+        }
+      }
+
+      // Gửi đánh giá cùng với ảnh đã tải lên
+      await RatingService.addRating(
+        orderDetailID,
+        rating,
+        feedback,
+        uploadedPictures
+      );
       dispatch(
         showNotification({
           message: "Cảm ơn bạn đã đánh giá sản phẩm!",
@@ -60,7 +86,11 @@ function Rating() {
 
   const handlePictureChange = (e) => {
     const selectedFiles = Array.from(e.target.files);
-    setPictures((prevPictures) => [...prevPictures, ...selectedFiles]);
+    // Kiểm tra và chỉ thêm ảnh hợp lệ vào danh sách ảnh xem trước
+    const validPictures = selectedFiles.filter((file) =>
+      file.type.startsWith("image/")
+    );
+    setPictures((prevPictures) => [...prevPictures, ...validPictures]);
   };
 
   const handleRemovePicture = (index) => {
@@ -73,7 +103,6 @@ function Rating() {
         Đánh giá sản phẩm
       </h1>
 
-      {/* Đánh giá sao bằng input radio */}
       <div className="mb-4">
         <div className="flex justify-center mt-2">
           <div className="rating rating-lg">
@@ -85,14 +114,13 @@ function Rating() {
                 className={`mask mask-star-2 bg-orange-400 ${
                   star <= rating ? "checked" : ""
                 }`}
-                onChange={() => setRating(star)} // Khi người dùng chọn sao
+                onChange={() => setRating(star)}
               />
             ))}
           </div>
         </div>
       </div>
 
-      {/* Feedback mô tả thêm */}
       <div className="mb-6">
         <label htmlFor="feedback" className="block text-gray-600 font-medium">
           Mô tả thêm (tùy chọn):
@@ -102,7 +130,7 @@ function Rating() {
           value={feedback}
           onChange={(e) => setFeedback(e.target.value)}
           rows="4"
-          className="mt-2 w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="mt-2 w-full p-4 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="Nhập đánh giá của bạn..."
         />
       </div>
@@ -112,7 +140,7 @@ function Rating() {
         <label htmlFor="pictures" className="block text-gray-600 font-medium">
           Chọn ảnh (tùy chọn):
         </label>
-        <div className="flex items-center">
+        <div className="flex items-center space-x-4">
           <input
             type="file"
             id="pictures"
@@ -120,31 +148,32 @@ function Rating() {
             onChange={handlePictureChange}
             className="hidden"
           />
-          {/* Nút dấu + */}
           <button
+            className="btn btn-square bg-blue-500 text-white rounded-md hover:bg-blue-600"
             onClick={() => document.getElementById("pictures").click()}
-            className="flex items-center justify-center bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none"
           >
             <PlusIcon className="w-6 h-6" />
           </button>
+          <span className="text-sm text-gray-500">
+            Chọn ảnh để tải lên (JPG, PNG, tối đa 5MB)
+          </span>
         </div>
       </div>
 
       {/* Hiển thị ảnh đã chọn */}
       <div className="flex flex-wrap space-x-4 mt-4">
         {pictures.map((picture, index) => (
-          <div key={index} className="relative">
+          <div key={index} className="relative mb-4">
             <img
               src={URL.createObjectURL(picture)}
               alt={`preview-${index}`}
-              className="w-32 h-32 object-cover rounded-md mb-2"
+              className="w-32 h-32 object-cover rounded-md border-2 border-gray-200"
             />
-            {/* Nút dấu + ở bên cạnh ảnh */}
             <button
               onClick={() => handleRemovePicture(index)}
               className="absolute top-0 right-0 bg-white text-red-500 rounded-full p-1"
             >
-              <PlusIcon className="w-6 h-6" />
+              <XMarkIcon className="w-6 h-6" />
             </button>
           </div>
         ))}
