@@ -11,19 +11,31 @@ const OrderService = {
         return response.data; // Trả về dữ liệu API
     },
 
-    // Lấy tất cả đơn hàng với các tham số tìm kiếm
-    getAllOrders: async (searchText, startDate, endDate, page, size) => {
-        const response = await axios.get(`${constants.API_BASE_URL}/orders`, {
-            params: {
-                searchText,
-                startDate,
-                endDate,
-                page,
-                size,
-            },
-        });
-        return response.data;
+    getAllOrders: async (keywords, startDate, endDate, page = 0, size = 10, status = '') => {
+        try {
+            // Gọi API để lấy danh sách đơn hàng
+            const response = await axios.get(`${constants.API_BASE_URL}/orders`, {
+                params: {
+                    keywords,
+                    startDate,
+                    endDate,
+                    page,
+                    size,
+                    status, // Tham số trạng thái
+                },
+            });
+
+            // Trả về dữ liệu từ phản hồi API
+            return response.data;
+        } catch (error) {
+            // Log lỗi ra console
+            console.error("Error fetching orders:", error);
+
+            // Quăng lỗi ra ngoài để xử lý
+            throw error;
+        }
     },
+
 
     // Tạo đơn hàng mới từ frontend
     createOrder: async (orderModel) => {
