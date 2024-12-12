@@ -1,70 +1,71 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { showNotification } from '../../common/headerSlice'; // Đường dẫn đúng
+import { showNotification } from '../../common/headerSlice';
 import attributeService from '../../../services/attributeService';
 import MinusIcon from '@heroicons/react/24/outline/MinusIcon';
 import PlusIcon from '@heroicons/react/24/outline/PlusIcon';
 
 const AddAttributeModal = ({ onClose, onAttributeAdded }) => {
     const [attributeName, setAttributeName] = useState('');
-    const [values, setValues] = useState(['']); // Bắt đầu với một giá trị trống
+    const [values, setValues] = useState([]); // Không có giá trị ban đầu
+    const [visibleInputs, setVisibleInputs] = useState([]); // Lưu trạng thái hiển thị của từng input
     const dispatch = useDispatch();
-    const [attributes, setAttributes] = useState([]);
-    const [currentPage, setCurrentPage] = useState(0);
-    const [totalPages, setTotalPages] = useState(0);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Kiểm tra trùng lặp trong danh sách values
-        const duplicateValue = values.find((value, index) => values.indexOf(value) !== index);
-
-        if (duplicateValue) {
-            // Nếu có trùng, hiển thị thông báo lỗi và không tiếp tục
-            dispatch(showNotification({ message: `Giá trị "${duplicateValue}" đã tồn tại. Vui lòng nhập giá trị khác.`, status: 0 }));
+        // Kiểm tra input nào đang hiển thị nhưng bị bỏ trống
+        const invalidIndex = visibleInputs.findIndex((visible, index) => visible && !values[index]);
+        if (invalidIndex !== -1) {
+            dispatch(showNotification({
+                message: `Giá trị ở vị trí ${invalidIndex + 1} không được để trống.`,
+                status: 0
+            }));
             return;
         }
+
+        // Kiểm tra trùng lặp
+        const duplicateValue = values.find((value, index) => values.indexOf(value) !== index);
+        if (duplicateValue) {
+            dispatch(showNotification({
+                message: `Giá trị "${duplicateValue}" đã tồn tại. Vui lòng nhập giá trị khác.`,
+                status: 0
+            }));
+            return;
+        }
+
         try {
             const newAttribute = {
                 attributeName,
-                attributeValues: values.map(value => ({ attributeValue: value })) // Chuyển đổi thành đối tượng
+                attributeValues: values.map(value => ({ attributeValue: value }))
             };
 
             const createdAttribute = await attributeService.createAttribute(newAttribute);
-            onAttributeAdded(createdAttribute); // Cập nhật state ở component cha
+            onAttributeAdded(createdAttribute);
             dispatch(showNotification({ message: 'Thêm thuộc tính thành công!', status: 1 }));
             resetForm();
             onClose();
         } catch (error) {
-            if (error.message.includes("Thuộc tính đã tồn tại")) {
-                dispatch(showNotification({ message: 'Thuộc tính đã tồn tại, vui lòng thử tên khác.', status: 0 }));
-                dispatch(showNotification({ message: 'Thêm thuộc tính không thành công! Lỗi: ' + error.message, status: 0 }));
-            } else {
-                dispatch(showNotification({ message: 'Thêm thuộc tính không thành công! Lỗi: ' + error.message, status: 0 }));
-            }
+            dispatch(showNotification({ message: `Thêm thuộc tính không thành công! Lỗi: ${error.message}`, status: 0 }));
             console.error("Error creating attribute:", error);
-        }
-    };
-
-    const handlePrevPage = () => {
-        if (currentPage > 0) {
-            setCurrentPage(currentPage - 1);
-        }
-    };
-
-    const handleNextPage = () => {
-        if (currentPage < totalPages - 1) {
-            setCurrentPage(currentPage + 1);
         }
     };
 
     const resetForm = () => {
         setAttributeName('');
-        setValues(['']);
+        setValues([]);
+        setVisibleInputs([]);
     };
 
     const addValueField = () => {
         setValues([...values, '']);
+        setVisibleInputs([...visibleInputs, false]); // Input mặc định ẩn
+    };
+
+    const showValueField = (index) => {
+        const updatedVisibleInputs = [...visibleInputs];
+        updatedVisibleInputs[index] = true;
+        setVisibleInputs(updatedVisibleInputs);
     };
 
     const updateValue = (index, newValue) => {
@@ -75,7 +76,9 @@ const AddAttributeModal = ({ onClose, onAttributeAdded }) => {
 
     const removeValueField = (index) => {
         const updatedValues = values.filter((_, i) => i !== index);
+        const updatedVisibleInputs = visibleInputs.filter((_, i) => i !== index);
         setValues(updatedValues);
+        setVisibleInputs(updatedVisibleInputs);
     };
 
     return (
@@ -84,38 +87,63 @@ const AddAttributeModal = ({ onClose, onAttributeAdded }) => {
             <dialog open className="modal">
                 <div className="modal-box">
                     <h3 className="font-bold text-lg">Thêm Thuộc Tính</h3>
-                    <form className='mt-4' onSubmit={handleSubmit}>
+                    <form className="mt-4" onSubmit={handleSubmit}>
                         {/* Label for Attribute Name */}
-                        <label htmlFor="attributeName" className="block mb-2">Tên thuộc tính</label>
+                        <label htmlFor="attributeName" className="block mb-2 font-semibold">Tên thuộc tính</label>
                         <input
                             id="attributeName"
                             type="text"
                             value={attributeName}
                             onChange={(e) => setAttributeName(e.target.value)}
-                            placeholder="Tên thuộc tính"
+                            placeholder="Nhập tên thuộc tính"
                             className="input input-bordered w-full mb-2"
                             required
                         />
 
                         {/* Loop through values and add labels */}
                         {values.map((value, index) => (
-                            <div key={index} className="flex items-center mb-2">
-                                <input
-                                    id={`value-${index}`}
-                                    type="text"
-                                    value={value}
-                                    onChange={(e) => updateValue(index, e.target.value)}
-                                    placeholder={`Giá trị ${index + 1}`}
-                                    className="input input-bordered w-full"
-                                />
-                                <MinusIcon className=" w-10 h-10 cursor-pointer text-error" onClick={() => removeValueField(index)} />
+                            <div key={index} className="flex items-center mb-4">
+                                {visibleInputs[index] ? (
+                                    <>
+                                        <label htmlFor={`value-${index}`} className="w-32 text-right pr-4 font-semibold">
+                                            Giá trị {index + 1}
+                                        </label>
+                                        <input
+                                            id={`value-${index}`}
+                                            type="text"
+                                            value={value}
+                                            onChange={(e) => updateValue(index, e.target.value)}
+                                            placeholder={`Nhập giá trị ${index + 1}`}
+                                            className="input input-bordered w-full"
+                                        />
+                                        <MinusIcon
+                                            className="w-10 h-10 ml-2 cursor-pointer text-error"
+                                            onClick={() => removeValueField(index)}
+                                            title="Xóa giá trị" // Tooltip mặc định
+                                        />
+                                    </>
+                                ) : (
+                                    <button
+                                        type="button"
+                                        className="btn btn-outline btn-sm btn-secondary"
+                                        onClick={() => showValueField(index)}
+                                    >
+                                        Thêm giá trị {index + 1}
+                                    </button>
+                                )}
                             </div>
                         ))}
 
+
                         {/* Add new value field */}
                         <div className="flex justify-end p-2">
-                            <PlusIcon className="w-8 h-8 text-primary" onClick={addValueField} />
+                            <PlusIcon
+                                className="w-8 h-8 text-primary cursor-pointer"
+                                onClick={addValueField}
+                                title="Thêm giá trị" // Tooltip mặc định
+                            />
                         </div>
+
 
                         <div className="modal-action">
                             <button type="submit" className="btn btn-outline btn-sm btn-primary">Lưu</button>
