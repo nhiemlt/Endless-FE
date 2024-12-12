@@ -9,7 +9,7 @@ import TitleCard from "../../components/Cards/TitleCard";
 function Transactions() {
     const [currentPage, setCurrentPage] = useState(1);
     const [ordersPerPage] = useState(8);
-    const [searchText, setSearchText] = useState("");
+    const [keywords, setSearchText] = useState("");
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false); // Quản lý modal xác nhận
@@ -25,68 +25,39 @@ function Transactions() {
     // Lấy dữ liệu từ API
     const fetchOrders = async () => {
         try {
+            // Gọi API để lấy danh sách đơn hàng
             const response = await OrderService.getAllOrders(
-                searchText,
-                startDate ? new Date(startDate).toISOString() : null,
-                endDate ? new Date(endDate).toISOString() : null,
-                currentPage - 1,
-                ordersPerPage
+                keywords, // Từ khóa tìm kiếm
+                startDate || null, // Bộ lọc ngày bắt đầu
+                endDate || null,     // Bộ lọc ngày kết thúc
+                currentPage - 1, // Pagination (zero-based index)
+                ordersPerPage, // Số đơn hàng mỗi trang
+                orderStatus === 'Tất cả' ? '' : orderStatus // Chỉ truyền trạng thái nếu không phải "Tất cả"
             );
-            setAllOrders(response.data.content);
-            setTotalPages(response.data.totalPages);
-
-            // Thiết lập ngày bắt đầu và ngày kết thúc mặc định
-            if (response.data.content.length > 0) {
-                const orderDates = response.data.content.map(order => new Date(order.orderDate));
-                const minDate = new Date(Math.min(...orderDates));
-                minDate.setDate(minDate.getDate() - 1); // Cộng 1 ngày vào minDate
-
-                const maxDate = new Date(Math.max(...orderDates));
-                maxDate.setDate(maxDate.getDate() + 1); // Cộng 1 ngày vào maxDate
-                maxDate.setHours(23, 59, 59, 999);     // Đặt thời gian maxDate thành 23:59:59.999
-
-                // Đặt giá trị ngày bắt đầu và ngày kết thúc
-                setStartDate(minDate.toISOString().slice(0, 10));  // Định dạng YYYY-MM-DD
-                setEndDate(maxDate.toISOString().slice(0, 10));
-            }
+    
+            // Cập nhật danh sách đơn hàng và thông tin phân trang
+            setAllOrders(response.data); // API trả về `data` là danh sách đơn hàng
+            setTotalPages(response.totalPages); // Tổng số trang từ API
         } catch (error) {
             console.error("Error fetching orders:", error);
+            // Xử lý thêm lỗi nếu cần, như hiển thị thông báo
         }
     };
-
-    // Lọc và phân trang dữ liệu
-    useEffect(() => {
-        const filteredOrders = allOrders.filter(order => {
-            const orderDate = new Date(order.orderDate);
-            const isInRange =
-                (!startDate || orderDate >= new Date(startDate)) &&
-                (!endDate || (new Date(endDate).setHours(23, 59, 59, 999), orderDate <= new Date(endDate)));
-
-
-            const matchesSearch = order.customer.fullname.toLowerCase().includes(searchText.toLowerCase()) ||
-                order.orderID.toString().includes(searchText);
-
-            return (orderStatus === 'Tất cả' || order.status === orderStatus) && isInRange && matchesSearch;
-        });
-
-        const paginatedOrders = filteredOrders.slice(
-            (currentPage - 1) * ordersPerPage,
-            currentPage * ordersPerPage
-        );
-
-        setOrders(paginatedOrders);
-    }, [allOrders, currentPage, orderStatus, startDate, endDate, searchText]);
-
-    // Gọi API khi cần
+    
+    // Gọi `fetchOrders` mỗi khi các tham số tìm kiếm thay đổi
     useEffect(() => {
         fetchOrders();
-    }, [currentPage, searchText]);
+    }, [keywords, startDate, endDate, orderStatus, currentPage]);
+    
 
     // Hàm xử lý tìm kiếm
     const applySearch = (value) => {
+        console.log('Search text:', value);  // Debug log
         setSearchText(value);
-        setCurrentPage(1);
+        setCurrentPage(1); // Đặt lại trang về 1
     };
+    
+
 
     // Hàm xử lý xem chi tiết đơn hàng
     const handleViewDetails = (order) => {
@@ -103,10 +74,25 @@ function Transactions() {
         if (currentPage > 1) setCurrentPage(currentPage - 1);
     };
 
-    const handleStatusChange = (status) => {
-        setOrderStatus(status);
-        setCurrentPage(1);
+    const handleStatusChange = (value) => {
+        console.log('Status changed:', value);  // Debug log
+        setOrderStatus(value);
+        setCurrentPage(1);  // Đặt lại trang về 1
     };
+
+    const handleDateChange = (dateType, value) => {
+        console.log(`${dateType} date changed to:`, value); // Log để kiểm tra
+        if (dateType === 'start') {
+            // Thêm thời gian bắt đầu cho ngày
+            const startDateTime = value ? `${value}T00:00:00` : null;
+            setStartDate(startDateTime);
+        } else if (dateType === 'end') {
+            // Thêm thời gian kết thúc cho ngày
+            const endDateTime = value ? `${value}T23:59:59` : null;
+            setEndDate(endDateTime);
+        }
+        setCurrentPage(1); // Đặt lại trang về 1
+    };    
 
     const sortOrders = (option) => {
         let sortedOrders = [...orders];
@@ -166,40 +152,33 @@ function Transactions() {
                     <div className="flex flex-col md:flex-row justify-between items-center w-full">
                         {/* Thanh tìm kiếm bên trái */}
                         <div className="flex justify-start items-center space-x-2 mb-2 mr-2 md:mb-0">
-                            <SearchBar searchText={searchText} styleClass="w-full md:w-50" setSearchText={applySearch} />
+                            <SearchBar searchText={keywords} styleClass="w-full md:w-50" setSearchText={applySearch} />
                         </div>
+
                         {/* Các thành phần bên phải */}
                         <div className="flex items-center justify-end space-x-4 flex-nowrap">
-                            {/* Tiêu đề cho input ngày bắt đầu */}
+                            {/* Input cho ngày bắt đầu */}
                             <div className="flex items-center space-x-2">
                                 <label htmlFor="startDate" className="text-sm font-medium">Thời gian:</label>
                                 <input
                                     id="startDate"
                                     type="date"
                                     value={startDate || ""}
-                                    onChange={(e) => {
-                                        setStartDate(e.target.value);
-                                        setCurrentPage(1);
-                                    }}
+                                    onChange={(e) => handleDateChange('start', e.target.value)}  // Gọi hàm handleDateChange cho ngày bắt đầu
                                     className="input input-bordered w-full md:w-40 h-8"
                                 />
                             </div>
                             <label htmlFor="endDate" className="text-sm font-medium">-</label>
-                            {/* Tiêu đề cho input ngày kết thúc */}
                             <div className="flex items-center">
                                 <input
                                     id="endDate"
                                     type="date"
                                     value={endDate || ""}
-                                    onChange={(e) => {
-                                        setEndDate(e.target.value);
-                                        setCurrentPage(1);
-                                    }}
+                                    onChange={(e) => handleDateChange('end', e.target.value)}  // Gọi hàm handleDateChange cho ngày kết thúc
                                     className="input input-bordered w-full md:w-40 h-8 ms-12 md:ms-0"
                                 />
                             </div>
-
-                            {/* Tiêu đề cho select trạng thái */}
+                            {/* Select cho trạng thái */}
                             <div className="flex items-center space-x-2">
                                 <label className="text-sm font-medium">Trạng thái:</label>
                                 <select
@@ -213,12 +192,15 @@ function Transactions() {
                                 </select>
                             </div>
 
-                            {/* Tiêu đề cho dropdown sắp xếp */}
+                            {/* Select dropdown cho việc sắp xếp */}
                             <div className="flex items-center space-x-2">
                                 <label className="text-sm font-medium">Sắp xếp:</label>
                                 <select
                                     className="select select-sm select-bordered w-full md:w-40"
-                                    onChange={(e) => sortOrders(e.target.value)}
+                                    onChange={(e) => {
+                                        // Sắp xếp sẽ gọi hàm xử lý sắp xếp (nếu cần)
+                                        sortOrders(e.target.value);
+                                    }}
                                 >
                                     <option value="">Sắp xếp</option>
                                     <option value="Số tiền - Tăng dần">Số tiền - Tăng dần</option>
@@ -246,7 +228,7 @@ function Transactions() {
                             </tr>
                         </thead>
                         <tbody>
-                            {orders.map(order => (
+                            {allOrders.map(order => (
                                 <tr key={order.orderID}>
                                     <td className="p-2">{order.orderID}</td>
                                     <td className="p-2 flex items-center">
@@ -257,22 +239,20 @@ function Transactions() {
                                     <td className="hidden md:table-cell p-2">{order?.voucher?.voucherCode || "Không có"}</td>
                                     <td className="p-2">{order.totalMoney.toLocaleString()} VND</td>
                                     <td className="hidden md:table-cell p-2">
-                                        <span
-                                            className={`badge badge-md ${order.status === "Chờ xác nhận"
-                                                ? "bg-yellow-500"
-                                                : order.status === "Đã thanh toán"
-                                                    ? "bg-pink-500"
-                                                    : order.status === "Đã xác nhận"
-                                                        ? "bg-green-500"
-                                                        : order.status === "Đang giao hàng"
-                                                            ? "bg-blue-700"
-                                                            : order.status === "Đã giao hàng"
-                                                                ? "bg-lime-800"
-                                                                : order.status === "Đã hủy"
-                                                                    ? "bg-red-800"
-                                                                    : "bg-gray-400"
-                                                } pt-2 pb-3 text-white badge-outline`}
-                                        >
+                                        <span className={`badge badge-md ${order.status === "Chờ xác nhận"
+                                            ? "bg-yellow-500"
+                                            : order.status === "Đã thanh toán"
+                                                ? "bg-pink-500"
+                                                : order.status === "Đã xác nhận"
+                                                    ? "bg-green-500"
+                                                    : order.status === "Đang giao hàng"
+                                                        ? "bg-blue-700"
+                                                        : order.status === "Đã giao hàng"
+                                                            ? "bg-lime-800"
+                                                            : order.status === "Đã hủy"
+                                                                ? "bg-red-800"
+                                                                : "bg-gray-400"
+                                            } pt-2 pb-3 text-white badge-outline`}>
                                             {order.status}
                                         </span>
                                     </td>
@@ -280,9 +260,7 @@ function Transactions() {
                                         <div className="flex items-center space-x-1">
                                             <EyeIcon className="w-5 cursor-pointer text-yellow-600" onClick={() => handleViewDetails(order)} />
                                             {order.status === 'Chờ xác nhận' && (
-                                                <>
-                                                    <CheckIcon className="w-5 cursor-pointer text-green-700" onClick={() => handleConfirmOrder(order)}>Xác nhận</CheckIcon>
-                                                </>
+                                                <CheckIcon className="w-5 cursor-pointer text-green-700" onClick={() => handleConfirmOrder(order)}>Xác nhận</CheckIcon>
                                             )}
                                             {order.status === 'Đã xác nhận' && (
                                                 <TruckIcon className="w-5 cursor-pointer text-blue-800" onClick={() => handleMarkOrderAsShipping(order)}>Vận chuyển</TruckIcon>
@@ -295,6 +273,7 @@ function Transactions() {
                                 </tr>
                             ))}
                         </tbody>
+
                     </table>
                 </div>
 
