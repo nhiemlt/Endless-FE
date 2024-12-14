@@ -196,7 +196,7 @@ function ProductDetail() {
                 )}
               </div>
               <p className="text-sm text-gray-900 dark:text-white mt-2">
-                Mô tả: {selectedProductVersion?.description}
+                Mô tả: {product?.description}
               </p>
 
               <div className="mt-8">
