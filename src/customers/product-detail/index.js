@@ -2,37 +2,50 @@ import { Link } from 'react-router-dom';
 import TitleCard from '../../components/Cards/TitleCard';
 import React, { useEffect, useState } from 'react';
 import ratingService from "../../services/ratingService";
-import { useLocation } from 'react-router-dom';
 import { showNotification } from "../../features/common/headerSlice";
 import { useDispatch } from "react-redux";
 import CartService from "../../services/CartService";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import productVersionService from "../../services/productVersionService";
 
 function ProductDetail() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const location = useLocation();
-
-  const { product } = location.state || {};
+  const { productVersionID } = useParams(); 
+  const [product, setProduct] = useState(null);  // State to store the product details
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [ratings, setRatings] = useState([]);  // State to store all the ratings
   const [selectedTab, setSelectedTab] = useState("all"); // Default to 5 stars tab
 
   useEffect(() => {
-    if (product && product?.productVersionID) {
-      // Gọi API để lấy đánh giá theo productVersionID
-      ratingService.getRatingsByProductVersionId(product?.productVersionID)
-        .then(data => {
-          // Sắp xếp đánh giá theo ratingDate giảm dần
-          const sortedRatings = data.sort((a, b) => new Date(b.ratingDate) - new Date(a.ratingDate));
+    if (productVersionID) {
+      // Gọi API lấy thông tin chi tiết sản phẩm
+      productVersionService
+        .getProductVersionById(productVersionID)
+        .then((product) => {
+          setProduct(product);
+        })
+        .catch((error) => {
+          console.error("Error fetching product details:", error);
+          navigate("/not-found"); // Điều hướng nếu không tìm thấy sản phẩm
+        });
+
+      // Gọi API lấy đánh giá sản phẩm
+      ratingService
+        .getRatingsByProductVersionId(productVersionID)
+        .then((data) => {
+          const sortedRatings = data.sort(
+            (a, b) => new Date(b.ratingDate) - new Date(a.ratingDate)
+          );
           setRatings(sortedRatings);
         })
-        .catch(error => {
+        .catch((error) => {
           console.error("Error fetching ratings:", error);
         });
     }
-  }, [product]);
+  }, [productVersionID, navigate]);
 
+  
   // Phân loại các đánh giá theo sao
   const ratingCategories = [5, 4, 3, 2, 1]; // Thứ tự giảm dần
   const ratingsByStar = ratingCategories.reduce((acc, stars) => {
@@ -87,9 +100,9 @@ function ProductDetail() {
                     className="rounded object-cover w-full"
                   />
                   {/* Chỉ hiển thị giảm giá nếu product.discountPercentage > 0 */}
-                  {product.discountPercentage > 0 && (
+                  {product?.discountPercentage > 0 && (
                     <p className="absolute top-2 left-2 bg-red-600 text-white font-semibold text-xs px-2 py-1 rounded-md shadow-md">
-                      - {product.discountPercentage}%
+                      - {product?.discountPercentage}%
                     </p>
                   )}
                 </div>
@@ -169,7 +182,7 @@ function ProductDetail() {
           <div className="mt-16 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.3)] p-6 dark:bg-base-100 dark:text-gray-200">
             <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">Thông tin chi tiết</h3>
             <ul className="mt-4 space-y-6 text-gray-800 dark:text-gray-100">
-              {product.versionAttributes.map((attribute, index) => (
+              {product?.versionAttributes.map((attribute, index) => (
                 <li key={index} className="text-sm">
                   {attribute.attributeName}
                   <span className="ml-4 float-right">{attribute.attributeValue}</span>
@@ -233,7 +246,7 @@ function ProductDetail() {
                           rating.pictures.map((pic, index) => (
                             <img
                               key={index}
-                              src={`https://firebasestorage.googleapis.com/v0/b/endlesstechstoreecommerce.appspot.com/o/${encodeURIComponent(pic?.picture)}?alt=media`}
+                              src={pic.picture}
                               alt={`Rating Image ${index + 1}`}
                               className="w-24 h-24 object-cover rounded"
                             />
