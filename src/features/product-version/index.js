@@ -10,7 +10,6 @@ import EyeIcon from '@heroicons/react/24/outline/EyeIcon';
 import AddProductVersionModal from './components/AddProductVersionModal';
 import EditProductVersionModal from './components/EditProductVersionModal';
 import ProductVersionAttributesModal from './components/ProductVersionAttributesModal'; // Import mới
-import DetailsModal from './components/DetailsModal';
 import ConfirmDialog from './components/ConfirmDialog'; // Import ConfirmDialog
 
 function ProductVersionPage() {
@@ -24,11 +23,13 @@ function ProductVersionPage() {
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false); // State for confirmation dialog
   const [isAttributesModalOpen, setIsAttributesModalOpen] = useState(false); // State mới để mở modal thuộc tính
   const [selectedVersion, setSelectedVersion] = useState(null);
-  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10; // Số lượng items hiển thị trên mỗi trang
 
   const [totalPages, setTotalPages] = useState(0);
+  const [searchKeyword, setSearchKeyword] = useState('');
+
+
 
 
   const fetchProductVersions = async () => {
@@ -39,7 +40,7 @@ function ProductVersionPage() {
         itemsPerPage,
         'versionName',
         'ASC',
-        searchText
+        searchKeyword
       );
       console.log("Fetched Product Versions:", response);
       setProductVersions(response.content); // Giả sử content là danh sách các ProductVersionDTO
@@ -108,17 +109,6 @@ function ProductVersionPage() {
 
   const handleCloseAttributesModal = () => {
     setIsAttributesModalOpen(false); // Đóng modal
-  };
-
-  // Hàm mở modal xem chi tiết
-  const handleViewDetails = (version) => {
-    setSelectedVersion(version);
-    setIsDetailsModalOpen(true);
-  };
-
-  // Hàm đóng modal
-  const handleCloseDetailsModal = () => {
-    setIsDetailsModalOpen(false);
   };
 
   // Thêm state cho xác nhận chỉnh sửa
@@ -194,8 +184,14 @@ function ProductVersionPage() {
   }
 
 
-  const applySearch = (value) => setSearchText(value);
 
+
+  const formatWeight = (weight) => {
+    if (weight >= 1000) {
+      return `${(weight / 1000).toFixed(1)} kg`; // Chuyển thành kg nếu >= 1000
+    }
+    return `${weight} g`; // Hiển thị g nếu < 1000
+  };
 
   return (
     <TitleCard title="Quản lý phiên bản sản phẩm" topMargin="mt-6">
@@ -206,10 +202,13 @@ function ProductVersionPage() {
               type="text"
               placeholder="Tìm kiếm..."
               onChange={(e) => {
-
+                setSearchKeyword(e.target.value);
+                setCurrentPage(0);
               }}
+
               className="input input-bordered w-full md:w-50 h-8"
             />
+
           </div>
           <button className="btn btn-outline btn-sm btn-primary" onClick={handleAddProductVersion} >
             Thêm phiên bản
@@ -227,7 +226,7 @@ function ProductVersionPage() {
                 <th>Thuộc tính</th>
                 <th>Giá gốc</th>
                 <th>Giá bán</th>
-                <th>Kích thước</th>
+                <th>Trọng lượng</th>
                 <th>Trạng thái</th>
                 <th>Hình ảnh</th>
                 <th></th>
@@ -248,14 +247,9 @@ function ProductVersionPage() {
                   </td>
                   <td>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(version.purchasePrice)}</td>
                   <td>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(version.price)}</td>
-                  <td>
-                    <button
-                      className="btn btn-sm btn-outline btn-primary border-0"
-                      onClick={() => handleViewDetails(version)}
-                    >
-                      <EyeIcon className="h-4 w-4" />
-                    </button>
-                  </td>
+                  <td>{formatWeight(version.weight)}</td>
+
+
                   <td>
                     <label className="label cursor-pointer flex flex-col items-center space-y-1 ">
                       <span className="label-text font-semibold">
@@ -304,11 +298,6 @@ function ProductVersionPage() {
               onConfirm={handleConfirmDelete}
               onCancel={handleCloseConfirmDialog}
             />
-          )}
-
-          {/* Hiển thị DetailsModal khi nhấp vào EyeIcon */}
-          {isDetailsModalOpen && (
-            <DetailsModal version={selectedVersion} onClose={handleCloseDetailsModal} />
           )}
 
           {/* Hiển thị modal thuộc tính */}

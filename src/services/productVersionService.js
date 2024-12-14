@@ -188,17 +188,17 @@ const ProductVersionService = {
                 keyword: filterData.keyword || "",
                 minPrice: filterData.minPrice || "",
                 maxPrice: filterData.maxPrice || "",
-              });
-              
-              // Chỉ thêm categoryIDs nếu có dữ liệu
-              if (filterData.categoryIDs && filterData.categoryIDs.length > 0) {
+            });
+
+            // Chỉ thêm categoryIDs nếu có dữ liệu
+            if (filterData.categoryIDs && filterData.categoryIDs.length > 0) {
                 params.append("categoryIDs", filterData.categoryIDs.join(","));
-              }
-              
-              // Chỉ thêm brandIDs nếu có dữ liệu
-              if (filterData.brandIDs && filterData.brandIDs.length > 0) {
+            }
+
+            // Chỉ thêm brandIDs nếu có dữ liệu
+            if (filterData.brandIDs && filterData.brandIDs.length > 0) {
                 params.append("brandIDs", filterData.brandIDs.join(","));
-              }              
+            }
 
             // Gửi request GET với các tham số qua query string
             const response = await axios.get(`${BASE_URL}/filter-product-versions?${params.toString()}`);
