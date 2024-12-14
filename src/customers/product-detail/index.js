@@ -125,9 +125,6 @@ function ProductDetail() {
                   )}
                 </div>
               </div>
-
-              {/* Chọn phiên bản sản phẩm (Di chuyển xuống dưới ảnh sản phẩm) */}
-
             </div>
 
             <div className="lg:col-span-3">
@@ -205,8 +202,9 @@ function ProductDetail() {
               <div className="mt-8">
                 <button
                   type="button"
-                  className="flex-1 px-4 py-2.5 bg-yellow-400 dark:bg-yellow-400 bg-transparent dark:hover:bg-yellow-500 text-gray-950 text-sm font-semibold rounded"
-                  onClick={() => handleAddToCart(selectedProductVersionID)} 
+                  className={`flex-1 px-4 py-2.5 ${selectedProductVersion?.quantityAvailable === 0 ? 'bg-gray-400 cursor-not-allowed' : 'bg-yellow-400 dark:bg-yellow-400 bg-transparent dark:hover:bg-yellow-500'} text-gray-950 text-sm font-semibold rounded`}
+                  onClick={() => handleAddToCart(selectedProductVersionID)}
+                  disabled={selectedProductVersion?.quantityAvailable === 0}
                 >
                   Thêm vào giỏ hàng
                 </button>
@@ -224,7 +222,7 @@ function ProductDetail() {
                     }}
                     className={`p-2 border rounded-lg flex flex-col items-center justify-center transition-colors duration-300 
                     ${selectedProductVersion?.productVersionID === version.productVersionID
-                        ? 'bg-yellow-400 text-gray-950'
+                        ? 'bg-gray-100 text-gray-950 dark:bg-gray-200'
                         : 'bg-white text-gray-900'}`}
                   >
                     <img
@@ -245,8 +243,6 @@ function ProductDetail() {
 
             </div>
           </div>
-
-
 
           {/* Phần thuộc tính */}
           <div className="mt-16 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.3)] p-6 dark:bg-base-100 dark:text-gray-200">
