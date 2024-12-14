@@ -314,7 +314,7 @@ function Product() {
       {/* Phần hiển thị sản phẩm */}
       <div className="flex-1 p-4">
         {Array.isArray(products) && products.length > 0 ? (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 w-full min-h-max">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 w-full min-h-max dark:bg-base-200">
             {products.map((product, index) =>
               index < 8 ? (
                 <div
@@ -338,8 +338,8 @@ function Product() {
                   </div>
 
                   {/* Thông tin sản phẩm */}
-                  <div className="relative border border-gray-100 bg-white p-4">
-                    <p className="text-sm text-gray-900 h-8 overflow-hidden text-ellipsis whitespace-nowrap transform scale-95">
+                  <div className="relative border border-gray-100 dark:border-gray-800 bg-white dark:bg-base-200 p-4">
+                    <p className="text-sm text-gray-900 dark:text-white h-8 overflow-hidden text-ellipsis whitespace-nowrap transform scale-95">
                       <b>{product.name}</b>
                     </p>
 
@@ -355,12 +355,12 @@ function Product() {
                           >
                             <path d="M20.924 7.625a1.523 1.523 0 0 0-1.238-1.044l-5.051-.734-2.259-4.577a1.534 1.534 0 0 0-2.752 0L7.365 5.847l-5.051.734A1.535 1.535 0 0 0 1.463 9.2l3.656 3.563-.863 5.031a1.532 1.532 0 0 0 2.226 1.616L11 17.033l4.518 2.375a1.534 1.534 0 0 0 2.226-1.617l-.863-5.03L20.537 9.2a1.523 1.523 0 0 0 .387-1.575Z" />
                           </svg>
-                          <p className="ms-2 text-sm font-bold text-gray-900 text-dark">
+                          <p className="ms-2 text-sm font-bold text-gray-900 text-dark dark:text-white">
                             {product.averageRating.toFixed(1)}/5
                           </p>
                         </>
                       ) : (
-                        <p className="text-sm text-gray-800 text-dark">Chưa có đánh giá</p>
+                        <p className="text-sm text-gray-800 text-dark dark:text-white">Chưa có đánh giá</p>
                       )}
                     </div>
 
