@@ -91,8 +91,7 @@ function TopSellByCategory() {
 
     // Hàm xử lý khi hình ảnh sản phẩm được chọn
     const handleImageClick = (product) => {
-        navigate(`/product-detail/${product.productVersionID}`, { state: { product } });
-        console.log(product);
+        navigate(`/product-detail/${product.product.productID}`);
     };
 
     return (
