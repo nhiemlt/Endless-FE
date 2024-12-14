@@ -140,12 +140,7 @@ const EditProductVersionModal = ({ productVersion, onClose, onProductUpdated }) 
             if (onProductUpdated) onProductUpdated(result); // truyền `result` thay vì không có tham số
             onClose();
         } catch (error) {
-            if (error.response && error.response.data && error.response.data.message === 'Phiên bản sản phẩm với tên này đã tồn tại') {
-                dispatch(showNotification({ message: 'Tên phiên bản sản phẩm đã tồn tại, vui lòng chọn tên khác.', status: 0 }));
-            } else {
-                dispatch(showNotification({ message: 'Cập nhật phiên bản sản phẩm thất bại!', status: 0 }));
-            }
-            setError('Có lỗi xảy ra khi cập nhật phiên bản sản phẩm.');
+            dispatch(showNotification({ message: error.response.data, status: 0 }));
 
         }
 
@@ -225,7 +220,16 @@ const EditProductVersionModal = ({ productVersion, onClose, onProductUpdated }) 
             }
         });
     };
+    // Hàm định dạng số thành dạng có dấu chấm (ví dụ: 10.000.000)
+    const formatCurrency = (value) => {
+        if (!value) return '';
+        return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    };
 
+    // Hàm chuyển lại chuỗi định dạng thành số
+    const parseCurrency = (formattedValue) => {
+        return Number(formattedValue.replace(/[^0-9]/g, ''));
+    };
 
 
 
@@ -284,158 +288,107 @@ const EditProductVersionModal = ({ productVersion, onClose, onProductUpdated }) 
                                         required
                                     />
                                 </label>
-                            </div>
-                            {/* Giá Bán */}
-                            <label>
-                                <span className="block text-sm font-medium mb-2">Giá Gốc</span>
-                                <input
-                                    type="number"
-                                    placeholder="Giá Gốc"
-                                    className="input input-bordered w-full"
-                                    value={purchasePrice}
-                                    onChange={(e) => {
-                                        const value = Number(e.target.value);
-                                        if (value >= 0 && value <= 1_000_000_000) {
-                                            setPurchasePrice(value);
-                                        } else {
-                                            dispatch(
-                                                showNotification({
-                                                    message: "Giá bán phải lớn hơn hoặc bằng 0 và không vượt quá 1 tỷ",
-                                                    status: 0,
-                                                })
-                                            );
-                                        }
-                                    }}
-                                    required
-                                />
-                            </label>
-
-                            {/* Giá Gốc */}
-                            <label>
-                                <span className="block text-sm font-medium mb-2">Giá Bán</span>
-                                <input
-                                    type="number"
-                                    placeholder="Giá Bán"
-                                    className="input input-bordered w-full"
-                                    value={price}
-                                    onChange={(e) => {
-                                        const value = Number(e.target.value);
-                                        if (value >= 0 && value <= 1_000_000_000) {
-                                            setPrice(value);
-                                        } else {
-                                            dispatch(
-                                                showNotification({
-                                                    message: "Giá gốc phải lớn hơn hoặc bằng 0 và không vượt quá 1 tỷ",
-                                                    status: 0,
-                                                })
-                                            );
-                                        }
-                                    }}
-                                    required
-                                />
-                            </label>
-                            <div className="grid grid-cols-4 gap-6 col-span-2">
-
                                 {/* Trọng Lượng */}
                                 <label>
-                                    <span className="block text-sm font-medium mb-2">Trọng Lượng</span>
-                                    <input
-                                        type="number"
-                                        placeholder="Trọng Lượng"
-                                        className="input input-bordered w-full"
-                                        value={weight}
-                                        onChange={(e) => {
-                                            const value = Number(e.target.value);
-                                            if (value >= 0 && value <= 1_000_000_000) {
-                                                setWeight(value);
-                                            } else {
-                                                dispatch(
-                                                    showNotification({
-                                                        message: "Trọng lượng phải lớn hơn hoặc bằng 0 và không vượt quá 1 tỷ",
-                                                        status: 0,
-                                                    })
-                                                );
-                                            }
-                                        }}
-                                        required
-                                    />
+                                    <span className="block text-sm font-medium mb-2 mt-4">Trọng Lượng</span>
+                                    <div className="relative">
+                                        {/* Input hiển thị giá trị trọng lượng */}
+                                        <input
+                                            type="text"
+                                            placeholder="Nhập trọng lượng"
+                                            className="input input-bordered w-full pr-16" // Thêm padding phải để tránh chồng lên <kbd>
+                                            value={weight === 0 ? '' : weight} // Nếu giá trị là 0, hiển thị chuỗi trống
+                                            onChange={(e) => {
+                                                let value = e.target.value.trim(); // Xử lý chuỗi nhập vào
+                                                if (/^\d*$/.test(value)) { // Chỉ chấp nhận số nguyên
+                                                    // Xóa các số 0 thừa ở đầu
+                                                    if (value.startsWith('0') && value.length > 1) {
+                                                        value = value.replace(/^0+/, '');
+                                                    }
+                                                    const parsedValue = Number(value);
+                                                    if (parsedValue >= 0 && parsedValue <= 1_000_000_000) {
+                                                        setWeight(parsedValue); // Cập nhật giá trị gốc
+                                                    } else {
+                                                        dispatch(
+                                                            showNotification({
+                                                                message: "Trọng lượng phải lớn hơn hoặc bằng 0 và không vượt quá 1 tỷ gam",
+                                                                status: 0,
+                                                            })
+                                                        );
+                                                    }
+                                                }
+                                            }}
+                                            required
+                                        />
+                                        {/* Kbd đơn vị cố định */}
+                                        <kbd className="kbd kbd-sm absolute top-1/2 right-4 transform -translate-y-1/2">
+                                            gam
+                                        </kbd>
+                                    </div>
                                 </label>
-                                {/* Chiều Cao */}
-                                <label>
-                                    <span className="block text-sm font-medium mb-2">Chiều Cao</span>
-                                    <input
-                                        type="number"
-                                        placeholder="Chiều Cao"
-                                        className="input input-bordered w-full"
-                                        value={height}
-                                        onChange={(e) => {
-                                            const value = Number(e.target.value);
-                                            if (value >= 0 && value <= 1_000_000_000) {
-                                                setHeight(value);
-                                            } else {
-                                                dispatch(
-                                                    showNotification({
-                                                        message: "Chiều cao phải lớn hơn hoặc bằng 0 và không vượt quá 1 tỷ",
-                                                        status: 0,
-                                                    })
-                                                );
-                                            }
-                                        }}
-                                        required
-                                    />
-                                </label>
-
-                                {/* Chiều Dài */}
-                                <label>
-                                    <span className="block text-sm font-medium mb-2">Chiều Dài</span>
-                                    <input
-                                        type="number"
-                                        placeholder="Chiều Dài"
-                                        className="input input-bordered w-full"
-                                        value={length}
-                                        onChange={(e) => {
-                                            const value = Number(e.target.value);
-                                            if (value >= 0 && value <= 1_000_000_000) {
-                                                setLength(value);
-                                            } else {
-                                                dispatch(
-                                                    showNotification({
-                                                        message: "Chiều dài phải lớn hơn hoặc bằng 0 và không vượt quá 1 tỷ",
-                                                        status: 0,
-                                                    })
-                                                );
-                                            }
-                                        }}
-                                        required
-                                    />
-                                </label>
-
-                                {/* Chiều Rộng */}
-                                <label>
-                                    <span className="block text-sm font-medium mb-2">Chiều Rộng</span>
-                                    <input
-                                        type="number"
-                                        placeholder="Chiều Rộng"
-                                        className="input input-bordered w-full"
-                                        value={width}
-                                        onChange={(e) => {
-                                            const value = Number(e.target.value);
-                                            if (value >= 0 && value <= 1_000_000_000) {
-                                                setWidth(value);
-                                            } else {
-                                                dispatch(
-                                                    showNotification({
-                                                        message: "Chiều rộng phải lớn hơn hoặc bằng 0 và không vượt quá 1 tỷ",
-                                                        status: 0,
-                                                    })
-                                                );
-                                            }
-                                        }}
-                                        required
-                                    />
-                                </label>
-
                             </div>
+                            <label>
+                                <span className="block text-sm font-medium mb-2">Giá Nhập</span>
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        placeholder="Giá nhập (đ)"
+                                        className="input input-bordered w-full"
+                                        value={formatCurrency(purchasePrice)}
+                                        onChange={(e) => {
+                                            const formattedValue = e.target.value;
+                                            const parsedValue = parseCurrency(formattedValue);
+                                            if (parsedValue >= 0 && parsedValue <= 1_000_000_000) {
+                                                setPurchasePrice(parsedValue);
+                                            } else {
+                                                dispatch(
+                                                    showNotification({
+                                                        message: "Giá nhập phải lớn hơn hoặc bằng 0 và không vượt quá 1 tỷ",
+                                                        status: 0,
+                                                    })
+                                                );
+                                            }
+                                        }}
+                                        required
+                                    />
+                                    {/* Kbd đơn vị cố định */}
+                                    <kbd className="kbd kbd-sm absolute top-1/2 right-4 transform -translate-y-1/2">
+                                        đồng
+                                    </kbd>
+                                </div>
+                            </label>
+                            <label>
+                                <span className="block text-sm font-medium mb-2">Giá Bán</span>
+                                <div className="relative">
+
+                                    <input
+                                        type="text"
+                                        placeholder="Giá bán (đ)"
+                                        className="input input-bordered w-full"
+                                        value={formatCurrency(price)}
+                                        onChange={(e) => {
+                                            const formattedValue = e.target.value;
+                                            const parsedValue = parseCurrency(formattedValue);
+                                            if (parsedValue >= 0 && parsedValue <= 1_000_000_000) {
+                                                setPrice(parsedValue);
+                                            } else {
+                                                dispatch(
+                                                    showNotification({
+                                                        message: "Giá bán phải lớn hơn hoặc bằng 0 và không vượt quá 1 tỷ",
+                                                        status: 0,
+                                                    })
+                                                );
+                                            }
+                                        }}
+                                        required
+                                    />
+                                    {/* Kbd đơn vị cố định */}
+                                    <kbd className="kbd kbd-sm absolute top-1/2 right-4 transform -translate-y-1/2">
+                                        đồng
+                                    </kbd>
+                                </div>
+                            </label>
+
 
 
                         </div>
