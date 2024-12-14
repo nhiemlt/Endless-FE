@@ -369,7 +369,7 @@ function Product() {
                     {/* Hiển thị giá */}
                     {formatCurrency(product.price) === formatCurrency(product.discountPrice) ? (
                       <span
-                        className="mt-1 text-sm text-red-600"
+                        className="mt-1 text-sm text-red-600 max-h-10"
                         style={{
                           animation: "blink 1s linear infinite",
                         }}
@@ -382,13 +382,12 @@ function Product() {
                           <s>{formatCurrency(product.price)}</s>
                         </span>{" "}
                         <span
-                          className="mt-1 text-sm text-red-600"
+                          className="mt-1 text-sm text-red-600 max-h-10"
                           style={{
                             animation: "blink 1s linear infinite",
                           }}
                         >
                           <b>{formatCurrency(product.discountPrice)}</b>
-                          <br />
                         </span>
                       </>
                     )}
@@ -401,9 +400,9 @@ function Product() {
                 }`
                       }
                     </style>
-                    <br></br>
+                    <br/>
                     {/* Số lượng đã bán và còn lại */}
-                    <span className="mt-1 text-xs text-gray-400">Đã bán: {product.quantitySold}</span><br></br>
+                    <span className="mt-1 text-xs text-gray-400">Đã bán: {product.quantitySold}</span><br/>
                     <span className="mt-1 text-xs text-gray-400">
                       Còn:{" "}
                       {product.quantityAvailable === 0 ? (
