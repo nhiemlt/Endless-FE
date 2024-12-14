@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useDispatch } from "react-redux";
 import { useNavigate } from 'react-router-dom';
-import productVersionService from "../../services/productVersionService";
+import productInfoService from "../../services/productInfoService";
 import CartService from "../../services/CartService";
 import CategoryService from "../../services/CategoryService";
 import BrandService from "../../services/BrandService";
@@ -64,18 +64,19 @@ function Product() {
           minPrice: filterData.minPrice,
           maxPrice: filterData.maxPrice,
         };
-  
-        const response = await productVersionService.filterProductVersions(filters);
+
+        const response = await productInfoService.filterProductInfos(filters);
+        console.log(response.content)
         setProducts(response.content || []);  // Fallback to empty array if no content
         setTotalPages(response.totalPages || 1); // Fallback to 1 if no totalPages
       } catch (error) {
         console.error('Error fetching filtered products:', error);
       }
     };
-  
+
     fetchProducts();
   }, [keyword, page, size, sortBy, direction, filterData]);
-  
+
 
   const handlePriceChange = (e, field) => {
     setFilterData((prev) => ({
@@ -135,7 +136,7 @@ function Product() {
   const handleImageClick = (product) => {
     navigate(`/product-detail/${product.productVersionID}`);
   };
-  
+
 
   return (
     <div className="flex">
@@ -319,16 +320,16 @@ function Product() {
             {products.map((product, index) =>
               index < 8 ? (
                 <div
-                  key={product.productVersionID}
+                  key={product.productID} // Dùng productID thay vì productVersionID
                   className="group relative block overflow-hidden bg-white"
                 >
                   {/* Hình ảnh sản phẩm */}
                   <div className="relative w-full h-48">
                     <img
-                      src={product.image}
+                      src={product.productVersionDTOs[0]?.image || 'default-image-url'} // Chỗ này thay bằng URL ảnh mặc định nếu không có
                       className="absolute inset-0 w-full h-full object-cover transition duration-500 group-hover:scale-105"
                       onClick={() => handleImageClick(product)}
-                      alt={product.product.name}
+                      alt={product.name}
                     />
                     {/* Giảm giá */}
                     {product.discountPercentage > 0 && (
@@ -341,7 +342,7 @@ function Product() {
                   {/* Thông tin sản phẩm */}
                   <div className="relative border border-gray-100 bg-white p-4">
                     <p className="text-sm text-gray-900 h-8 overflow-hidden text-ellipsis whitespace-nowrap transform scale-95">
-                      <b>{product.product.name} | {product.versionName}</b>
+                      <b>{product.name}</b>
                     </p>
 
                     {/* Đánh giá sản phẩm */}
@@ -394,11 +395,11 @@ function Product() {
 
                     <style>
                       {`
-                      @keyframes blink {
-                        0%, 100% { opacity: 1; }
-                        50% { opacity: 0; }
-                      }
-                    `}
+                @keyframes blink {
+                  0%, 100% { opacity: 1; }
+                  50% { opacity: 0; }
+                }
+              `}
                     </style>
                     <br></br>
                     {/* Số lượng đã bán và còn lại */}
@@ -408,7 +409,9 @@ function Product() {
                       {product.quantityAvailable === 0 ? (
                         <span className="text-red-600">Đã bán hết</span>
                       ) : (
-                        <span className={product.quantityAvailable < 10 ? "text-red-600" : "text-gray-400"}>
+                        <span
+                          className={product.quantityAvailable < 10 ? "text-red-600" : "text-gray-400"}
+                        >
                           {product.quantityAvailable} sản phẩm
                         </span>
                       )}
@@ -458,6 +461,8 @@ function Product() {
           </div>
         </div>
       </div>
+
+
 
     </div >
   );
