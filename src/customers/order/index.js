@@ -51,8 +51,8 @@ function PurchaseHistory() {
         size
       );
 
-      if (response?.data?.content) {
-        const updatedOrders = response.data.content.map((order) => {
+      if (response?.data) {
+        const updatedOrders = response.data.map((order) => {
           const hasPendingRatings = order.orderDetails.some(
             (detail) => !detail.rated
           );
@@ -66,10 +66,13 @@ function PurchaseHistory() {
         setFilteredOrders(updatedOrders);
         setTotalPages(response.data.totalPages);
       } else {
+        console.log(response);
         throw new Error("Dữ liệu không hợp lệ từ API.");
+        
       }
     } catch (error) {
       console.error("Lỗi khi lấy danh sách hóa đơn:", error);
+      console.log(error);
       dispatch(
         showNotification({
           message: "Không thể tải danh sách hóa đơn. Vui lòng thử lại.",
