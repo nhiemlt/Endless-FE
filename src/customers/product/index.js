@@ -120,28 +120,28 @@ function Product() {
     });
   };
 
-  //Hàm thêm sản phẩm vào giỏ hàng
-  const handleAddToCart = async (product) => {
-    const cartModel = { productVersionID: product.productVersionID, quantity: 1 };
-    try {
-      await CartService.addToCart(cartModel);
-      dispatch(showNotification({ message: "Sản phẩm đã được thêm vào giỏ hàng.", status: 1 }));
-    } catch (error) {
-      dispatch(showNotification({ message: "Lỗi khi thêm vào giỏ hàng.", status: 0 }));
-      console.error("Lỗi khi thêm vào giỏ hàng:", error);
-    }
-  };
+  // //Hàm thêm sản phẩm vào giỏ hàng
+  // const handleAddToCart = async (product) => {
+  //   const cartModel = { productVersionID: product.productVersionID, quantity: 1 };
+  //   try {
+  //     await CartService.addToCart(cartModel);
+  //     dispatch(showNotification({ message: "Sản phẩm đã được thêm vào giỏ hàng.", status: 1 }));
+  //   } catch (error) {
+  //     dispatch(showNotification({ message: "Lỗi khi thêm vào giỏ hàng.", status: 0 }));
+  //     console.error("Lỗi khi thêm vào giỏ hàng:", error);
+  //   }
+  // };
 
   //Hàm chuyển trang chi tiết sản phẩm
-  const handleImageClick = (product) => {
-    navigate(`/product-detail/${product.productVersionID}`);
+  const handleViewDetails = (productID) => {
+    navigate(`/product-detail/${productID}`);
   };
 
 
   return (
-    <div className="flex">
-      <div className="w-1/4 p-4 dark:bg-base-100 bg-white rounded-lg shadow-md">
-
+    <div className="flex flex-col lg:flex-row">
+      {/* Sidebar */}
+      <div className="w-full lg:w-1/4 p-4 dark:bg-base-100 bg-white rounded-lg shadow-md">
         {/* Phần tìm kiếm */}
         <div>
           <label htmlFor="SortBy" className="block text-xs font-medium dark:text-white text-gray-900 mt-3">
@@ -200,7 +200,6 @@ function Product() {
             <option value="quantitySold, DESC">Lượt bán - Giảm dần</option>
           </select>
         </div>
-
 
         {/* Phần lọc giá */}
         <div>
@@ -311,6 +310,7 @@ function Product() {
           </div>
         </div>
       </div>
+
       {/* Phần hiển thị sản phẩm */}
       <div className="flex-1 p-4">
         {Array.isArray(products) && products.length > 0 ? (
@@ -324,10 +324,10 @@ function Product() {
                   {/* Hình ảnh sản phẩm */}
                   <div className="relative w-full h-48">
                     <img
-                      src={product.productVersionDTOs[0]?.image || 'default-image-url'} // Chỗ này thay bằng URL ảnh mặc định nếu không có
+                      src={product.productVersionDTOs[0]?.image ||`https://www.lg.com/lg5-common/images/common/product-default-list-350.jpg`} // Chỗ này thay bằng URL ảnh mặc định nếu không có
                       className="absolute inset-0 w-full h-full object-cover transition duration-500 group-hover:scale-105"
-                      onClick={() => handleImageClick(product)}
                       alt={product.name}
+                      onClick={() => handleViewDetails(product.productID)}
                     />
                     {/* Giảm giá */}
                     {product.discountPercentage > 0 && (
@@ -392,12 +392,12 @@ function Product() {
                     )}
 
                     <style>
-                      {`
-                @keyframes blink {
-                  0%, 100% { opacity: 1; }
-                  50% { opacity: 0; }
-                }
-              `}
+                      {
+                        `@keyframes blink {
+                        0 %, 100 % { opacity: 1; }
+                  50% {opacity: 0; }
+                }`
+                      }
                     </style>
                     <br></br>
                     {/* Số lượng đã bán và còn lại */}
@@ -415,20 +415,18 @@ function Product() {
                       )}
                     </span>
 
-                    {/* Nút Thêm vào giỏ hàng */}
+                    {/* Nút xem chi tiết */}
                     <form
-                      className="mt-4"
                       onSubmit={(e) => {
                         e.preventDefault();
-                        handleAddToCart(product);
+                        handleViewDetails(product.productID); // Chuyển trang đến chi tiết sản phẩm
                       }}
                     >
                       <button
                         type="submit"
-                        className="w-full rounded btn btn-warning p-2 text-xs"
-                        disabled={product.quantityAvailable === 0}
+                        className="w-full rounded btn btn-info p-2 text-xs text-white"
                       >
-                        Thêm vào giỏ hàng
+                        Xem chi tiết
                       </button>
                     </form>
                   </div>
@@ -460,9 +458,8 @@ function Product() {
         </div>
       </div>
 
-
-
     </div >
+
   );
 }
 

@@ -1,38 +1,48 @@
-import { Link } from 'react-router-dom';
-import TitleCard from '../../components/Cards/TitleCard';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { useNavigate, useParams } from 'react-router-dom';
+import productInfoService from "../../services/productInfoService";
 import ratingService from "../../services/ratingService";
 import { showNotification } from "../../features/common/headerSlice";
-import { useDispatch } from "react-redux";
+import TitleCard from '../../components/Cards/TitleCard';
 import CartService from "../../services/CartService";
-import { useNavigate, useParams } from 'react-router-dom';
-import productVersionService from "../../services/productVersionService";
 
 function ProductDetail() {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const { productVersionID } = useParams(); 
+  const { productID } = useParams();
   const [product, setProduct] = useState(null);  // State to store the product details
-  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedProductVersion, setSelectedProductVersion] = useState(null);
+  const [selectedProductVersionID, setSelectedProductVersionID] = useState(null);
   const [ratings, setRatings] = useState([]);  // State to store all the ratings
   const [selectedTab, setSelectedTab] = useState("all"); // Default to 5 stars tab
-
   useEffect(() => {
-    if (productVersionID) {
-      // Gọi API lấy thông tin chi tiết sản phẩm
-      productVersionService
-        .getProductVersionById(productVersionID)
-        .then((product) => {
-          setProduct(product);
+    if (productID) {
+      // Lấy thông tin sản phẩm theo ID
+      productInfoService
+        .getProductById(productID)
+        .then((data) => {
+          console.log(data);
+          setProduct(data); // Lưu dữ liệu sản phẩm
+
+          // Nếu có các phiên bản sản phẩm
+          if (data.productVersionDTOs && data.productVersionDTOs.length > 0) {
+            console.log('Sản phẩm đầu tiên', data.productVersionDTOs[0]);
+            setSelectedProductVersion(data.productVersionDTOs[0]);
+            setSelectedProductVersionID(data.productVersionDTOs[0].productVersionID);
+          }
         })
         .catch((error) => {
-          console.error("Error fetching product details:", error);
-          navigate("/not-found"); // Điều hướng nếu không tìm thấy sản phẩm
+          console.error("Lỗi khi lấy thông tin sản phẩm:", error);
         });
+    }
+  }, [productID]);
 
-      // Gọi API lấy đánh giá sản phẩm
+  // Đảm bảo lấy đánh giá chỉ khi đã có selectedProductVersionID
+  useEffect(() => {
+    if (selectedProductVersionID) {
+      // Gọi API lấy đánh giá sản phẩm theo phiên bản
       ratingService
-        .getRatingsByProductVersionId(productVersionID)
+        .getRatingsByProductVersionId(selectedProductVersionID)
         .then((data) => {
           const sortedRatings = data.sort(
             (a, b) => new Date(b.ratingDate) - new Date(a.ratingDate)
@@ -40,12 +50,21 @@ function ProductDetail() {
           setRatings(sortedRatings);
         })
         .catch((error) => {
-          console.error("Error fetching ratings:", error);
+          console.error("Lỗi khi lấy đánh giá sản phẩm:", error);
         });
     }
-  }, [productVersionID, navigate]);
+  }, [selectedProductVersionID]);
 
-  
+
+  const handleVersionChange = (versionID) => {
+    setSelectedProductVersionID(versionID);
+    const selectedVersion = product.productVersions.find(
+      (version) => version.productVersionID === versionID
+    );
+    setSelectedProductVersion(selectedVersion); // Cập nhật phiên bản đã chọn
+  };
+
+
   // Phân loại các đánh giá theo sao
   const ratingCategories = [5, 4, 3, 2, 1]; // Thứ tự giảm dần
   const ratingsByStar = ratingCategories.reduce((acc, stars) => {
@@ -69,9 +88,9 @@ function ProductDetail() {
   };
 
   //Hàm thêm sản phẩm vào giỏ hàng
-  const handleAddToCart = async (product) => {
+  const handleAddToCart = async (productVersionID) => {
     const cartModel = {
-      productVersionID: product.productVersionID, // ID phiên bản sản phẩm
+      productVersionID: productVersionID, // ID phiên bản sản phẩm
       quantity: 1, // Số lượng mặc định là 1
     };
 
@@ -90,30 +109,33 @@ function ProductDetail() {
         <div className="p-4 lg:max-w-7xl max-w-4xl mx-auto">
 
           {/* Phần sản phẩm */}
-          <div className="grid items-start grid-cols-1 lg:grid-cols-5 gap-12 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.3)] p-6 rounded-lg dark:bg-base-100">
+          <div className="grid items-start grid-cols-1 lg:grid-cols-5 gap-x-12 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.3)] p-6 rounded-lg dark:bg-base-100">
             <div className="lg:col-span-2 w-full lg:sticky top-0 text-center">
               <div className="p-1 rounded-lg shadow-[0_2px_10px_-3px_rgba(6,81,237,0.3)] relative dark:shadow-[0_2px_10px_-3px_rgba(237,237,237,0.3)]">
-                <div className="relative">
+                <div className="relative min-h-96 flex justify-center items-center">
                   <img
-                    src={product?.image || "default-image-url"}
-                    alt={product?.product?.name || "product"}
+                    src={selectedProductVersion?.image || `https://www.lg.com/lg5-common/images/common/product-default-list-350.jpg`}
                     className="rounded object-cover w-full"
                   />
                   {/* Chỉ hiển thị giảm giá nếu product.discountPercentage > 0 */}
-                  {product?.discountPercentage > 0 && (
+                  {selectedProductVersion?.discountPercentage > 0 && (
                     <p className="absolute top-2 left-2 bg-red-600 text-white font-semibold text-xs px-2 py-1 rounded-md shadow-md">
-                      - {product?.discountPercentage}%
+                      - {selectedProductVersion?.discountPercentage}% Giảm giá
                     </p>
                   )}
                 </div>
               </div>
+
+              {/* Chọn phiên bản sản phẩm (Di chuyển xuống dưới ảnh sản phẩm) */}
+
             </div>
+
             <div className="lg:col-span-3">
               <h2 className="text-2xl font-extrabold text-gray-900 dark:text-white">
-                {product?.product?.name} | {product?.versionName}
+                {product?.name} | {selectedProductVersion?.versionName}
               </h2>
               <div className="flex space-x-2 mt-4">
-                {product?.averageRating ? (
+                {selectedProductVersion?.averageRating ? (
                   <>
                     <svg
                       className="w-6 h-6 text-yellow-300"
@@ -124,7 +146,7 @@ function ProductDetail() {
                       <path d="M20.924 7.625a1.523 1.523 0 0 0-1.238-1.044l-5.051-.734-2.259-4.577a1.534 1.534 0 0 0-2.752 0L7.365 5.847l-5.051.734A1.535 1.535 0 0 0 1.463 9.2l3.656 3.563-.863 5.031a1.532 1.532 0 0 0 2.226 1.616L11 17.033l4.518 2.375a1.534 1.534 0 0 0 2.226-1.617l-.863-5.03L20.537 9.2a1.523 1.523 0 0 0 .387-1.575Z" />
                     </svg>
                     <p className="ms-2 text-xl font-bold text-gray-900 dark:text-gray-100">
-                      {product?.averageRating?.toFixed(1)}/5
+                      {selectedProductVersion?.averageRating?.toFixed(1)}/5
                     </p>
                   </>
                 ) : (
@@ -133,12 +155,25 @@ function ProductDetail() {
                   </p>
                 )}
               </div>
-              <div className="flex flex-wrap gap-4 mt-8">
+              <span className="mt-1 text-sm text-gray-400">Đã bán: {selectedProductVersion?.quantitySold}</span><br></br>
+              <span className="mt-1 text-sm text-gray-400">
+                Còn:{" "}
+                {selectedProductVersion?.quantityAvailable === 0 ? (
+                  <span className="text-red-600">Đã bán hết</span>
+                ) : (
+                  <span
+                    className={selectedProductVersion?.quantityAvailable < 10 ? "text-red-600" : "text-gray-400"}
+                  >
+                    {selectedProductVersion?.quantityAvailable} sản phẩm
+                  </span>
+                )}
+              </span>
+              <div className="flex flex-wrap gap-4 mt-3">
                 {/* Kiểm tra nếu giá gốc và giá giảm bằng nhau */}
-                {product?.price === product?.discountPrice ? (
+                {selectedProductVersion?.price === selectedProductVersion?.discountPrice ? (
                   // Nếu bằng nhau, chỉ hiển thị giá giảm
                   <p className="text-red-600 dark:text-red-500 text-2xl font-bold">
-                    {product?.discountPrice?.toLocaleString("vi-VN", {
+                    {selectedProductVersion?.discountPrice?.toLocaleString("vi-VN", {
                       style: "currency",
                       currency: "VND",
                     }) || "Giá giảm"}
@@ -147,14 +182,14 @@ function ProductDetail() {
                   // Nếu khác nhau, hiển thị cả giá gốc và giá giảm
                   <>
                     <p className="text-red-600 dark:text-red-500 text-2xl font-bold">
-                      {product?.discountPrice?.toLocaleString("vi-VN", {
+                      {selectedProductVersion?.discountPrice?.toLocaleString("vi-VN", {
                         style: "currency",
                         currency: "VND",
                       }) || "Giá giảm"}
                     </p>
                     <p className="text-gray-400 dark:text-gray-500 text-base">
                       <strike>
-                        {product?.price?.toLocaleString("vi-VN", {
+                        {selectedProductVersion?.price?.toLocaleString("vi-VN", {
                           style: "currency",
                           currency: "VND",
                         }) || "Giá gốc"}
@@ -163,26 +198,61 @@ function ProductDetail() {
                   </>
                 )}
               </div>
-              <p className="text-xl text-gray-900 dark:text-white mt-2">
-                Mô tả: {product?.product?.description}
+              <p className="text-sm text-gray-900 dark:text-white mt-2">
+                Mô tả: {selectedProductVersion?.description}
               </p>
+
               <div className="mt-8">
                 <button
                   type="button"
                   className="flex-1 px-4 py-2.5 bg-yellow-400 dark:bg-yellow-400 bg-transparent dark:hover:bg-yellow-500 text-gray-950 text-sm font-semibold rounded"
-                  onClick={() => handleAddToCart(product)} // Thêm sự kiện onClick để gọi hàm handleAddToCart
+                  onClick={() => handleAddToCart(selectedProductVersionID)} 
                 >
                   Thêm vào giỏ hàng
                 </button>
               </div>
             </div>
+
+            <div className="lg:col-span-5">
+              <div className="grid grid-cols-2 sm:grid-cols-5 lg:grid-cols-7 gap-4 mt-4"> {/* Giảm số cột */}
+                {product?.productVersionDTOs?.map((version) => (
+                  <button
+                    key={version.productVersionID}
+                    onClick={() => {
+                      setSelectedProductVersion(version);
+                      setSelectedProductVersionID(version.productVersionID);
+                    }}
+                    className={`p-2 border rounded-lg flex flex-col items-center justify-center transition-colors duration-300 
+                    ${selectedProductVersion?.productVersionID === version.productVersionID
+                        ? 'bg-yellow-400 text-gray-950'
+                        : 'bg-white text-gray-900'}`}
+                  >
+                    <img
+                      src={version.image || `https://www.lg.com/lg5-common/images/common/product-default-list-350.jpg`}
+                      className="w-14 h-14 object-cover rounded-md mb-2"
+                    />
+                    <p className="text-xs min-h-10 font-semibold">{version.versionName}</p>
+                    <p className="text-xs font-bold mt-1">
+                      {version.discountPrice?.toLocaleString("vi-VN", {
+                        style: "currency",
+                        currency: "VND",
+                      }) || "Giá giảm"}
+                    </p>
+                  </button>
+                ))}
+
+              </div>
+
+            </div>
           </div>
+
+
 
           {/* Phần thuộc tính */}
           <div className="mt-16 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.3)] p-6 dark:bg-base-100 dark:text-gray-200">
             <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">Thông tin chi tiết</h3>
             <ul className="mt-4 space-y-6 text-gray-800 dark:text-gray-100">
-              {product?.versionAttributes.map((attribute, index) => (
+              {selectedProductVersion?.versionAttributes.map((attribute, index) => (
                 <li key={index} className="text-sm">
                   {attribute.attributeName}
                   <span className="ml-4 float-right">{attribute.attributeValue}</span>
@@ -190,6 +260,7 @@ function ProductDetail() {
               ))}
             </ul>
           </div>
+
 
           {/* Phần đánh giá */}
           <div className="mt-16 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.3)] p-6 dark:bg-base-100 dark:text-gray-200">

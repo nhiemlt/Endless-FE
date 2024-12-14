@@ -30,7 +30,7 @@ const customerRoutes = [
   { path: '/settings-profile', component: ProfileSettings, role: ['customer'] },
   { path: '/home', component: Home },
   { path: '/products', component: ProductList },
-  { path: '/product-detail/:productVersionID', component: ProductDetail }, 
+  { path: '/product-detail/:productID', component: ProductDetail }, 
   { path: '/404', component: Page404, role: ['customer'] },
   { path: '/blank', component: Blank, role: ['customer'] },
   { path: '/change-password', component: ChangePassword, role: 'customer' }

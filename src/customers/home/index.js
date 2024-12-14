@@ -97,8 +97,7 @@ const Home = ({ categoryID }) => {
 
   // Hàm xử lý khi hình ảnh sản phẩm được chọn
   const handleImageClick = (product) => {
-    navigate(`/product-detail/${product.productVersionID}`, { state: { product } });
-    console.log(product);
+    navigate(`/product-detail/${product.product.productID}`);
   };
 
   const scrollToProducts = () => {
@@ -107,31 +106,33 @@ const Home = ({ categoryID }) => {
   };
   return (
     <div>
-      <main className="flex flex-col gap-y-20 w-full">
+      <main className="flex flex-col">
 
         {/* Khám Phá Endless Section */}
-        <section className="container p-5 mb-2">
-          <div className="bg-white dark:bg-base-100 flex relative items-center overflow-hidden">
-            <div className="container mx-auto px-6 py-16 flex relative">
+        {/* Section 2: Explore Endless */}
+        <section className="container px-6 py-16 mb-2 ">
+          <div className="bg-white dark:bg-base-100 flex items-center overflow-hidden p-10 xs:p-2 sm:p-3 md:p-5">
+            <div className="flex flex-col lg:flex-row mx-auto md:space-x-6 lg:space-x-6 xl:space-x-6">
               {/* Left Section: Text Content */}
-              <div className="sm:w-1/2 lg:w-1/2 flex flex-col relative">
-                <h4 className="font-bebas-neue uppercase text-5xl sm:text-5xl font-black flex flex-col leading-none dark:text-white text-gray-900">
+              <div className="lg:w-1/2 flex flex-col text-center lg:text-left">
+                <h4 className="font-bebas-neue text-5xl sm:text-6xl font-black text-gray-900 dark:text-white leading-none">
                   Khám Phá
-                  <span className="text-7xl sm:text-7xl">ENDLESS</span>
+                  <span className="text-5xl sm:text-8xl"> ENDLESS</span>
                 </h4>
-                <p className="text-sm sm:text-base text-gray-900 dark:text-white">
+                <p className="text-sm sm:text-base text-gray-900 dark:text-white mt-4">
                   Chào mừng bạn đến với ENDLESS – điểm đến lý tưởng cho những tín đồ yêu thích công nghệ!
-                  Tại ENDLESS, chúng tôi cung cấp một loạt các sản phẩm điện tử chất lượng cao với mức giá hấp dẫn, giúp bạn dễ dàng chọn lựa và sở hữu những thiết bị công nghệ tiên tiến. Hãy khám phá các ưu đãi đặc biệt và trải nghiệm dịch vụ giao hàng nhanh chóng, an toàn.
-                  Cảm ơn bạn đã lựa chọn ENDLESS – nơi mua sắm không giới hạn!
+                  Tại ENDLESS, chúng tôi cung cấp một loạt các sản phẩm điện tử chất lượng cao với mức giá hấp dẫn,
+                  giúp bạn dễ dàng chọn lựa và sở hữu những thiết bị công nghệ tiên tiến. Hãy khám phá các ưu đãi đặc biệt
+                  và trải nghiệm dịch vụ giao hàng nhanh chóng, an toàn. Cảm ơn bạn đã lựa chọn ENDLESS – nơi mua sắm không giới hạn!
                 </p>
-                <div className="flex mt-8">
+                <div className="flex justify-center lg:justify-start mt-8">
                   <a
                     href="#products"
                     onClick={(e) => {
                       e.preventDefault();
                       scrollToProducts(); // Gọi hàm cuộn xuống
                     }}
-                    className="uppercase py-2 px-4 rounded-lg bg-pink-500 border-2 border-transparent font-bold text-white text-md mr-4 hover:bg-pink-400"
+                    className="uppercase py-2 px-4 rounded-lg bg-pink-500 text-white font-bold text-md hover:bg-pink-400 transition"
                   >
                     Bắt đầu ngay
                   </a>
@@ -139,7 +140,7 @@ const Home = ({ categoryID }) => {
               </div>
 
               {/* Right Section: TopSellingProducts Component */}
-              <div className="sm:w-1/2 lg:w-1/2 relative">
+              <div className="lg:w-1/2 lg:justify-end mt-8 xs:mt-1 sm:mt-2 md:mt-3 lg:mt-0">
                 <TopSellingProducts />
               </div>
             </div>
