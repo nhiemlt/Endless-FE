@@ -133,8 +133,9 @@ function Product() {
 
   //Hàm chuyển trang chi tiết sản phẩm
   const handleImageClick = (product) => {
-    navigate(`/product-detail/${product.productVersionID}`, { state: { product } });
+    navigate(`/product-detail/${product.productVersionID}`);
   };
+  
 
   return (
     <div className="flex">
