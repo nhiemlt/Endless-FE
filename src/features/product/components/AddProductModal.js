@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import ProductService from '../../../services/ProductService';
 import { showNotification } from '../../common/headerSlice';
+import CategoryService from '../../../services/CategoryService';
+import BrandService from '../../../services/BrandService';
+import Select from 'react-select';  // Import react-select
 
 const AddProductModal = ({ onClose, onProductAdded }) => {
     const [productName, setProductName] = useState('');
@@ -9,18 +12,32 @@ const AddProductModal = ({ onClose, onProductAdded }) => {
     const [category, setCategory] = useState('');
     const [brand, setBrand] = useState('');
     const [categories, setCategories] = useState([]); // State cho danh sách danh mục
-    const [brands, setBrands] = useState([]); // State cho danh sách thương hiệu
+    const [brands, setBrands] = useState([]);        // State cho danh sách thương hiệu
 
     const dispatch = useDispatch();
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const categoryData = await ProductService.getCategories();
-                const brandData = await ProductService.getBrands();
+                const categoryData = await CategoryService.getCategories({ size: 50 });
+                const brandData = await BrandService.getBrands({ size: 50 });
+                console.log("Danh mục trong product: ", categoryData.content);
+                console.log("Thương hiệu trong product: ", brandData.content);
 
-                setCategories(Array.isArray(categoryData) ? categoryData : []);
-                setBrands(Array.isArray(brandData) ? brandData : []);
+                if (Array.isArray(categoryData.content)) {
+                    setCategories(categoryData.content);
+                } else {
+                    setCategories([]);
+                    dispatch(showNotification({ message: 'Không tìm thấy danh mục!', type: 'error' }));
+                }
+
+                if (Array.isArray(brandData.content)) {
+                    setBrands(brandData.content);
+                } else {
+                    setBrands([]);
+                    dispatch(showNotification({ message: 'Không tìm thấy thương hiệu!', type: 'error' }));
+                }
+
             } catch (error) {
                 console.error('Error fetching categories and brands:', error);
                 dispatch(showNotification({ message: 'Không thể tải danh mục hoặc thương hiệu!', type: 'error' }));
@@ -30,14 +47,12 @@ const AddProductModal = ({ onClose, onProductAdded }) => {
         fetchData();
     }, [dispatch]);
 
-
-
     const handleSubmit = async (e) => {
         e.preventDefault();
 
         // Tìm danh mục và thương hiệu dựa trên ID
-        const selectedCategory = categories.find(cat => cat.categoryID === category);
-        const selectedBrand = brands.find(b => b.brandID === brand);
+        const selectedCategory = categories.find(cat => cat.categoryID === category?.value);
+        const selectedBrand = brands.find(b => b.brandID === brand?.value);
 
         const newProduct = {
             name: productName,
@@ -52,16 +67,15 @@ const AddProductModal = ({ onClose, onProductAdded }) => {
             return; // Không tiếp tục nếu không có danh mục hoặc thương hiệu
         }
 
-        console.log("Submitting new product:", newProduct); // Kiểm tra giá trị trước khi gửi
+        console.log("Submitting new product:", newProduct);
         try {
             await ProductService.addProduct(newProduct);
-            dispatch(showNotification({ message: 'Thêm sản phẩm thành công!', status: 1 })); // Thông báo thành công
+            dispatch(showNotification({ message: 'Thêm sản phẩm thành công!', status: 1 }));
             resetForm();
-            onProductAdded(); // Gọi lại để cập nhật danh sách sản phẩm
-            onClose(); // Đóng modal
+            onProductAdded();
+            onClose();
         } catch (error) {
             if (error.response && error.response.data && error.response.data.message) {
-                // Hiển thị thông báo lỗi từ server
                 dispatch(showNotification({ message: error.response.data.message, status: 0 }));
             } else {
                 dispatch(showNotification({ message: 'Thêm sản phẩm thất bại!', status: 0 }));
@@ -69,14 +83,56 @@ const AddProductModal = ({ onClose, onProductAdded }) => {
         }
     };
 
-
-
-
     const resetForm = () => {
         setProductName('');
         setDescription('');
         setCategory('');
         setBrand('');
+    };
+
+    // Map danh mục và thương hiệu cho react-select
+    const categoryOptions = categories.map(cat => ({ value: cat.categoryID, label: cat.name }));
+    const brandOptions = brands.map(b => ({ value: b.brandID, label: b.brandName }));
+
+    // Custom styles cho react-select
+    const customStyles = {
+        control: (styles) => ({
+            ...styles,
+            borderColor: '#D1D5DB', // Màu border khi chưa chọn
+            boxShadow: 'none',
+            '&:hover': {
+                borderColor: '#3B82F6', // Màu xanh nước khi hover
+            },
+            padding: '0.5rem',
+            minHeight: '38px', // Đảm bảo input không bị thu nhỏ
+        }),
+        option: (styles, { isFocused, isSelected }) => ({
+            ...styles,
+            backgroundColor: isFocused ? '#E3F2FD' : isSelected ? '#3B82F6' : '#fff', // Màu xanh nước khi hover hoặc khi chọn
+            color: isSelected ? '#fff' : '#333',
+            cursor: 'pointer',
+            padding: '10px',
+            ':active': {
+                backgroundColor: '#0288D1', // Khi được chọn
+            },
+        }),
+        menu: (styles) => ({
+            ...styles,
+            maxHeight: '150px', // Giới hạn chiều cao menu
+            overflowY: 'auto',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+        }),
+        multiValue: (styles) => ({
+            ...styles,
+            backgroundColor: '#3B82F6', // Màu xanh nước cho multi value
+            color: '#fff',
+            borderRadius: '16px',
+            padding: '2px 8px',
+        }),
+        placeholder: (styles) => ({
+            ...styles,
+            color: '#9CA3AF', // Màu của placeholder
+        }),
     };
 
     return (
@@ -87,9 +143,7 @@ const AddProductModal = ({ onClose, onProductAdded }) => {
                     <h3 className="font-bold text-lg">Thêm Sản Phẩm</h3>
                     <form className='mt-4' onSubmit={handleSubmit}>
                         <div className="grid grid-cols-1 gap-4">
-                            {/* Input tên sản phẩm trên một hàng */}
                             <label className='font-semibold'>Tên sản phẩm</label>
-
                             <input
                                 type="text"
                                 placeholder="Nhập tên sản phẩm..."
@@ -98,40 +152,31 @@ const AddProductModal = ({ onClose, onProductAdded }) => {
                                 className="input input-bordered w-full"
                                 required
                             />
-                            {/* Hai combobox đứng cùng một hàng */}
+
+                            {/* Sử dụng react-select cho Danh mục và Thương hiệu */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className='font-semibold'>Danh mục:</label>
-                                    <select
+                                    <Select
                                         value={category}
-                                        onChange={(e) => {
-                                            setCategory(e.target.value);
-                                        }}
-                                        className="select select-bordered w-full" >
-                                        <option value="">Chọn danh mục</option>
-                                        {categories.map((cat, index) => (
-                                            <option key={`${cat.categoryID}-${index}`} value={cat.categoryID}>{cat.name}</option>
-                                        ))}
-                                    </select>
+                                        onChange={setCategory}
+                                        options={categoryOptions}
+                                        placeholder="Chọn danh mục"
+                                        styles={customStyles}
+                                    />
                                 </div>
                                 <div>
-                                    <label className='font-semibold'>Thương hiệu</label>
-                                    <select
+                                    <label className='font-semibold'>Thương hiệu:</label>
+                                    <Select
                                         value={brand}
-                                        onChange={(e) => {
-                                            setBrand(e.target.value);
-                                        }}
-                                        className="select select-bordered w-full">
-                                        <option value="">Chọn thương hiệu</option>
-                                        {brands.map((b, index) => (
-                                            <option key={`${b.brandID}-${index}`} value={b.brandID}>{b.brandName}</option>
-                                        ))}
-                                    </select>
+                                        onChange={setBrand}
+                                        options={brandOptions}
+                                        placeholder="Chọn thương hiệu"
+                                        styles={customStyles}
+                                    />
                                 </div>
-
-
                             </div>
-                            {/* Mô tả sản phẩm trên một hàng */}
+
                             <label className='font-semibold'>Mô tả:</label>
                             <textarea
                                 placeholder="Nhập mô tả..."

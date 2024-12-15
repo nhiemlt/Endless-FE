@@ -63,11 +63,8 @@ function ProductPage() {
       setLoading(false);
     }
   };
-  console.log('categoryId:', categoryID);
-  console.log('brandId:', brandID);
 
 
-  // Remove the fetchProducts call from handleCategoryChange and handleBrandChange
   const handleCategoryChange = (e) => {
     setCategoryID(e.target.value);
     setCurrentPage(0);  // Reset trang khi thay đổi bộ lọc
@@ -115,21 +112,18 @@ function ProductPage() {
 
   const handleCloseAddModal = () => {
     setIsAddModalOpen(false);
-    fetchProducts(); // Refresh product list after adding
+    fetchProducts();
   };
 
   const handleCloseEditModal = () => {
     setIsEditModalOpen(false);
     setCurrentProduct(null);
-    fetchProducts(); // Refresh product list after editing
+    fetchProducts();
   };
 
-  // New function to handle product addition
   const handleProductAdded = (newProduct) => {
     setProducts((prevProducts) => [newProduct, ...prevProducts]); // Thêm sản phẩm mới vào đầu danh sách
   };
-
-
 
   const handlePrevPage = () => {
     if (currentPage > 0) {
@@ -142,10 +136,6 @@ function ProductPage() {
       setCurrentPage(currentPage + 1);
     }
   };
-
-
-
-
 
   return (
     <TitleCard topMargin="mt-6">
@@ -245,13 +235,7 @@ function ProductPage() {
       {/* Điều hướng phân trang */}
       <div className="join mt-4 flex justify-center w-full">
         <button
-          onClick={handlePrevPage}
-          className="join-item btn"
-          disabled={currentPage === 0}
-        >
-          Trước
-        </button>
-
+          onClick={handlePrevPage} className="join-item btn" disabled={currentPage === 0}> Trước  </button>
         {Array.from({ length: totalPages }, (_, index) => (
           <button
             key={index}
@@ -261,16 +245,10 @@ function ProductPage() {
             {index + 1}
           </button>
         ))}
-
         <button
-          onClick={handleNextPage}
-          className="join-item btn"
-          disabled={currentPage === totalPages - 1}
-        >
-          Tiếp
-        </button>
+          onClick={handleNextPage} className="join-item btn"
+          disabled={currentPage === totalPages - 1}> Tiếp </button>
       </div>
-
 
 
       {isAddModalOpen && (
