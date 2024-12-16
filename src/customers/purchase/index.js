@@ -117,16 +117,17 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
     const selected = vouchers.find(voucher => voucher.voucherID === selectedVoucherId);
     setSelectedVoucherDiscount(selected ? selected.discountLevel : 0);
   };
-
   const calculateShippingFee = async () => {
     if (!toDistrictId || !toWardCode) {
       setShippingFee(0);
       return;
     }
-
+  
+    console.log("Tính phí với:", { toDistrictId, toWardCode });
+  
     setLoading(true);
     setError(null);
-
+  
     try {
       const weight = selectedItems.reduce((total, item) => total + (item.weight * item.quantity), 0);
       const items = selectedItems.map(item => ({
@@ -137,14 +138,23 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
         length: Math.round(item.length),
         width: Math.round(item.width),
       }));
-
-      const response = await GHNService.calculateShippingFee({
+  
+      console.log("Dữ liệu gửi đi:", {
         toDistrictId: Number(toDistrictId),
         toWardCode: String(toWardCode),
         weight: Math.round(weight),
         items
       });
-
+  
+      const response = await GHNService.calculateShippingFee({
+        toDistrictId: Number(toDistrictId),
+        toWardCode: String(toWardCode),
+        weight: Math.round(weight),
+        items,
+      });
+  
+      console.log("Phản hồi từ GHN:", response.data);
+  
       setShippingFee(response.data.total);
     } catch (err) {
       console.error('Error calculating shipping fee:', err);
@@ -153,6 +163,8 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
       setLoading(false);
     }
   };
+  
+  
 
   const handlePaymentMethodChange = (event) => {
     setPaymentMethod(event.target.value);
@@ -254,13 +266,24 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
 
   // Hàm xử lý khi thay đổi địa chỉ
   const handleChangeAddress = (e) => {
-    const wardCode = e.target.value;
-    setSelectedAddressId(wardCode); // Cập nhật ID địa chỉ đã chọn
-
-    // Tìm địa chỉ đã chọn trong danh sách
-    const selectedAddress = userAddresses.find(address => address.wardCode === wardCode);
-    setSelectedAddressDetails(selectedAddress); // Cập nhật thông tin địa chỉ đã chọn
+    const selectedWardCode = String(e.target.value).trim(); // Chuyển thành chuỗi và loại bỏ khoảng trắng
+    console.log("WardCode đã chọn: ", selectedWardCode);
+    
+    // Tìm địa chỉ trong danh sách userAddresses bằng wardCode
+    const selectedAddress = userAddresses.find(address => String(address.wardCode).trim() === selectedWardCode);
+    
+    if (selectedAddress) {
+      const { wardCode, districtID } = selectedAddress;  // Lấy wardCode và districtID từ đối tượng đã chọn
+      console.log("WardCode: ", wardCode, "DistrictID: ", districtID);
+      setDistrictId(districtID);  // Cập nhật districtID
+      setWardCode(wardCode);  // Cập nhật wardCode
+      setSelectedAddressId(wardCode); // Cập nhật ID địa chỉ đã chọn
+    } else {
+      console.log("Không tìm thấy địa chỉ với wardCode: ", selectedWardCode);
+    }
   };
+  
+  
 
   useEffect(() => {
     if (userAddresses.length > 0) {
@@ -353,7 +376,7 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
 
                   <dl className="flex items-center justify-between gap-4 py-3">
                     <dt className="text-base font-normal text-gray-500 dark:text-gray-400">Giá giảm voucher</dt>
-                    <dd className="text-base font-medium text-gray-900 dark:text-white"><i> - {formatCurrency(calculateDiscountAmount())}</i></dd>
+                    <dd className="text-base font-medium text-gray-900 dark:text-white"><i> {calculateDiscountAmount > 0 ? ' - ' : ''} {formatCurrency(calculateDiscountAmount())}</i></dd>
                   </dl>
 
 
@@ -365,7 +388,7 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
                       <dd className="text-base font-medium text-red-500">{error}</dd>
                     ) : (
                       <dd className="text-base font-medium text-gray-900 dark:text-white">
-                        {shippingFee ? `- ${formatCurrency(shippingFee)}` : 'Chưa có phí'}
+                        {shippingFee ? ` ${formatCurrency(shippingFee)}` : 'Chưa có phí'}
                       </dd>
                     )}
                   </dl>
@@ -425,18 +448,20 @@ const Purchase = ({ fromDistrictId, fromWardCode, productDetails }) => {
                     Địa chỉ
                   </label>
                   <div className="flex items-center gap-2">
-                    <select
-                      id="address-selector"
-                      className="select select-bordered w-full max-w-full flex-1 rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
-                      value={selectedAddressId}  // Giá trị mặc định
-                      onChange={handleChangeAddress}
-                    >
-                      {userAddresses.map((address, index) => (
-                        <option key={index} value={address.wardCode}>
-                          {address.detailAddress}, {address.wardName}, {address.districtName}, {address.provinceName}
-                        </option>
-                      ))}
-                    </select>
+                  <select
+  id="address-selector"
+  className="select select-bordered w-full max-w-full flex-1 rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500"
+  value={selectedAddressId} // Giá trị mặc định là wardCode
+  onChange={handleChangeAddress} // Gọi handleChangeAddress khi thay đổi
+>
+  {userAddresses.map((address, index) => (
+    <option key={index} value={address.wardCode}>
+      {address.detailAddress}, {address.wardName}, {address.districtName}, {address.provinceName}
+    </option>
+  ))}
+</select>
+
+
                     {/* Nút Thêm Địa Chỉ */}
                     <button onClick={handleOpenModal} className="btn btn-primary">
                       Thêm địa chỉ
