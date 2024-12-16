@@ -4,90 +4,71 @@ import TitleCard from "../../components/Cards/TitleCard";
 import LineChart from "../../features/dashboard/components/LineChart";
 
 function StatisticalProduct() {
-  const [chartData, setChartData] = useState([]);
-  const [selectedRange, setSelectedRange] = useState("day");
+  const [chartData, setChartData] = useState(null);
+  const [year, setYear] = useState(2024); // Mặc định là năm 2024
 
   useEffect(() => {
-    const fetchReports = async () => {
+    const fetchRevenueReport = async () => {
       try {
-        // Fetch stock and revenue data
-        const stockData = await ReportService.fetchStockReport(selectedRange);
-        const revenueData = await ReportService.fetchRevenueReport(selectedRange);
+        // Gọi API để lấy dữ liệu doanh thu theo năm
+        const revenueData = await ReportService.fetchRevenueReport(year);
 
-        // Kiểm tra nếu dữ liệu không có hoặc lỗi
-        if (!stockData || !revenueData) {
-          console.error("Data is missing or error occurred");
-          return;
+        // Kiểm tra xem dữ liệu có hợp lệ không
+        if (revenueData && revenueData.details) {
+          // Định dạng lại dữ liệu để phù hợp với biểu đồ
+          const formattedData = {
+            labels: revenueData.details.map(item => item.month), // Các tháng trong năm
+            datasets: [
+              {
+                label: "Doanh thu (VND)",
+                data: revenueData.details.map(item => item.monthlyRevenue), // Dữ liệu doanh thu theo tháng
+                borderColor: "rgba(75, 192, 192, 1)",
+                backgroundColor: "rgba(75, 192, 192, 0.2)",
+                tension: 0.4,
+              },
+            ],
+          };
+          setChartData(formattedData); // Cập nhật dữ liệu cho biểu đồ
+        } else {
+          console.error("Dữ liệu không hợp lệ từ API");
+          setChartData(null); // Nếu dữ liệu không hợp lệ, xóa dữ liệu biểu đồ
         }
-
-        // Kết hợp dữ liệu cho biểu đồ
-        const combinedData = stockData.map((stockReport, index) => ({
-          label: stockReport.versionName,
-          totalEntry: stockReport.totalEntryQuantity,
-          totalOrder: stockReport.totalOrderQuantity,
-          totalRevenue: revenueData.details && revenueData.details[index] ? revenueData.details[index].revenue : 0,  // Lấy doanh thu từ danh sách chi tiết
-        }));
-
-        setChartData(combinedData);
       } catch (error) {
-        console.error("Error fetching reports:", error);
+        console.error("Lỗi khi lấy dữ liệu từ API:", error.message || error);
+        setChartData(null); // Nếu có lỗi, xóa dữ liệu biểu đồ
       }
     };
 
-    fetchReports();
-  }, [selectedRange]);
+    fetchRevenueReport(); // Gọi hàm lấy dữ liệu khi component mount
+  }, [year]); // Thực hiện lại khi thay đổi năm
 
-  const handleRangeChange = (range) => {
-    setSelectedRange(range);
+  const handleYearChange = (e) => {
+    setYear(e.target.value); // Cập nhật năm khi người dùng chọn
   };
 
   return (
-    <TitleCard title="Thống kê sản phẩm và doanh thu" topMargin="mt-2">
-      {/* Dropdown for selecting range */}
+    <TitleCard title="Thống kê doanh thu" topMargin="mt-2">
+      {/* Dropdown để chọn năm */}
       <div className="flex justify-between items-center mb-4">
         <select
-          value={selectedRange}
-          onChange={(e) => handleRangeChange(e.target.value)}
+          value={year}
+          onChange={handleYearChange}
           className="p-2 border rounded-md text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700"
         >
-          <option value="day">7 ngày gần nhất</option>
-          <option value="month">1 tháng gần nhất</option>
-          <option value="quarter">1 quý gần nhất</option>
-          <option value="year">1 năm gần nhất</option>
+          <option value="2023">2023</option>
+          <option value="2024">2024</option>
+          <option value="2025">2025</option>
         </select>
       </div>
 
-      {/* Line Chart */}
-      <LineChart
-        data={{
-          labels: chartData.map((data) => data.label),
-          datasets: [
-            {
-              label: "Tổng Nhập",
-              data: chartData.map((data) => data.totalEntry),
-              borderColor: "rgba(54, 162, 235, 1)",
-              backgroundColor: "rgba(54, 162, 235, 0.2)",
-              tension: 0.4,
-            },
-            {
-              label: "Tổng Bán",
-              data: chartData.map((data) => data.totalOrder),
-              borderColor: "rgba(255, 99, 132, 1)",
-              backgroundColor: "rgba(255, 99, 132, 0.2)",
-              tension: 0.4,
-            },
-            {
-              label: "Tổng Doanh Thu (VND)",
-              data: chartData.map((data) => data.totalRevenue),
-              borderColor: "rgba(75, 192, 192, 1)",
-              backgroundColor: "rgba(75, 192, 192, 0.2)",
-              tension: 0.4,
-            },
-          ],
-        }}
-      />
+      {/* Kiểm tra xem dữ liệu có hợp lệ không trước khi render biểu đồ */}
+      {chartData ? (
+        <LineChart data={chartData} />
+      ) : (
+        <p>Không có dữ liệu để hiển thị</p>
+      )}
     </TitleCard>
   );
 }
 
-export default StatisticalProduct;
+export default StatisticalProduct

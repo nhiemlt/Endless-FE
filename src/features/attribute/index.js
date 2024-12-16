@@ -21,7 +21,11 @@ function AttributePage() {
   const [confirmDialogVisible, setConfirmDialogVisible] = useState(false); // Hiển thị ConfirmDialog
   const [attributeToDelete, setAttributeToDelete] = useState(null); // Lưu thuộc tính cần xóa
   const [currentPage, setCurrentPage] = useState(0);
-  const [size, setSize] = useState(10);
+  const [size, setSize] = useState(20);
+  const [totalPages, setTotalPages] = useState(1);
+
+
+
   const fetchAttributes = async () => {
     try {
       const response = await attributeService.getAttributes();
@@ -78,6 +82,18 @@ function AttributePage() {
   const filteredAttributesList = attributesList.filter(attribute =>
     attribute.attributeName.toLowerCase().includes(searchKeyword.toLowerCase())
   );
+
+  const handlePrevPage = () => {
+    if (currentPage > 0) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages - 1) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
 
   return (
     <div className="">
@@ -139,6 +155,33 @@ function AttributePage() {
             </tbody>
 
           </table>
+        </div>
+        <div className="join mt-4 flex justify-center w-full">
+          <button
+            onClick={handlePrevPage}
+            className="join-item btn"
+            disabled={currentPage === 0}
+          >
+            Trước
+          </button>
+
+          {Array.from({ length: totalPages }, (_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentPage(index)} // Chuyển trang khi nhấn
+              className={`join-item btn ${currentPage === index ? 'btn-primary' : ''}`} // Thêm 'btn-primary' cho trang hiện tại
+            >
+              {index + 1}
+            </button>
+          ))}
+
+          <button
+            onClick={handleNextPage}
+            className="join-item btn"
+            disabled={currentPage === totalPages - 1}
+          >
+            Tiếp
+          </button>
         </div>
       </TitleCard>
 
