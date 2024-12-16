@@ -28,7 +28,7 @@ function CustomerLayout() {
                 <input id="left-sidebar-drawer" type="checkbox" className="drawer-toggle" />
                 <CustomerPageContent />
             </div>
-            
+
             {/* Right drawer - containing secondary content like notifications list etc.. */}
             <RightSidebar />
 

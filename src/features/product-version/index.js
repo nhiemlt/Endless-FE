@@ -4,6 +4,7 @@ import { useDispatch } from 'react-redux';
 import { showNotification } from '../common/headerSlice';
 import SearchBar from '../../components/Input/SearchBar';
 import ProductVersionService from '../../services/productVersionService';
+import ProductService from '../../services/ProductService';
 import PencilIcon from '@heroicons/react/24/outline/PencilIcon';
 import TrashIcon from '@heroicons/react/24/outline/TrashIcon';
 import EyeIcon from '@heroicons/react/24/outline/EyeIcon';
@@ -28,7 +29,13 @@ function ProductVersionPage() {
 
   const [totalPages, setTotalPages] = useState(0);
   const [searchKeyword, setSearchKeyword] = useState('');
-
+  const [searchProductId, setSearchProductId] = useState(''); // Khởi tạo state cho Product ID
+  const [products, setProducts] = useState([]);  // State để lưu danh sách sản phẩm
+  const [categoryID, setCategoryID] = useState('');
+  const [brandID, setBrandID] = useState('');
+  const [pageSize, setPageSize] = useState(100);
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
 
 
 
@@ -40,11 +47,13 @@ function ProductVersionPage() {
         itemsPerPage,
         'versionName',
         'ASC',
-        searchKeyword
+        searchKeyword,
+        searchProductId,
+        minPrice,
+        maxPrice
       );
-      console.log("Fetched Product Versions:", response);
-      setProductVersions(response.content); // Giả sử content là danh sách các ProductVersionDTO
-      const totalPages = Math.ceil(response.totalElements / itemsPerPage); // Tính lại tổng số trang
+      setProductVersions(response.content);
+      const totalPages = Math.ceil(response.totalElements / itemsPerPage);
       setTotalPages(totalPages);
     } catch (err) {
       console.error("Error fetching product versions:", err);
@@ -55,8 +64,31 @@ function ProductVersionPage() {
   };
 
   useEffect(() => {
-    fetchProductVersions();  // Gọi hàm ngoài useEffect
-  }, [currentPage, searchText]);  // Thêm currentPage và searchText vào dependency array
+    fetchProductVersions();
+  }, [currentPage, searchKeyword, searchProductId, minPrice, maxPrice]); // Thêm minPrice, maxPrice vào dependencies
+
+
+  // Gọi API để lấy danh sách sản phẩm
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await ProductService.getProducts(searchKeyword,    // Từ khóa tìm kiếm
+          currentPage,      // Trang hiện tại
+          pageSize,         // Số lượng sản phẩm mỗi trang
+          'createDate',     // Thuộc tính sắp xếp
+          'asc',             // Hướng sắp xếp
+          categoryID || undefined, // Truyền undefined nếu không có categoryId
+          brandID || undefined    // Truyền undefined nếu không có brandId
+        ); // Giả sử hàm này lấy danh sách sản phẩm
+        console.log("Fetched products:", response); // Log products response
+        setProducts(response.content); // Cập nhật state với danh sách sản phẩm
+      } catch (error) {
+        console.error('Lỗi khi lấy danh sách sản phẩm:', error);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
 
   const handleEditProductVersion = (version) => {
@@ -172,19 +204,10 @@ function ProductVersionPage() {
     if (currentPage < totalPages - 1) setCurrentPage(currentPage + 1);
   };
 
-
-  // Hiển thị loading nếu đang tải dữ liệu
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
   // Hiển thị thông báo lỗi nếu có
   if (error) {
     return <div>{error}</div>;
   }
-
-
-
 
   const formatWeight = (weight) => {
     if (weight >= 1000) {
@@ -193,8 +216,20 @@ function ProductVersionPage() {
     return `${weight} g`; // Hiển thị g nếu < 1000
   };
 
+  // Hàm thay đổi giá trị và loại bỏ dấu chấm để tránh lỗi khi nhập
+  const handlePriceChange = (e, setPrice) => {
+    let value = e.target.value.replace(/[^\d]/g, ''); // Loại bỏ mọi ký tự không phải là số
+    setPrice(value);
+  };
+
+  // Hàm định dạng số khi hiển thị giá trị có dấu chấm
+  const formatNumber = (number) => {
+    if (!number) return '';
+    return Number(number).toLocaleString('vi-VN'); // Định dạng theo kiểu Việt Nam với dấu chấm phân cách nghìn
+  };
+
   return (
-    <TitleCard title="Quản lý phiên bản sản phẩm" topMargin="mt-6">
+    <TitleCard topMargin="mt-6">
       <div className="space-y-4">
         <div className="flex flex-col md:flex-row justify-between items-center w-full mb-4">
           <div className="flex justify-start items-center space-x-2 mb-2 mr-2 md:mb-0">
@@ -210,6 +245,56 @@ function ProductVersionPage() {
             />
 
           </div>
+          {/* Select lọc theo tên sản phẩm */}
+          <div className="flex justify-start items-center space-x-2 mb-2 mr-2 md:mb-0">
+            <label className="whitespace-nowrap text-sm">Lọc sản phẩm:</label>
+
+            <select
+              onChange={(e) => {
+                setSearchProductId(e.target.value);
+                setCurrentPage(0);
+              }}
+              className="select select-bordered select-xs w-full md:w-25 h-8 px-3"
+              defaultValue=""
+            >
+              <option value="">Tất cả</option>
+              {products.map((product) => (
+                <option key={product.productID} value={product.productID}>
+                  {product.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+
+          <div className="flex justify-start items-center space-x-2 mb-2 mr-2 md:mb-0">
+            <label className="whitespace-nowrap text-sm">Khoảng giá:</label>
+
+            <input
+              type="text"
+              placeholder="Từ"
+              className="input input-bordered input-xs w-full md:w-30 h-8"
+              value={formatNumber(minPrice)}  // Hiển thị theo dạng có dấu chấm
+              onChange={(e) => {
+                handlePriceChange(e, setMinPrice);  // Gọi hàm xử lý thay đổi giá trị
+                setCurrentPage(0);  // Đặt lại trang
+              }}
+            />
+
+            <span className="mx-2">-</span>
+
+            <input
+              type="text"
+              placeholder="Đến"
+              className="input input-bordered input-xs w-full md:w-30 h-8"
+              value={formatNumber(maxPrice)}  // Hiển thị theo dạng có dấu chấm
+              onChange={(e) => {
+                handlePriceChange(e, setMaxPrice);  // Gọi hàm xử lý thay đổi giá trị
+                setCurrentPage(0);  // Đặt lại trang
+              }}
+            />
+          </div>
+
           <button className="btn btn-outline btn-sm btn-primary" onClick={handleAddProductVersion} >
             Thêm phiên bản
           </button>
@@ -338,8 +423,6 @@ function ProductVersionPage() {
             Tiếp
           </button>
         </div>
-
-
       </div>
       {isAddModalOpen && (
         <AddProductVersionModal

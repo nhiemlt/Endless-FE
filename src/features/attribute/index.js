@@ -80,7 +80,7 @@ function AttributePage() {
   );
 
   return (
-    <div className="p-4">
+    <div className="">
       <TitleCard >
         <div className="flex flex-col md:flex-row justify-between items-center w-full mb-4">
           <div className="flex justify-start items-center space-x-2 mb-2 mr-2 md:mb-0">
@@ -96,7 +96,7 @@ function AttributePage() {
                 <th>STT</th>
                 <th>Tên thuộc tính</th>
                 <th>Giá trị</th>
-                <th colSpan={2} className="text-center">Hành động</th>
+                <th colSpan={2} className="text-center"></th>
               </tr>
             </thead>
             <tbody>

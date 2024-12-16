@@ -5,6 +5,8 @@ import TitleCard from '../../components/Cards/TitleCard';
 import { useDispatch } from 'react-redux';
 import { showNotification } from '../common/headerSlice';
 import ProductService from '../../services/ProductService';
+import BrandService from '../../services/BrandService';
+import CategoryService from '../../services/CategoryService';
 import AddProductModal from './components/AddProductModal';
 import EditProductModal from './components/EditProductModal';
 import ConfirmDialog from './components/ConfirmDialog'; // Import ConfirmDialog
@@ -31,17 +33,20 @@ function ProductPage() {
     async function fetchData() {
       try {
         const [categoryData, brandData] = await Promise.all([
-          ProductService.getCategories(),
-          ProductService.getBrands()
+          CategoryService.getCategories({ size: 50 }), // Kiểm tra API này
+          BrandService.getBrands({ size: 50 }),    // Kiểm tra API này
         ]);
-        setCategories(categoryData);
-        setBrands(brandData);
+        console.log(categoryData);  // Kiểm tra dữ liệu trả về
+        console.log(brandData);     // Kiểm tra dữ liệu trả về
+        setCategories(categoryData.content); // Cập nhật vào state
+        setBrands(brandData.content);       // Cập nhật vào state
       } catch (error) {
         dispatch(showNotification({ message: 'Lỗi khi lấy danh mục hoặc thương hiệu', type: 'error' }));
       }
     }
     fetchData();
   }, [dispatch]);
+
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -157,7 +162,7 @@ function ProductPage() {
           <div className="flex items-center space-x-2">
             <label className="whitespace-nowrap font-medium">Danh mục:</label>
             <select
-              className="select select-bordered select-xs w-full  md:w-38 h-10 px-3"
+              className="select select-bordered select-xs w-full md:w-40 h-10 px-3"  // Điều chỉnh chiều rộng của select
               onChange={handleCategoryChange}
             >
               <option value="">Tất cả</option>
@@ -172,7 +177,7 @@ function ProductPage() {
           <div className="flex items-center space-x-2">
             <label className="whitespace-nowrap font-medium">Thương hiệu:</label>
             <select
-              className="select select-bordered select-xs w-full w-full md:w-48 h-10 px-3"
+              className="select select-bordered select-xs w-full md:w-40 h-10 px-3"  // Điều chỉnh chiều rộng của select
               onChange={handleBrandChange}
             >
               <option value="">Tất cả</option>

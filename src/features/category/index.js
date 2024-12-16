@@ -95,7 +95,7 @@ function CategoryPage() {
   };
 
   return (
-    <TitleCard title="Quản lý danh mục" topMargin="mt-6">
+    <TitleCard topMargin="mt-6">
       <div className="flex flex-col md:flex-row justify-between items-center w-full mb-4">
         <div className="flex justify-start items-center space-x-2 mb-2 mr-2 md:mb-0">
           <SearchBar searchText={searchKeyword} setSearchText={applySearch} styleClass="mb-4" />
@@ -109,7 +109,7 @@ function CategoryPage() {
             <tr>
               <th>STT</th>
               <th className="text-center">Tên Danh Mục</th>
-              <th colSpan={2} className="text-center">Hành Động</th>
+              <th colSpan={2} className="text-center"></th>
             </tr>
           </thead>
           <tbody>

@@ -125,7 +125,7 @@ const AddPromotionModal = ({ isOpen, onClose, onPromotionAdded }) => {
     useEffect(() => {
         const fetchProducts = async () => {
             try {
-                const response = await productVersionService.getAllProductVersions();
+                const response = await productVersionService.getAllProductVersions(0, 10000);
                 const productVersions = Array.isArray(response.content) ? response.content : [];
                 const groupedProducts = productVersions.reduce((acc, product) => {
                     const brandName = product?.product.brandName || 'Khác';
