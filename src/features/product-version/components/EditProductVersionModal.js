@@ -6,6 +6,7 @@ import { showNotification } from '../../common/headerSlice';
 import ProductService from '../../../services/ProductService';
 import attributeService from '../../../services/attributeService';
 
+
 const EditProductVersionModal = ({ productVersion, onClose, onProductUpdated }) => {
 
     const [productID, setProductID] = useState('');
@@ -18,7 +19,6 @@ const EditProductVersionModal = ({ productVersion, onClose, onProductUpdated }) 
     const [width, setWidth] = useState(0);
     const [image, setImage] = useState('');
     const [previewLogo, setPreviewLogo] = useState(null);
-    const [attributes, setAttributes] = useState([]);
     const [error, setError] = useState('');
     const dispatch = useDispatch();
     const [products, setProducts] = useState([]); // State để lưu danh sách sản phẩm
@@ -26,12 +26,12 @@ const EditProductVersionModal = ({ productVersion, onClose, onProductUpdated }) 
     const [activeAttribute, setActiveAttribute] = useState('');
     const [selectedAttributeValues, setSelectedAttributeValues] = useState([]);
 
-    // Gọi API để lấy danh sách sản phẩm
+    // Gọi API để lấy danh sách sản phẩm với kích thước mặc định là 20
     useEffect(() => {
         const fetchProducts = async () => {
             try {
-                const response = await ProductService.getProducts(); // Giả sử hàm này lấy danh sách sản phẩm
-
+                // Thay đổi size thành 20 khi gọi API
+                const response = await ProductService.getProducts('', 0, 50);
                 setProducts(response.content); // Cập nhật state với danh sách sản phẩm
             } catch (error) {
                 console.error('Lỗi khi lấy danh sách sản phẩm:', error);
@@ -258,13 +258,14 @@ const EditProductVersionModal = ({ productVersion, onClose, onProductUpdated }) 
                                 </div>
                             </div>
                             <div>
-                                <label >
+                                <label>
                                     <span className="block text-sm font-medium mb-2">Chọn Sản Phẩm</span>
                                     <select
-                                        className="select select-bordered w-full"
+                                        className="select select-bordered w-full text-gray-700 disabled:bg-gray-100 disabled:text-gray-400 cursor-not-allowed"
                                         required
                                         value={productID}
                                         onChange={(e) => setProductID(e.target.value)}
+                                        disabled // Thêm thuộc tính này để vô hiệu hóa
                                     >
                                         <option value="">Chọn Sản Phẩm</option>
                                         {products.map((product, index) => (
@@ -274,6 +275,8 @@ const EditProductVersionModal = ({ productVersion, onClose, onProductUpdated }) 
                                         ))}
                                     </select>
                                 </label>
+
+
 
                                 {/* Tên Phiên Bản */}
                                 <label>

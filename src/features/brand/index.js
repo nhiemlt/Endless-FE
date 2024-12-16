@@ -92,7 +92,7 @@ function BrandPage() {
 
   return (
     <div>
-      <TitleCard title="Quản lý thương hiệu">
+      <TitleCard >
         <div className="flex flex-col md:flex-row justify-between items-center w-full mb-4">
           <div className="flex justify-start items-center space-x-2 mb-2 mr-2 md:mb-0">
             <input
@@ -115,7 +115,7 @@ function BrandPage() {
                 <th>STT</th>
                 <th className="text-center">Tên thương hiệu</th>
                 <th>Logo</th>
-                <th className="text-center" colSpan={2}>Action</th>
+                <th className="text-center" colSpan={2}></th>
               </tr>
             </thead>
             <tbody>

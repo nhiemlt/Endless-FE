@@ -1,47 +1,66 @@
 import { useState, useEffect } from 'react';
-import EntryService from '../../../services/EntryService';
-import ProductVersionService from '../../../services/productVersionService';
-import InputDropdown from '../../../components/Input/InputDropdown';
 import { useDispatch } from 'react-redux';
-import { showNotification } from "../../common/headerSlice";
+import { showNotification } from '../../common/headerSlice';
+import Select from 'react-select';
+import ProductVersionService from '../../../services/productVersionService';
+import EntryService from '../../../services/EntryService';
 
 function CreateEntryModal({ showModal, closeModal, onEntryCreated }) {
   const dispatch = useDispatch();
   const [cart, setCart] = useState([]);
   const [productVersions, setProductVersions] = useState([]);
+  const [currentPage, setCurrentPage] = useState(0);
+  const itemsPerPage = 10000000;
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const [searchProductId, setSearchProductId] = useState('');
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
+
+  const [selectedProduct, setSelectedProduct] = useState(null); // State mới để theo dõi sản phẩm đã chọn
 
   useEffect(() => {
-    // Gọi API lấy danh sách sản phẩm khi modal mở
-    const fetchProductVersions = async () => {
-      try {
-        const data = await ProductVersionService.getAllProductVersions();
-        console.log(data.content)
-        setProductVersions(data.content);
-      } catch (error) {
-        dispatch(showNotification({ message: 'Lỗi khi tải danh sách sản phẩm.', status: 0 }));
-      }
-    };
-    if (showModal) fetchProductVersions();
-  }, [showModal, dispatch]);
+    if (showModal) {
+      const fetchProductVersions = async () => {
+        try {
+          const response = await ProductVersionService.getAllProductVersions(
+            currentPage,
+            itemsPerPage,
+            'versionName',
+            'ASC',
+            searchKeyword,
+            searchProductId,
+            minPrice,
+            maxPrice
+          );
+          setProductVersions(response.content);
+        } catch (error) {
+          dispatch(showNotification({ message: 'Lỗi khi tải danh sách sản phẩm.', status: 0 }));
+        }
+      };
+      fetchProductVersions();
+    }
+  }, [showModal, currentPage, searchKeyword, searchProductId, minPrice, maxPrice, dispatch]);
 
   const resetData = () => {
     setCart([]);
+    setSelectedProduct(null); // Reset giá trị sản phẩm khi đóng modal hoặc khi cần
   };
 
   const handleSelectProduct = (selectedProduct) => {
     if (!selectedProduct) return;
+
     const existingItem = cart.find(item => item.productVersionID === selectedProduct.productVersionID);
     if (existingItem) {
-      // Nếu sản phẩm đã có trong giỏ hàng, tăng số lượng
       setCart(cart.map(item =>
         item.productVersionID === selectedProduct.productVersionID
           ? { ...item, quantity: item.quantity + 1 }
           : item
       ));
     } else {
-      // Nếu sản phẩm chưa có trong giỏ hàng, thêm mới với số lượng 1
       setCart([...cart, { ...selectedProduct, quantity: 1 }]);
     }
+
+    setSelectedProduct(null); // Reset lại giá trị sau khi chọn sản phẩm
   };
 
   const handleRemoveFromCart = (productId) => {
@@ -49,6 +68,7 @@ function CreateEntryModal({ showModal, closeModal, onEntryCreated }) {
   };
 
   const handleQuantityChange = (index, newQuantity) => {
+    if (newQuantity < 1) return;
     const updatedCart = [...cart];
     updatedCart[index].quantity = newQuantity;
     setCart(updatedCart);
@@ -71,8 +91,7 @@ function CreateEntryModal({ showModal, closeModal, onEntryCreated }) {
       onEntryCreated();
       handleCloseModal();
     } catch (error) {
-      console.error("Lỗi khi tạo đơn nhập:", error);
-      dispatch(showNotification({ message: 'Đã xảy ra lỗi khi tạo đơn nhập.', type: 'error' }));
+      dispatch(showNotification({ message: 'Đã xảy ra lỗi khi tạo đơn nhập.', status: 0 }));
     }
   };
 
@@ -81,8 +100,25 @@ function CreateEntryModal({ showModal, closeModal, onEntryCreated }) {
     closeModal();
   };
 
+  const customSingleValue = ({ data }) => (
+    <div className="flex items-center">
+      <img src={data.image} alt={data.label} className="w-8 h-8 rounded-full mr-2" />
+      {data.label}
+    </div>
+  );
+
+  const customOption = (props) => {
+    const { data, innerRef, innerProps } = props;
+    return (
+      <div ref={innerRef} {...innerProps} className="flex items-center space-x-2 p-2 cursor-pointer">
+        <img src={data.image} alt={data.label} className="w-8 h-8 rounded-full" />
+        <span>{data.label}</span>
+      </div>
+    );
+  };
+
   return (
-    <>
+    <div>
       {showModal && (
         <div className="modal modal-open">
           <div className="modal-box">
@@ -91,10 +127,19 @@ function CreateEntryModal({ showModal, closeModal, onEntryCreated }) {
               <label className="label">
                 <span className="label-text">Chọn sản phẩm</span>
               </label>
-              <InputDropdown
-                options={productVersions || []} // truyền danh sách sản phẩm vào InputDropdown
-                onSelect={handleSelectProduct}
+              <Select
+                options={productVersions.map(item => ({
+                  image: item.image,
+                  value: item.productVersionID,
+                  label: `${item.product.name} - ${item.versionName}`
+                })) || []}
+                value={selectedProduct}  // Giá trị chọn được đặt thành null để không giữ giá trị
+                onChange={(selectedOption) => {
+                  const selectedProduct = productVersions.find(product => product.productVersionID === selectedOption.value);
+                  handleSelectProduct(selectedProduct);
+                }}
                 placeholder="Tìm sản phẩm..."
+                components={{ SingleValue: customSingleValue, Option: customOption }}
               />
             </div>
             <div className="mt-4">
@@ -149,7 +194,7 @@ function CreateEntryModal({ showModal, closeModal, onEntryCreated }) {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
 

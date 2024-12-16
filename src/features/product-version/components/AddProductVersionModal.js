@@ -11,7 +11,6 @@ import Select from 'react-select';  // Import react-select
 const AddProductVersionModal = ({ onClose, onProductAdded }) => {
 
 
-    const [error, setError] = useState('');
     const [versionName, setVersionName] = useState('');
     const [price, setPrice] = useState(0);
     const [purchasePrice, setPurchasePrice] = useState(0);
@@ -33,6 +32,8 @@ const AddProductVersionModal = ({ onClose, onProductAdded }) => {
     const [currentPage, setCurrentPage] = useState(0);
     const [pageSize, setPageSize] = useState(100);
     const dispatch = useDispatch();
+    const [disabledAttributeValues, setDisabledAttributeValues] = useState([]);  // Thêm state mới để lưu giá trị thuộc tính bị vô hiệu hóa
+
 
     // Gọi API để lấy danh sách sản phẩm
     useEffect(() => {
@@ -46,6 +47,7 @@ const AddProductVersionModal = ({ onClose, onProductAdded }) => {
                     categoryID || undefined, // Truyền undefined nếu không có categoryId
                     brandID || undefined    // Truyền undefined nếu không có brandId
                 ); // Giả sử hàm này lấy danh sách sản phẩm
+                console.log("Fetched products:", response); // Log products response
                 setProducts(response.content); // Cập nhật state với danh sách sản phẩm
             } catch (error) {
                 console.error('Lỗi khi lấy danh sách sản phẩm:', error);
@@ -138,11 +140,9 @@ const AddProductVersionModal = ({ onClose, onProductAdded }) => {
             image: imageUrl // Thêm hình ảnh vào dữ liệu gửi đi
         };
 
-        console.log("Data gửi lên API:", productVersionData);
 
         try {
             const result = await ProductVersionService.createProductVersion(productVersionData);
-            console.log('API Response:', result);
 
             dispatch(showNotification({ message: 'Thêm phiên bản sản phẩm thành công!', status: 1 }));
             if (onProductAdded) onProductAdded();  // Gọi callback để tải lại bảng sản phẩm
@@ -155,13 +155,11 @@ const AddProductVersionModal = ({ onClose, onProductAdded }) => {
         }
     };
 
-
     useEffect(() => {
         const fetchAttributes = async () => {
             try {
                 const response = await attributeService.getAttributes(); // Gọi API
                 const attributes = response?.data || []; // Đảm bảo có dữ liệu
-                console.log(attributes);
                 const groupedAttributes = attributes.reduce((acc, attr) => {
                     const groupName = attr?.attributeName ?? 'Khác';
                     if (!acc[groupName]) acc[groupName] = [];
@@ -206,28 +204,38 @@ const AddProductVersionModal = ({ onClose, onProductAdded }) => {
     const renderAttributeValues = () => {
         if (!activeAttribute || !attributesByGroup[activeAttribute]) return null;
 
-        return attributesByGroup[activeAttribute].map((valueObj, index) => (
-            <label key={`${valueObj.attributeValueID}-${index}`} className="flex items-center space-x-2">
-                <input
-                    type="checkbox"
-                    checked={selectedAttributeValues.includes(valueObj.attributeValueID)}
-                    onChange={() => handleCheckboxChange(valueObj.attributeValueID)}
-                />
-                <span>{valueObj.attributeValue}</span>
-            </label>
-        ));
+        return attributesByGroup[activeAttribute].map((valueObj, index) => {
+            const isSelected = selectedAttributeValues.includes(valueObj.attributeValueID);
+            const isDisabled = disabledAttributeValues.includes(valueObj.attributeValueID); // Xác định xem giá trị có bị disabled không
+
+            return (
+                <label key={`${valueObj.attributeValueID}-${index}`} className="flex items-center space-x-2">
+                    <input
+                        type="checkbox"
+                        checked={isSelected}  // Kiểm tra nếu giá trị đã được chọn
+                        onChange={() => handleCheckboxChange(valueObj.attributeValueID)}  // Khi thay đổi chọn, cập nhật selectedAttributeValues
+                        disabled={isDisabled} // Vô hiệu hóa nếu thuộc tính này cần vô hiệu hóa
+                    />
+                    <span>{valueObj.attributeValue}</span>
+                </label>
+            );
+        });
     };
+
+
 
 
     const handleCheckboxChange = (valueID) => {
         setSelectedAttributeValues((prev) => {
+            const isDisabled = disabledAttributeValues.includes(valueID); // Kiểm tra nếu thuộc tính bị disable
+            if (isDisabled) {
+                return prev; // Không thay đổi nếu thuộc tính bị vô hiệu hóa
+            }
+
+            // Cập nhật giá trị thuộc tính trong selectedAttributeValues
             const newSelectedValues = prev.includes(valueID)
                 ? prev.filter((id) => id !== valueID)
                 : [...prev, valueID];
-
-            // Ghi log các giá trị đã chọn hoặc bỏ chọn
-            console.log("Selected Attribute Values:", newSelectedValues);
-
             return newSelectedValues;
         });
     };
@@ -242,16 +250,54 @@ const AddProductVersionModal = ({ onClose, onProductAdded }) => {
         );
     };
 
-    // Hàm định dạng số thành dạng có dấu chấm (ví dụ: 10.000.000)
     const formatCurrency = (value) => {
         if (!value) return '';
         return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
     };
 
-    // Hàm chuyển lại chuỗi định dạng thành số
     const parseCurrency = (formattedValue) => {
         return Number(formattedValue.replace(/[^0-9]/g, ''));
     };
+    const fetchProductAttributes = async () => {
+        if (selectedProduct) {
+            try {
+                // Lấy giá trị thuộc tính của sản phẩm từ API theo productID
+                const response = await ProductVersionService.getProductAttributeValues(selectedProduct);
+
+                // Chỉ xử lý nếu response là một mảng và không rỗng
+                if (response && Array.isArray(response)) {
+                    // Lưu các giá trị thuộc tính bị vô hiệu hóa vào disabledAttributeValues
+                    const disabledValues = response.map((item) => item); // Chỉ lấy attributeValueID
+                    setDisabledAttributeValues(disabledValues);
+
+                    // Đồng thời cập nhật selectedAttributeValues để giữ các giá trị đã chọn trước đó, bao gồm cả giá trị disable
+                    const preSelectedValues = response
+                        .filter(item => item.selected)  // Giả sử thuộc tính có trường `selected` chỉ định nếu thuộc tính đã chọn
+                        .map(item => item.attributeValueID);
+
+                    setSelectedAttributeValues(prevState => {
+                        // Thêm vào cả các giá trị bị disabled, nếu chúng đã được chọn trước
+                        return [...new Set([...prevState, ...preSelectedValues, ...disabledValues])];
+                    });
+
+                    console.log('Các thuộc tính bị vô hiệu hóa:', disabledValues);
+                }
+            } catch (error) {
+                dispatch(showNotification({
+                    message: 'Lỗi khi lấy giá trị thuộc tính sản phẩm.',
+                    status: 0,
+                }));
+            }
+        }
+    };
+
+
+
+    // Hook dùng để lắng nghe sự thay đổi của `selectedProduct`
+    useEffect(() => {
+        fetchProductAttributes();  // Gọi API khi productID thay đổi
+    }, [selectedProduct]);  // Lắng nghe sự thay đổi của `selectedProduct`
+
 
 
 
@@ -326,7 +372,6 @@ const AddProductVersionModal = ({ onClose, onProductAdded }) => {
                                                     }
                                                 }
                                             }}
-                                            required
                                         />
                                         {/* Kbd đơn vị cố định */}
                                         <kbd className="kbd kbd-sm absolute top-1/2 right-4 transform -translate-y-1/2">
@@ -361,7 +406,6 @@ const AddProductVersionModal = ({ onClose, onProductAdded }) => {
                                                 );
                                             }
                                         }}
-                                        required
                                     />
                                     {/* Kbd đơn vị cố định */}
                                     <kbd className="kbd kbd-sm absolute top-1/2 right-4 transform -translate-y-1/2">
@@ -392,7 +436,6 @@ const AddProductVersionModal = ({ onClose, onProductAdded }) => {
                                                 );
                                             }
                                         }}
-                                        required
                                     />
                                     {/* Kbd đơn vị cố định */}
                                     <kbd className="kbd kbd-sm absolute top-1/2 right-4 transform -translate-y-1/2">

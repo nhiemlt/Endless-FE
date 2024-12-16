@@ -6,12 +6,12 @@ const API_URL = `${constants.API_BASE_URL}/api/attributes`; // Thay đổi URL b
 
 const attributeService = {
     // Lấy tất cả thuộc tính với các tham số lọc, tìm kiếm, và phân trang
-    getAttributes: async (id = '', name = '', page = 0, size = 10) => {
+    getAttributes: async (id = '', name = '', page = '', size = '1000') => {
         try {
             const response = await axios.get(API_URL, {
                 params: { id, name, page, size },
             });
-            // console.log(response.data); // In ra để kiểm tra
+            console.log("Attribute1", response); // In ra để kiểm tra
             return response; // Trả về toàn bộ phản hồi để sau này bạn có thể truy cập vào response.data
         } catch (error) {
             console.error(error); // In ra chi tiết lỗi

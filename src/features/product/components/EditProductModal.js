@@ -2,19 +2,35 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import ProductService from '../../../services/ProductService';
 import { showNotification } from '../../common/headerSlice';
+import Select from 'react-select';  // Import react-select
+import CategoryService from '../../../services/CategoryService';
+import BrandService from '../../../services/BrandService';
 
-const EditProductModal = ({ product, categories, brands, onClose, onProductUpdated }) => {
+const EditProductModal = ({ product, onClose, onProductUpdated }) => {
     const [productName, setProductName] = useState(product.name || '');
     const [category, setCategory] = useState(product.categoryID || ''); // Lưu ID danh mục
     const [brand, setBrand] = useState(product.brandID || ''); // Lưu ID thương hiệu
     const [description, setDescription] = useState(product.description || '');
-
+    const [categories, setCategories] = useState([]); // Lưu danh sách categories
+    const [brands, setBrands] = useState([]); // Lưu danh sách brands
     const dispatch = useDispatch();
 
+    // Lấy danh mục và thương hiệu
     useEffect(() => {
-        console.log("Product:", product);
-        console.log("Category ID:", product.categoryID);
-        console.log("Brand ID:", product.brandID);
+        const fetchData = async () => {
+            try {
+                const categoriesData = await CategoryService.getCategories({ size: 50 }); // Lấy categories
+                const brandsData = await BrandService.getBrands({ size: 50 }); // Lấy brands
+                setCategories(categoriesData.content);
+                setBrands(brandsData.content);
+            } catch (error) {
+                dispatch(showNotification({ message: "Lấy dữ liệu thất bại!", status: 0 }));
+            }
+        };
+        fetchData();
+    }, [dispatch]);
+
+    useEffect(() => {
         // Thiết lập lại giá trị khi modal mở
         setProductName(product.name || '');
         setCategory(product.categoryID?.categoryID || ''); // Đảm bảo lấy đúng ID của category
@@ -35,20 +51,51 @@ const EditProductModal = ({ product, categories, brands, onClose, onProductUpdat
             onProductUpdated();
             onClose();
         } catch (error) {
-            const errorMessage = error.response?.data?.message || "Cập nhật sản phẩm thất bại!"; // Lấy thông điệp từ lỗi
-            if (error.response && error.response.status === 500) {
-                // Nếu lỗi là 500, hiển thị thông báo cụ thể
-                dispatch(showNotification({ message: errorMessage, status: 0 }));
-            } else {
-                dispatch(showNotification({ message: "Cập nhật sản phẩm thất bại!", status: 0 }));
-            }
+            const errorMessage = error.response?.data?.message || "Cập nhật sản phẩm thất bại!";
+            dispatch(showNotification({ message: errorMessage, status: 0 }));
         }
     };
 
+    // Chuyển categories và brands thành options cho react-select
+    const categoryOptions = categories.map((cat) => ({
+        value: cat.categoryID,
+        label: cat.name,
+    }));
 
+    const brandOptions = brands.map((b) => ({
+        value: b.brandID,
+        label: b.brandName,
+    }));
+
+    // Custom styles cho react-select
+    const customStyles = {
+        control: (styles) => ({
+            ...styles,
+            borderColor: '#D1D5DB',
+            boxShadow: 'none',
+            '&:hover': {
+                borderColor: '#3B82F6',
+            },
+            padding: '0.5rem',
+            minHeight: '38px',
+        }),
+        option: (styles, { isFocused, isSelected }) => ({
+            ...styles,
+            backgroundColor: isFocused ? '#E3F2FD' : isSelected ? '#3B82F6' : '#fff',
+            color: isSelected ? '#fff' : '#333',
+            cursor: 'pointer',
+            padding: '10px',
+        }),
+        menu: (styles) => ({
+            ...styles,
+            maxHeight: '150px',
+            overflowY: 'auto',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+        }),
+    };
 
     return (
-        <>
+        <div>
             <div className="fixed inset-0 bg-black bg-opacity-50 z-40"></div>
             <dialog className="modal" role="dialog" open>
                 <div className="modal-box">
@@ -67,37 +114,24 @@ const EditProductModal = ({ product, categories, brands, onClose, onProductUpdat
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className='font-semibold'>Danh mục:</label>
-                                    <select
-                                        value={category}
-                                        onChange={(e) => setCategory(e.target.value)}
-                                        className="select select-bordered w-full"
-                                        required
-                                    >
-                                        <option value="">Chọn danh mục</option>
-                                        {categories.map((cat) => (
-                                            <option key={cat.categoryID} value={cat.categoryID}>
-                                                {cat.name}
-                                            </option>
-                                        ))}
-                                    </select>
+                                    <Select
+                                        value={categoryOptions.find(option => option.value === category)}
+                                        onChange={(selectedOption) => setCategory(selectedOption?.value || '')}
+                                        options={categoryOptions}
+                                        styles={customStyles}
+                                        placeholder="Chọn danh mục"
+                                    />
                                 </div>
                                 <div>
                                     <label className='font-semibold'>Thương hiệu</label>
-                                    <select
-                                        value={brand}
-                                        onChange={(e) => setBrand(e.target.value)}
-                                        className="select select-bordered w-full"
-                                        required
-                                    >
-                                        <option value="">Chọn thương hiệu</option>
-                                        {brands.map((b) => (
-                                            <option key={b.brandID} value={b.brandID}>
-                                                {b.brandName}
-                                            </option>
-                                        ))}
-                                    </select>
+                                    <Select
+                                        value={brandOptions.find(option => option.value === brand)}
+                                        onChange={(selectedOption) => setBrand(selectedOption?.value || '')}
+                                        options={brandOptions}
+                                        styles={customStyles}
+                                        placeholder="Chọn thương hiệu"
+                                    />
                                 </div>
-
                             </div>
                             <label>Mô tả</label>
                             <textarea
@@ -120,7 +154,7 @@ const EditProductModal = ({ product, categories, brands, onClose, onProductUpdat
                     </form>
                 </div>
             </dialog>
-        </>
+        </div>
     );
 };
 

@@ -14,7 +14,7 @@ function DetailModal({ showModal, closeModal, entry }) {
     detail.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     detail.productVersionName.toLowerCase().includes(searchTerm.toLowerCase())
   );
-  
+
 
   // Tính toán số lượng trang
   const totalPages = Math.ceil(filteredDetails.length / recipientsPerPage);
@@ -57,7 +57,7 @@ function DetailModal({ showModal, closeModal, entry }) {
               <p><strong>Entry ID:</strong> {entry.entryID}</p>
               <p><strong>Ngày nhập:</strong> {new Date(entry.entryDate).toLocaleDateString('vi-VN')}</p>
               <p>
-                <strong>Tổng tiền:</strong>
+                <strong>Tổng tiền: </strong>
                 <span className="font-normal">
                   {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(entry.totalMoney)}
                 </span>
@@ -92,7 +92,7 @@ function DetailModal({ showModal, closeModal, entry }) {
                 {currentDetails.map((detail) => (
                   <tr key={detail.purchaseOrderDetailID} className="hover:bg-gray-100">
                     <td className="px-4 py-2">
-                      <img src={detail.productVersionImage} alt={detail.productName} className="w-16 h-16 mr-2 object-cover" /> {/* Thay đổi kích thước hình ảnh */}
+                      <img src={detail.productImage} alt={detail.productName} className="w-16 h-16 mr-2 object-cover" /> {/* Thay đổi kích thước hình ảnh */}
                     </td>
                     <td className="px-4 py-2">{detail.productName}</td>
                     <td className="px-4 py-2">{detail.productVersionName}</td>

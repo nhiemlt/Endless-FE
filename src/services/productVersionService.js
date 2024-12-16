@@ -5,10 +5,10 @@ const BASE_URL = constants.API_BASE_URL + '/api/product-versions';
 
 const ProductVersionService = {
     // Lấy danh sách tất cả các phiên bản sản phẩm
-    getAllProductVersions: async (page = 0, size = 10, sortBy = 'versionName', direction = 'ASC', keyword = '') => {
+    getAllProductVersions: async (page = 0, size = 10, sortBy = 'versionName', direction = 'ASC', keyword = ' ', productId = '', minPrice = '', maxPrice = '') => {
         try {
             const response = await axios.get(BASE_URL, {
-                params: { page, size, sortBy, direction, keyword },
+                params: { page, size, sortBy, direction, keyword, productId, minPrice, maxPrice },
             });
             return response.data;
         } catch (error) {
@@ -163,6 +163,21 @@ const ProductVersionService = {
             throw error;
         }
     },
+
+    getProductAttributeValues: async (productId) => {
+        try {
+            const response = await axios.get(`${BASE_URL}/${productId}/attribute-values`);
+
+            // Log response.data để kiểm tra dữ liệu trả về
+            console.log('Dữ liệu trả về từ API:', response.data);
+
+            return response.data; // Dữ liệu trả về từ API
+        } catch (error) {
+            console.error("There was an error fetching the product attributes:", error);
+            throw error; // Có thể thay đổi cách xử lý lỗi tùy vào yêu cầu
+        }
+    },
+
     // Lấy danh sách phiên bản sản phẩm có sắp xếp theo tiêu chí
     getSortedProductVersions: async (sortBy = 'versionName', direction = 'ASC') => {
         try {

@@ -46,21 +46,22 @@ function PromotionList() {
 
   const openConfirmDialog = (promotion) => {
     setSelectedPromotionForToggle(promotion);
-    setIsStatusDialogOpen(true);
+    setIsConfirmDialogOpen(true); // Chỉ sử dụng một biến trạng thái
   };
 
-  const handleConfirmToggle = async () => {
-    if (!selectedPromotionForToggle) return;
 
+  const handleConfirmToggle = async () => {
     try {
-      await toggleActiveStatus(selectedPromotionForToggle.promotionID, selectedPromotionForToggle.active);
-    } catch (error) {
-      dispatch(showNotification({ message: "Lỗi khi cập nhật trạng thái", status: 0 }));
+      if (!selectedPromotionForToggle) return;
+
+      await toggleActiveStatus(selectedPromotionForToggle.promotionID, selectedPromotionForToggle.active); // Chỉ gọi qua hàm gốc
     } finally {
-      setIsStatusDialogOpen(false);
+      setIsConfirmDialogOpen(false);
       setSelectedPromotionForToggle(null);
     }
   };
+
+
 
 
 
@@ -366,11 +367,12 @@ function PromotionList() {
       )}
 
       <ConfirmDialogStatus
-        isOpen={isConfirmDialogOpen}
-        onClose={() => setIsConfirmDialogOpen(false)}
-        onConfirm={handleConfirmToggle}
+        isOpen={isConfirmDialogOpen}  // Trạng thái mở modal
+        onClose={() => setIsConfirmDialogOpen(false)} // Đóng modal
+        onConfirm={handleConfirmToggle} // Xử lý xác nhận
         message={`Bạn có chắc chắn muốn ${selectedPromotionForToggle?.active ? "tắt" : "bật"} trạng thái khuyến mãi này?`}
       />
+
 
       <ConfirmDialog
         isOpen={isDeleteDialogOpen}
