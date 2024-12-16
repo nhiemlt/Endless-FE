@@ -112,9 +112,9 @@ function TopSellByCategory() {
                                     </h1>
                                     <a href="/products" className="text-primary">Tất cả sản phẩm</a>
                                 </div>
-                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5 mt-3">
+                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5 mt-3 dark:bg-base-200">
                                     {productsByCategory[category.categoryID].map((product) => (
-                                        <div key={product.productVersionID} className="group relative block overflow-hidden">
+                                        <div key={product.productVersionID} className="group relative block overflow-hidden h-96">
                                             <img
                                                 src={product.image}
                                                 alt={product.product.name}
@@ -126,7 +126,7 @@ function TopSellByCategory() {
                                                     - {product.discountPercentage}%
                                                 </p>
                                             )}
-                                            <div className="relative bg-blue-50 dark:bg-base-200 p-4">
+                                            <div className="relative border border-gray-100 dark:border-gray-800 bg-blue-50 dark:bg-base-200 p-4">
                                                 <p className="mt-1 text-sm text-gray-900 h-8 overflow-hidden text-ellipsis whitespace-nowrap transform scale-95 dark:text-white">
                                                     <b>{product.product.name} | {product.versionName}</b>
                                                 </p>
@@ -151,7 +151,7 @@ function TopSellByCategory() {
                                                 </div>
 
                                                 {formatCurrency(product.price) === formatCurrency(product.discountPrice) ? (
-                                                    <span className="mt-1 text-sm text-red-600" style={{ animation: 'blink 1s linear infinite' }}>
+                                                    <span className="mt-1 text-sm text-red-600">
                                                         <b>{formatCurrency(product.price)}</b>
                                                     </span>
                                                 ) : (
@@ -159,16 +159,11 @@ function TopSellByCategory() {
                                                         <span className="mt-1 text-xs text-gray-500">
                                                             <s>{formatCurrency(product.price)}</s>
                                                         </span>{' '}
-                                                        <span className="mt-1 text-sm text-red-600" style={{ animation: 'blink 1s linear infinite' }}>
+                                                        <span className="mt-1 text-sm text-red-600">
                                                             <b>{formatCurrency(product.discountPrice)}</b>
-                                                            <br />
                                                         </span>
                                                     </>
                                                 )}
-
-                                                <style>
-                                                    {`@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }`}
-                                                </style>
                                                 <br />
                                                 <span className="mt-1 text-xs text-gray-400">Đã bán: {product.quantitySold} | </span>
                                                 <span className="mt-1 text-xs text-gray-400">
@@ -181,7 +176,6 @@ function TopSellByCategory() {
                                                         </span>
                                                     )}
                                                 </span>
-
                                                 <form
                                                     className="mt-4"
                                                     onSubmit={(e) => {
