@@ -13,9 +13,9 @@ function CustomerLayout() {
     useEffect(() => {
         if (newNotificationMessage !== "") {
             if (newNotificationStatus === 1) {
-                NotificationManager.success(newNotificationMessage, 'Success');
+                NotificationManager.success(newNotificationMessage, 'Thành công');
             } else if (newNotificationStatus === 0) {
-                NotificationManager.error(newNotificationMessage, 'Error');
+                NotificationManager.error(newNotificationMessage, 'Thất bại');
             }
             dispatch(removeNotificationMessage());
         }
