@@ -44,13 +44,10 @@ function PurchaseHistory() {
   const fetchOrders = async () => {
     try {
       const response = await OrderService.getAllOrderByUserLogin(
-        null,
         searchText,
-        null,
-        currentPage,
-        size
       );
 
+      console.log(response)
       if (response?.data) {
         const updatedOrders = response.data.map((order) => {
           const hasPendingRatings = order.orderDetails.some(
@@ -67,7 +64,6 @@ function PurchaseHistory() {
         setTotalPages(response.data.totalPages);
       } else {
         console.log(response);
-        throw new Error("Dữ liệu không hợp lệ từ API.");
         
       }
     } catch (error) {
@@ -326,7 +322,7 @@ function PurchaseHistory() {
 
   const handlePaymentMethodChange = (event) => {
     setSelectedPaymentMethod(event.target.value);
-  };
+  };  
 
   return (
     <div className="bg-base-200 min-h-screen py-12 px-8">

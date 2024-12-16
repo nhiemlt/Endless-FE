@@ -6,7 +6,7 @@ const OrderService = {
     // Lấy tất cả đơn hàng của người dùng hiện tại
     getAllOrderByUserLogin: async (searchText) => {
         const response = await axios.get(`${constants.API_BASE_URL}/orders/user`, {
-            params: { searchText },
+            params: { keywords: searchText},
         });
         return response.data; // Trả về dữ liệu API
     },
