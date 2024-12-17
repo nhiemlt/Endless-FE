@@ -219,13 +219,37 @@ function ProductPage() {
                   <td>{product.name}</td>
                   <td>{product.categoryID?.name || 'N/A'}</td>
                   <td>{product.brandID?.brandName || 'N/A'}</td>
-                  <td>{product.description}</td>
+                  <td>{product.description?.length > 50 ? `${product.description.slice(0, 50)}...` : product.description}</td>
+
                   <td className="text-center">
                     <div className="flex justify-center space-x-2">
-                      <PencilIcon className="w-5 h-5 cursor-pointer text-info" onClick={() => handleEditProduct(product)} />
-                      <TrashIcon className="w-5 h-5 cursor-pointer text-error" onClick={() => handleDeleteProduct(product.productID)} />
+                      <div className="flex space-x-2">
+                        {/* Nút Chỉnh sửa */}
+                        <button
+                          className="btn btn-sm btn-outline btn-primary border-0 group relative"
+                          onClick={() => handleEditProduct(product)}
+                        >
+                          <PencilIcon className="w-4 h-4" />
+                          <span className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-gray-700 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
+                            Chỉnh sửa sản phẩm
+                          </span>
+                        </button>
+
+                        {/* Nút Xóa */}
+                        <button
+                          onClick={() => handleDeleteProduct(product.productID)}
+                          className="btn btn-sm btn-outline btn-error border-0 group relative"
+                        >
+                          <TrashIcon className="w-5 h-5" />
+                          <span className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-gray-700 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
+                            Xóa sản phẩm
+                          </span>
+                        </button>
+                      </div>
+
                     </div>
                   </td>
+
                 </tr>
               ))
             ) : (

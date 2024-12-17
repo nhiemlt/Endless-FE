@@ -133,9 +133,40 @@ function BrandPage() {
                     </td>
                     <td className="text-center">
                       <div className="flex justify-center space-x-2">
-                        <PencilIcon onClick={() => { setEditBrand(brand); setIsEditModalOpen(true); }} className="w-5 h-5 cursor-pointer text-info" />
-                        <TrashIcon onClick={() => confirmDelete(brand)} className="w-5 h-5 cursor-pointer text-error" />
+                        {/* Biểu tượng chỉnh sửa */}
+                        <div className="relative group">
+                          <button
+                            onClick={() => {
+                              setEditBrand(brand);
+                              setIsEditModalOpen(true);
+                            }}
+                            className="btn btn-sm btn-outline btn-primary border-0">
+                            <PencilIcon
+
+                              className="w-5 h-5 "
+                            />
+                          </button>
+                          <span className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-gray-700 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
+                            Chỉnh sửa thương hiệu
+                          </span>
+                        </div>
+
+                        {/* Biểu tượng xóa */}
+                        <div className="relative group">
+                          <button onClick={() => confirmDelete(brand)}
+                            className="btn btn-sm btn-outline btn-error border-0 group relative">
+                            <TrashIcon
+                              onClick={() => confirmDelete(brand)}
+                              className=" w-5 h-5 "
+                            />
+                          </button>
+
+                          <span className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-gray-700 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
+                            Xóa thương hiệu
+                          </span>
+                        </div>
                       </div>
+
                     </td>
                   </tr>
                 ))

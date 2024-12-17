@@ -132,18 +132,32 @@ function AttributePage() {
                     </td>
                     <td>
                       <div className="flex justify-center space-x-2">
-                        <PencilIcon
-                          className="w-5 h-5 cursor-pointer text-info"
+                        {/* Nút Chỉnh sửa thuộc tính */}
+                        <button
+                          className="btn btn-sm btn-outline btn-primary border-0 group relative"
                           onClick={() => {
                             setSelectedAttribute(attribute);
                             setShowEditModal(true);
                           }}
-                        />
-                        <TrashIcon
-                          className="w-5 h-5 cursor-pointer text-error"
+                        >
+                          <PencilIcon className="w-5 h-5" />
+                          <span className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-gray-700 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
+                            Chỉnh sửa thuộc tính
+                          </span>
+                        </button>
+
+                        {/* Nút Xóa thuộc tính */}
+                        <button
+                          className="btn btn-sm btn-outline btn-error border-0 group relative"
                           onClick={() => showConfirmDelete(attribute)} // Hiển thị ConfirmDialog khi nhấn xóa
-                        />
+                        >
+                          <TrashIcon className="w-5 h-5 cursor-pointer text-error" />
+                          <span className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-gray-700 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
+                            Xóa thuộc tính
+                          </span>
+                        </button>
                       </div>
+
                     </td>
                   </tr>
                 ))
