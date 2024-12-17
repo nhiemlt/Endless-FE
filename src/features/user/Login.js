@@ -203,7 +203,7 @@ function Login() {
                                 defaultValue={loginObj.emailId}
                                 updateType="emailId"
                                 containerStyle="mt-4"
-                                labelTitle="Email"
+                                labelTitle="Tên đăng nhập hoặc email"
                                 updateFormValue={updateFormValue}
                             />
 
@@ -257,6 +257,14 @@ function Login() {
                                 Chưa có tài khoản? <Link to="/register"><span className="inline-block hover:text-primary hover:underline hover:cursor-pointer transition duration-200">Đăng ký</span></Link>
                             </div>
                         </form>
+
+                        <div className="mt-4 text-center">
+                            <span 
+                                onClick={() => window.location.href = '/'}
+                                className="inline-block hover:text-primary hover:underline hover:cursor-pointer transition duration-200">
+                                Quay về trang chủ
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>

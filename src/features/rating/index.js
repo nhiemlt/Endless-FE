@@ -223,8 +223,7 @@ function Rating() {
             <tr>
               <th>STT</th>
               <th>Tên khách hàng</th>
-              <th>Hình ảnh</th>
-              <th>Tên sản phẩm</th>
+              <th>Sản phẩm</th>
               <th>Đánh giá</th>
               <th>Hành động</th>
             </tr>
@@ -240,9 +239,14 @@ function Rating() {
                   <td>{index + 1 + currentPage * size}</td>
                   <td>{rating.fullname}</td>
                   <td>
-                    <img src={rating.image} className="w-10 h-10 object-cover" />
+                    <div className="flex items-center space-x-2">
+                      <img src={rating.image} className="w-10 h-10 object-cover" alt="rating" />
+                      <span>
+                        {rating.name} | {rating.versionName}
+                      </span>
+                    </div>
                   </td>
-                  <td>{rating.versionName}</td>
+
                   <td>
                     <div className="rating rating-sm">
                       {[...Array(5)].map((_, starIndex) => (

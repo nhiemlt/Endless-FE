@@ -19,43 +19,93 @@ function Register() {
     const navigate = useNavigate()
 
     const submitForm = async (e) => {
-        e.preventDefault()
-        setAlert({ type: "", message: "" })
-
+        e.preventDefault();
+        setAlert({ type: "", message: "" });
+    
         // Kiểm tra tính hợp lệ của form bằng HTML5
         if (!e.target.checkValidity()) {
-            return // Ngừng nếu form không hợp lệ
+            setAlert({ type: "error", message: "Vui lòng điền đầy đủ và đúng thông tin!" });
+            return;
         }
-
-        setLoading(true)
-
+    
+        // Kiểm tra username không trống
+        if (!registerObj.username) {
+            setAlert({ type: "error", message: "Tên đăng nhập không được để trống!" });
+            return;
+        }
+    
+        // Kiểm tra email hợp lệ bằng Regex
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailPattern.test(registerObj.emailId)) {
+            setAlert({ type: "error", message: "Vui lòng nhập địa chỉ email hợp lệ!" });
+            return;
+        }
+    
+        // Kiểm tra mật khẩu và xác nhận mật khẩu
+        if (registerObj.password !== registerObj.confirmPassword) {
+            setAlert({ type: "error", message: "Mật khẩu và xác nhận mật khẩu không khớp!" });
+            return;
+        }
+    
+        // Kiểm tra mật khẩu mạnh bằng Regex
+        const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        if (!passwordPattern.test(registerObj.password)) {
+            setAlert({
+                type: "error",
+                message: "Mật khẩu phải chứa ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt."
+            });
+            return;
+        }
+    
+        setLoading(true);
+    
         try {
             const response = await axios.post(`${constants.API_BASE_URL}/register`, {
                 username: registerObj.username,
                 email: registerObj.emailId,
                 password: registerObj.password,
-            })
-
+            });
+    
             // Nếu đăng ký thành công
             if (response.data.success) {
-                setAlert({ type: "success", message: "Đăng ký thành công! Vui lòng kiểm tra email để xác minh tài khoản." })
-                setRegisterObj(INITIAL_REGISTER_OBJ) // Xóa dữ liệu form sau khi đăng ký thành công
+                setAlert({
+                    type: "success",
+                    message: "Đăng ký thành công! Vui lòng kiểm tra email để xác minh tài khoản."
+                });
+                setRegisterObj(INITIAL_REGISTER_OBJ);
                 setTimeout(() => {
-                    setAlert({ type: "", message: "" })
-                    navigate('/login') // Chuyển hướng đến trang đăng nhập sau 3 giây
-                }, 3000)
+                    setAlert({ type: "", message: "" });
+                    navigate('/login');
+                }, 3000);
             }
         } catch (error) {
             if (error.response) {
-                setAlert({ type: "error", message: "Đã xảy ra lỗi trong quá trình đăng ký." })
-                console.log(error.response.message)
+                const { data, status } = error.response;
+                if (status === 400 && data.errors) {
+                    const errorMessages = Object.values(data.errors).join("\n");
+                    setAlert({
+                        type: "error",
+                        message: `Dữ liệu đầu vào không hợp lệ:\n${errorMessages}`
+                    });
+                } else {
+                    console.log(error.response.data)
+                    setAlert({
+                        type: "error",
+                        message: error.response.data.error || "Đã xảy ra lỗi trong quá trình đăng ký."
+                    });
+                }
             } else {
-                setAlert({ type: "error", message: "Không thể kết nối với máy chủ. Vui lòng thử lại sau." })
+                setAlert({
+                    type: "error",
+                    message: "Không thể kết nối với máy chủ. Vui lòng thử lại sau."
+                });
             }
         } finally {
-            setLoading(false)
+            setLoading(false);
         }
-    }
+    };
+    
+    
 
     const updateFormValue = ({ updateType, value }) => {
         setAlert({ type: "", message: "" })
@@ -129,7 +179,6 @@ function Register() {
                                     {!loading ? 'Đăng ký' : ''}
                                 </span>
                             </button>
-
 
                             <div className='text-center mt-2'>Đã có tài khoản? <Link to="/login"><span className="inline-block hover:text-primary hover:underline hover:cursor-pointer transition duration-200">Đăng nhập</span></Link></div>
                         </form>

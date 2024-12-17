@@ -11,17 +11,15 @@ const OrderService = {
         return response.data; // Trả về dữ liệu API
     },
 
-    getAllOrders: async (keywords, startDate, endDate, page = 0, size = 10, status = '') => {
+    getAllOrders: async (keywords, page = 0, size = 10, statusId = '10') => {
         try {
             // Gọi API để lấy danh sách đơn hàng
             const response = await axios.get(`${constants.API_BASE_URL}/orders`, {
                 params: {
                     keywords,
-                    startDate,
-                    endDate,
                     page,
                     size,
-                    status, // Tham số trạng thái
+                    statusId,
                 },
             });
 
@@ -92,6 +90,11 @@ const OrderService = {
     // Hủy đơn hàng theo ID
     cancelOrder: async (orderId) => {
         const response = await axios.post(`${constants.API_BASE_URL}/orders/${orderId}/cancel`);
+        return response.data; // Trả về dữ liệu API
+    },
+
+    cancelOrderPaid: async (orderId) => {
+        const response = await axios.post(`${constants.API_BASE_URL}/orders/${orderId}/cancel-paid`);
         return response.data; // Trả về dữ liệu API
     },
 

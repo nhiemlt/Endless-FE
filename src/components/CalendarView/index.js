@@ -9,7 +9,7 @@ const THEME_BG = CALENDAR_EVENT_STYLE
 function CalendarView({calendarEvents, addNewEvent, openDayDetail}){
 
     const today = moment().startOf('day')
-    const weekdays = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+    const weekdays = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
     const colStartClasses = [
       "",
       "col-start-2",

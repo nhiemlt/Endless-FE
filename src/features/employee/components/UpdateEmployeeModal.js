@@ -1,67 +1,118 @@
-import React, { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
-import EmployeeService from "../../../services/StaffService";
-import { showNotification } from "../../common/headerSlice";
-import UploadFileService from "../../../services/UploadFileService";
+import React, { useEffect, useState } from 'react'
+import Select from 'react-select'
+import { useDispatch } from 'react-redux'
+import EmployeeService from '../../../services/StaffService'
+import { showNotification } from '../../common/headerSlice'
+import UploadFileService from '../../../services/UploadFileService'
+import RoleService from '../../../services/roleService'
 
 const UpdateEmployeeModal = ({
   showModal,
   closeModal,
   employee,
-  fetchEmployees,
+  fetchEmployees
 }) => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch()
   const [employeeData, setEmployeeData] = useState({
-    username: "",
-    fullname: "",
-    phone: "",
-    email: "",
-    position: "",
-  });
-  const [avatar, setAvatar] = useState(null);
-  const [avatarPreview, setAvatarPreview] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const defaultAvatar = "https://example.com/default-avatar.png";
+    username: '',
+    fullname: '',
+    phone: '',
+    email: ''
+  })
+  const [avatar, setAvatar] = useState(null)
+  const [avatarPreview, setAvatarPreview] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
 
+  const [roles, setRoles] = useState([]) // Danh sách vai trò từ API
+  const [userRoles, setUserRoles] = useState([]) // Vai trò đã chọn của người dùng
+
+  const defaultAvatar = 'https://example.com/default-avatar.png'
+
+  // Fetch danh sách roles từ API
+  useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        const rolesData = await RoleService.getAll()
+        if (Array.isArray(rolesData)) {
+          const roleOptions = rolesData.map(role => ({
+            value: role.roleId,
+            label: role.roleName
+          }))
+          setRoles(roleOptions)
+        } else {
+          throw new Error('Invalid roles data format')
+        }
+      } catch (error) {
+        console.error('Failed to fetch roles:', error)
+        dispatch(
+          showNotification({
+            message: 'Lỗi khi tải danh sách vai trò.',
+            status: 0
+          })
+        )
+      }
+    }
+    fetchRoles()
+  }, [dispatch])
+
+  // Load thông tin nhân viên từ props
   useEffect(() => {
     if (employee) {
-      console.log("Employee data updated:", employee);
       setEmployeeData({
-        username: employee.username || "",
-        fullname: employee.fullname || "",
-        phone: employee.phone || "",
-        email: employee.email || "",
-        position: employee.position || "",
-      });
-      setAvatarPreview(employee.avatar || defaultAvatar);
-    }
-  }, [employee]);
+        username: employee.username || '',
+        fullname: employee.fullname || '',
+        phone: employee.phone || '',
+        email: employee.email || ''
+      })
+      setAvatarPreview(employee.avatar || defaultAvatar)
 
-  const handleAvatarChange = (event) => {
-    const file = event.target.files[0];
+      // Xử lý roles của nhân viên
+      if (employee.roles) {
+        const selectedRoles = employee.roles.map(role => ({
+          value: role.roleId,
+          label: role.roleName
+        }))
+        console.log("Dữ liệu hiện tại", )
+        setUserRoles(selectedRoles)
+      }
+    }
+  }, [employee])
+
+  const handleAvatarChange = event => {
+    const file = event.target.files[0]
     if (file) {
-      setAvatar(file);
-      const reader = new FileReader();
-      reader.onloadend = () => setAvatarPreview(reader.result);
-      reader.readAsDataURL(file);
+      setAvatar(file)
+      const reader = new FileReader()
+      reader.onloadend = () => setAvatarPreview(reader.result)
+      reader.readAsDataURL(file)
     }
-  };
+  }
 
-  const handleUpdateEmployee = async (event) => {
+  const handleRoleChange = (selectedRoles) => {
+    const uniqueRoles = selectedRoles.filter((role, index, self) =>
+      index === self.findIndex((t) => t.value === role.value)
+    );
+    setUserRoles(uniqueRoles); 
+    console.log("Các vai trò đã chọn:", uniqueRoles);
+  };
+  
+
+
+  const handleUpdateEmployee = async event => {
     event.preventDefault();
     setIsLoading(true);
 
+    // Validate form
     if (
       !employeeData.username ||
       !employeeData.fullname ||
       !employeeData.email ||
-      !employeeData.phone ||
-      !employeeData.position
+      !employeeData.phone
     ) {
       dispatch(
         showNotification({
-          message: "Vui lòng điền đầy đủ thông tin.",
-          status: 0,
+          message: 'Vui lòng điền đầy đủ thông tin.',
+          status: 0
         })
       );
       setIsLoading(false);
@@ -69,7 +120,7 @@ const UpdateEmployeeModal = ({
     }
 
     if (!/\S+@\S+\.\S+/.test(employeeData.email)) {
-      dispatch(showNotification({ message: "Email không hợp lệ.", status: 0 }));
+      dispatch(showNotification({ message: 'Email không hợp lệ.', status: 0 }));
       setIsLoading(false);
       return;
     }
@@ -83,26 +134,29 @@ const UpdateEmployeeModal = ({
       const updatedEmployeeData = {
         ...employeeData,
         avatar: avatarUrl || employee.avatar,
+        roleIds: userRoles.map((role) => role.value) // Lấy roleId từ userRoles đã chọn
       };
-      await EmployeeService.updateEmployee(
-        employee.userID,
-        updatedEmployeeData
-      );
+
+      console.log('Dữ liệu cập nhật', updatedEmployeeData);
+
+      await EmployeeService.updateEmployee(employee.userID, updatedEmployeeData);
 
       dispatch(
         showNotification({
-          message: "Cập nhật nhân viên thành công",
-          status: 1,
+          message: 'Cập nhật nhân viên thành công.',
+          status: 1
         })
       );
-      fetchEmployees();
-      closeModal();
+      fetchEmployees(); // Lấy lại danh sách nhân viên
+      closeModal(); // Đóng modal sau khi cập nhật thành công
     } catch (error) {
+      console.error('Cập nhật nhân viên thất bại:', error);
       dispatch(
         showNotification({
-          message: `Cập nhật nhân viên thất bại: ${error.response?.data?.message || "Lỗi không xác định"
-            }`,
-          status: 0,
+          message: `Cập nhật thất bại: ${
+            error.response?.data?.message || 'Lỗi không xác định'
+          }`,
+          status: 0
         })
       );
     } finally {
@@ -110,116 +164,81 @@ const UpdateEmployeeModal = ({
     }
   };
 
+  
+
   return (
-    <div className={`modal ${showModal ? "modal-open" : ""}`}>
-      <div className="modal-box w-full max-w-3xl lg:max-w-4xl">
+    <div className={`modal ${showModal ? 'modal-open' : ''}`}>
+      <div className='modal-box w-full max-w-3xl lg:max-w-4xl'>
         <form onSubmit={handleUpdateEmployee}>
-          <h2 className="font-bold text-lg mb-4">
+          <h2 className='font-bold text-lg mb-4'>
             Cập nhật thông tin nhân viên
           </h2>
 
           {/* Avatar */}
-          <div className="flex flex-col items-center mb-6">
+          <div className='flex flex-col items-center mb-6'>
             <div
-              className="relative w-[140px] h-[140px] rounded-full bg-gray-200"
+              className='relative w-[140px] h-[140px] rounded-full bg-gray-200'
               style={{
                 backgroundImage: `url(${avatarPreview})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
               }}
               onClick={() =>
-                document.getElementById("upload_avatarUpdate").click()
+                document.getElementById('upload_avatarUpdate').click()
               }
-              title="Thay đổi ảnh đại diện"
+              title='Thay đổi ảnh đại diện'
             >
               <input
-                type="file"
-                id="upload_avatarUpdate"
+                type='file'
+                id='upload_avatarUpdate'
                 hidden
-                accept="image/*"
+                accept='image/*'
                 onChange={handleAvatarChange}
               />
-              <span className="absolute bottom-2 right-2 bg-white p-1 rounded-full text-blue-600 cursor-pointer">
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-              </span>
             </div>
           </div>
 
-          {/* Form */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-            {[
-              {
-                label: "Tên người dùng",
-                field: "username",
-                type: "text",
-                placeholder: "Tên người dùng",
-              },
-              {
-                label: "Họ và tên",
-                field: "fullname",
-                type: "text",
-                placeholder: "Họ và tên",
-              },
-              {
-                label: "Email",
-                field: "email",
-                type: "email",
-                placeholder: "Email",
-              },
-              {
-                label: "Số điện thoại",
-                field: "phone",
-                type: "tel",
-                placeholder: "Số điện thoại",
-              },
-              {
-                label: "Chức vụ",
-                field: "position",
-                type: "text",
-                placeholder: "Chức vụ",
-              },
-            ].map(({ label, field, type, placeholder }, idx) => (
-              <div key={idx} className="mb-4">
-                <label className="label">{label}:</label>
+          <div className='mb-4'>
+            <label className='label'>Chọn vai trò:</label>
+            <Select
+              options={roles} // Danh sách roles từ API
+              value={userRoles} // Danh sách roles đã chọn
+              onChange={handleRoleChange} // Cập nhật userRoles khi thay đổi
+              isMulti
+              placeholder='Chọn vai trò...'
+            />
+          </div>
+
+          {/* Các input */}
+          <div className='grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4'>
+            {[{ label: 'Tên người dùng', field: 'username' }, { label: 'Họ và tên', field: 'fullname' }, { label: 'Email', field: 'email' }, { label: 'Số điện thoại', field: 'phone' }].map(({ label, field }, idx) => (
+              <div key={idx}>
+                <label className='label'>{label}:</label>
                 <input
-                  type={type}
-                  placeholder={placeholder}
+                  type='text'
                   value={employeeData[field]}
-                  onChange={(e) =>
+                  onChange={e =>
                     setEmployeeData({
                       ...employeeData,
-                      [field]: e.target.value,
+                      [field]: e.target.value
                     })
                   }
-                  className="input input-bordered w-full"
-                  required
+                  className='input input-bordered w-full'
                 />
               </div>
             ))}
           </div>
 
-          <div className="modal-action">
+          {/* Actions */}
+          <div className='modal-action'>
             <button
-              type="submit"
-              className="btn btn-primary"
+              type='submit'
+              className='btn btn-primary'
               disabled={isLoading}
             >
-              {isLoading ? "Đang cập nhật..." : "Cập nhật nhân viên"}
+              {isLoading ? 'Đang cập nhật...' : 'Cập nhật nhân viên'}
             </button>
-            <button type="button" className="btn" onClick={closeModal}>
+            <button type='button' className='btn' onClick={closeModal}>
               Hủy
             </button>
           </div>
@@ -227,6 +246,6 @@ const UpdateEmployeeModal = ({
       </div>
     </div>
   );
-};
+}
 
-export default UpdateEmployeeModal;
+export default UpdateEmployeeModal
