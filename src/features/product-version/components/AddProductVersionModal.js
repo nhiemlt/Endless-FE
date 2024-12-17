@@ -435,31 +435,20 @@ const AddProductVersionModal = ({ onClose, onProductAdded }) => {
                                                     })
                                                 );
                                             }
-                                        }}
-                                    />
-                                    {/* Kbd đơn vị cố định */}
+                                        }} />
                                     <kbd className="kbd kbd-sm absolute top-1/2 right-4 transform -translate-y-1/2">
                                         đồng
                                     </kbd>
                                 </div>
                             </label>
-
-
-
                         </div>
-
                         <div className="border border-gray-300 shadow-lg rounded-lg p-5 mt-5 bg-base-100">
-                            {/* Tabs */}
                             <div role="tablist" className="tabs tabs-boxed mb-5 overflow-x-auto whitespace-nowrap">
                                 {renderAttributeTabs()}
                             </div>
-
-                            {/* Hiển thị giá trị của thuộc tính */}
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {renderAttributeValues()}
                             </div>
-
-                            {/* Nút chọn tất cả */}
                             <div className="flex justify-between items-center mt-4">
                                 <span className="text-sm text-gray-500">
                                     {/* Hiển thị các giá trị thuộc tính đã chọn */}
@@ -483,9 +472,7 @@ const AddProductVersionModal = ({ onClose, onProductAdded }) => {
                                     {`Chọn tất cả (${activeAttribute})`}
                                 </button>
                             </div>
-
                         </div>
-
 
                         {/* Nút hành động */}
                         <div className="modal-action mt-4">
@@ -498,10 +485,8 @@ const AddProductVersionModal = ({ onClose, onProductAdded }) => {
                             </button>
                         </div>
                     </form>
-
                 </div>
             </dialog>
-
         </>
     );
 };

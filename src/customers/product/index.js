@@ -368,9 +368,6 @@ function Product() {
                     {formatCurrency(product.price) === formatCurrency(product.discountPrice) ? (
                       <span
                         className="mt-1 text-sm text-red-600 max-h-10"
-                        style={{
-                          animation: "blink 1s linear infinite",
-                        }}
                       >
                         <b>{formatCurrency(product.price)}</b>
                       </span>
@@ -381,26 +378,14 @@ function Product() {
                         </span>{" "}
                         <span
                           className="mt-1 text-sm text-red-600 max-h-10"
-                          style={{
-                            animation: "blink 1s linear infinite",
-                          }}
                         >
                           <b>{formatCurrency(product.discountPrice)}</b>
                         </span>
                       </>
                     )}
-
-                    <style>
-                      {
-                        `@keyframes blink {
-                        0 %, 100 % { opacity: 1; }
-                  50% {opacity: 0; }
-                }`
-                      }
-                    </style>
                     <br/>
                     {/* Số lượng đã bán và còn lại */}
-                    <span className="mt-1 text-xs text-gray-400">Đã bán: {product.quantitySold}</span><br/>
+                    <span className="mt-1 text-xs text-gray-400">Đã bán: {product.quantitySold} | </span>
                     <span className="mt-1 text-xs text-gray-400">
                       Còn:{" "}
                       {product.quantityAvailable === 0 ? (
@@ -409,7 +394,7 @@ function Product() {
                         <span
                           className={product.quantityAvailable < 10 ? "text-red-600" : "text-gray-400"}
                         >
-                          {product.quantityAvailable} sản phẩm
+                          {product.quantityAvailable}
                         </span>
                       )}
                     </span>

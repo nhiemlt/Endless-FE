@@ -17,7 +17,7 @@ function ProductVersionAttributesModal({ version, onClose }) {
             <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
                 <h2 className="text-2xl font-semibold text-center text-gray-800 mb-4">Chi tiết sản phẩm</h2>
 
-                <h3 className="font-bold">Version Name: {version.versionName}</h3>
+                <h3 className="font-bold">Tên phiên bản: {version.versionName}</h3>
                 <hr></hr>
                 <h4 className="mt-2">Thuộc tính:</h4>
                 <table className="table table-sm w-full mt-2">

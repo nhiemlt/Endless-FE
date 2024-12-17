@@ -20,7 +20,7 @@ const UpdateEmployeeModal = ({
   });
   const [avatar, setAvatar] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState("");
-  const [isLoading, setIsLoading] = useState(false); 
+  const [isLoading, setIsLoading] = useState(false);
   const defaultAvatar = "https://example.com/default-avatar.png";
 
   useEffect(() => {
@@ -100,9 +100,8 @@ const UpdateEmployeeModal = ({
     } catch (error) {
       dispatch(
         showNotification({
-          message: `Cập nhật nhân viên thất bại: ${
-            error.response?.data?.message || "Lỗi không xác định"
-          }`,
+          message: `Cập nhật nhân viên thất bại: ${error.response?.data?.message || "Lỗi không xác định"
+            }`,
           status: 0,
         })
       );

@@ -135,6 +135,7 @@ function Vouchers() {
                                             <PencilIcon
                                                 className="w-5 cursor-pointer text-green-600"
                                                 onClick={() => handleEdit(voucher)}
+                                                title="Chỉnh sửa"
                                             />
                                         </td>
                                     </tr>

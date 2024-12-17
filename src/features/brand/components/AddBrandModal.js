@@ -47,7 +47,7 @@ const AddBrandModal = ({ onClose, onBrandAdded }) => {
             console.log("Data gửi lên API:", newBrand);
 
             onBrandAdded(createdBrand);
-            dispatch(showNotification({ message: 'Brand Created Successfully!', status: 1 }));
+            dispatch(showNotification({ message: 'Tạo thương hiệu thành công!', status: 1 }));
             resetForm();
             onClose();
         } catch (error) {

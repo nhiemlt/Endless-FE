@@ -340,10 +340,10 @@ const Home = ({ categoryID }) => {
               <h1 className="text-lg font-bold">Sản phẩm bán chạy</h1>
               <a href="/products" className="text-primary">Tất cả sản phẩm</a>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5 mt-3">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5 mt-3 dark:bg-base-200">
               {Array.isArray(products) && products.length > 0 ? (
                 products.map((product) => (
-                  <div key={product.productVersionID} className="group relative block overflow-hidden">
+                  <div key={product.productVersionID} className="group relative block overflow-hidden h-96">
                     <img
                       src={product.image}
                       className="h-30 w-full object-cover transition duration-500 group-hover:scale-105"
@@ -356,7 +356,7 @@ const Home = ({ categoryID }) => {
                         - {product.discountPercentage}%
                       </p>
                     )}
-                    <div className="relative bg-blue-50 dark:bg-base-200 p-4">
+                    <div className="relative border border-gray-100 dark:border-gray-800 bg-blue-50 dark:bg-base-200 p-4">
                       <p className="mt-1 text-sm text-gray-900 h-8 dark:text-white overflow-hidden text-ellipsis whitespace-nowrap transform scale-95">
                         <b>{product.product.name} | {product.versionName}</b>
                       </p>
@@ -386,9 +386,6 @@ const Home = ({ categoryID }) => {
                       {formatCurrency(product.price) === formatCurrency(product.discountPrice) ? (
                         <span
                           className="mt-1 text-sm text-red-600"
-                          style={{
-                            animation: "blink 1s linear infinite",
-                          }}
                         >
                           <b>{formatCurrency(product.price)}</b>
                         </span>
@@ -399,22 +396,12 @@ const Home = ({ categoryID }) => {
                           </span>{" "}
                           <span
                             className="mt-1 text-sm text-red-600"
-                            style={{
-                              animation: "blink 1s linear infinite",
-                            }}
                           >
                             <b>{formatCurrency(product.discountPrice)}</b>
-                            <br />
                           </span>
                         </>
                       )}
-
-                      <style>
-                        {`@keyframes blink {
-                  0%, 100% { opacity: 1; }
-                  50% { opacity: 0; }}`}
-                      </style>
-                      <br />
+                      <br/>
                       <span className="mt-1 text-xs text-gray-400">Đã bán: {product.quantitySold} | </span>
                       <span className="mt-1 text-xs text-gray-400">
                         Còn:{" "}
