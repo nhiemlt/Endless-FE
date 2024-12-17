@@ -84,8 +84,7 @@ function TopSellByCategory() {
             const result = await CartService.addToCart(cartModel); // Gọi API thêm sản phẩm vào giỏ hàng
             dispatch(showNotification({ message: "Sản phẩm đã được thêm vào giỏ hàng.", status: 1 })); // Hiển thị thông báo thành công
         } catch (error) {
-            dispatch(showNotification({ message: "Lỗi khi thêm vào giỏ hàng.", status: 0 })); // Hiển thị thông báo lỗi
-            console.error("Lỗi khi thêm vào giỏ hàng:", error); // In lỗi nếu có
+            dispatch(showNotification({ message: error.message || "Lỗi khi thêm vào giỏ hàng.", status: 0 })); // Hiển thị thông báo lỗi
         }
     };
 
