@@ -203,7 +203,7 @@ function Login() {
                                 defaultValue={loginObj.emailId}
                                 updateType="emailId"
                                 containerStyle="mt-4"
-                                labelTitle="Email"
+                                labelTitle="Tên đăng nhập hoặc email"
                                 updateFormValue={updateFormValue}
                             />
 

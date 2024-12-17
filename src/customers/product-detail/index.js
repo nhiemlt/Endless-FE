@@ -310,7 +310,7 @@ function ProductDetail() {
                       {/* Hiển thị ảnh đánh giá người dùng */}
                       <div className="flex space-x-2 mt-4">
                         {rating?.pictures && rating?.pictures.length > 0 ? (
-                          rating.pictures.map((pic, index) => (
+                          rating?.pictures.map((pic, index) => (
                             <img
                               key={index}
                               src={pic.picture}

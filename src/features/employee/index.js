@@ -301,14 +301,14 @@ function Staff() {
       <AddEmployeeModal
         showModal={showModal}
         closeModal={() => setShowModal(false)}
-        fetchStaffs={fetchStaffs}
+        fetchEmployees={fetchStaffs}
       />
 
       <UpdateStaffModal
         showModal={showUpdateModal}
         closeModal={handleUpdateModalClose}
-        staff={staffDetails}
-        fetchStaffs={fetchStaffs}
+        employee={staffDetails}
+        fetchEmployees={fetchStaffs}
       />
 
       <ConfirmDeleteModal

@@ -10,6 +10,11 @@ const RoleService = {
     return response.data;
   },
 
+  getAll: async () => {
+    const response = await axios.get(`${constants.API_BASE_URL}/api/roles/get-all`);
+    return response.data;
+  },
+
   // Lấy role theo ID và kèm danh sách permissions
   getRoleById: async (roleId) => {
     const response = await axios.get(`${constants.API_BASE_URL}/api/roles/${roleId}`);
