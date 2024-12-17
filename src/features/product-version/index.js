@@ -326,7 +326,8 @@ function ProductVersionPage() {
                   <td>
                     <button
                       className="btn btn-sm btn-outline btn-primary border-0"
-                      onClick={() => handleViewAttributes(version)}>
+                      onClick={() => handleViewAttributes(version)}
+                      title='Xem thuộc tính'>
                       <EyeIcon className="h-4 w-4" />
                     </button>
                   </td>
@@ -354,14 +355,26 @@ function ProductVersionPage() {
                   <td>
                     <button
                       key={`edit-${version.productVersionID}`}
-                      className="btn btn-sm btn-outline btn-primary border-0"
+                      className="btn btn-sm btn-outline btn-primary border-0 group relative"
                       onClick={() => handleEditProductVersion(version)} // Mở modal khi nhấn nút
                     >
                       <PencilIcon className="h-4 w-4" />
+                      <span className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-gray-700 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
+                        Chỉnh sửa phiên bản
+                      </span>
                     </button>
-                    <button onClick={() => handleDeleteProductVersion(version.productVersionID)} key={`delete-${version.productVersionID}`} className="btn btn-sm btn-outline btn-error border-0">
+
+                    <button
+                      onClick={() => handleDeleteProductVersion(version.productVersionID)}
+                      key={`delete-${version.productVersionID}`}
+                      className="btn btn-sm btn-outline btn-error border-0 group relative"
+                    >
                       <TrashIcon className="h-4 w-4" />
+                      <span className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-gray-700 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
+                        Xóa phiên bản
+                      </span>
                     </button>
+
                   </td>
 
                 </tr>

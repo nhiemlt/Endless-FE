@@ -133,7 +133,7 @@ const EditProductModal = ({ product, onClose, onProductUpdated }) => {
                                     />
                                 </div>
                             </div>
-                            <label>Mô tả</label>
+                            <label className='font-semibold'>Mô tả</label>
                             <textarea
                                 placeholder="Nhập mô tả sản phẩm"
                                 value={description}

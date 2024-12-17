@@ -125,18 +125,36 @@ function CategoryPage() {
                     <td className="text-center">{cat.name}</td>
                     <td className="text-center">
                       <div className="flex justify-center space-x-2">
-                        <PencilIcon
-                          className="w-5 h-5 cursor-pointer text-info"
-                          onClick={() => {
-                            setEditCategory(cat);
-                            setShowEditModal(true);
-                          }}
-                        />
-                        <TrashIcon
-                          className="w-5 h-5 cursor-pointer text-error"
-                          onClick={() => handleDelete(cat.categoryID)}
-                        />
+                        {/* Nút chỉnh sửa */}
+                        <div className="relative group">
+                          <button
+                            onClick={() => {
+                              setEditCategory(cat);
+                              setShowEditModal(true);
+                            }}
+                            className="btn btn-sm btn-outline btn-primary border-0"
+                          >
+                            <PencilIcon className="w-5 h-5 " />
+                          </button>
+                          <span className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-gray-700 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
+                            Chỉnh sửa danh mục
+                          </span>
+                        </div>
+
+                        {/* Nút xóa */}
+                        <div className="relative group">
+                          <button
+                            onClick={() => handleDelete(cat.categoryID)}
+                            className="btn btn-sm btn-outline btn-error border-0"
+                          >
+                            <TrashIcon className="w-5 h-5" />
+                          </button>
+                          <span className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-gray-700 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
+                            Xóa danh mục
+                          </span>
+                        </div>
                       </div>
+
                     </td>
                   </tr>
                 ))

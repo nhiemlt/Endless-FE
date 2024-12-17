@@ -274,7 +274,7 @@ function PromotionList() {
                         <td>{moment(promotion.createDate).format("DD/MM/YYYY")}</td>
                         <td>
                           <button
-                            className="text-blue-600 hover:underline"
+                            className="btn btn-sm btn-outline btn-primary border-0"
                             onClick={() => handleOpenModal(promotion)}
                           >
                             <EyeIcon className="h-4 w-4" />
@@ -284,15 +284,37 @@ function PromotionList() {
 
                         <td>
                           <div className="flex space-x-2">
-                            <PencilIcon
-                              onClick={() => openEditPromotionModal(promotion)}
-                              className="w-4 h-4 cursor-pointer text-info"
-                            />
-                            <TrashIcon
-                              onClick={() => handleDeleteClick(promotion.promotionID)}
-                              className="w-4 h-4 cursor-pointer text-error"
-                            />
+                            {/* Nút chỉnh sửa */}
+                            <div className="relative group">
+                              <button
+                                className="btn btn-sm btn-outline btn-primary border-0"
+                              >
+                                <PencilIcon
+                                  onClick={() => openEditPromotionModal(promotion)}
+                                  className="w-4 h-4"
+                                />
+                              </button>
+                              <span className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-gray-700 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
+                                Chỉnh sửa khuyến mãi
+                              </span>
+                            </div>
+
+                            {/* Nút xóa */}
+                            <div className="relative group">
+                              <button
+                                className="btn btn-sm btn-outline btn-error border-0"
+                              >
+                                <TrashIcon
+                                  onClick={() => handleDeleteClick(promotion.promotionID)}
+                                  className="w-4 h-4"
+                                />
+                              </button>
+                              <span className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-gray-700 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
+                                Xóa khuyến mãi
+                              </span>
+                            </div>
                           </div>
+
                         </td>
 
                       </tr>
