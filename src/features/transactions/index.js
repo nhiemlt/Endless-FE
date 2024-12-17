@@ -281,17 +281,27 @@ function Transactions () {
                       <EyeIcon
                         className='w-5 cursor-pointer text-yellow-600'
                         onClick={() => handleViewDetails(order)}
+                        title='Xem chi tiết' // Tooltip cho icon này
                       />
                       {order.status === 'Chờ xác nhận' && (
-                        <CheckIcon
-                          className='w-5 cursor-pointer text-green-700'
-                          onClick={() => handleConfirmOrder(order)}
-                        />
+                        <div className='flex items-center gap-2'>
+                          <CheckIcon
+                            className='w-5 cursor-pointer text-green-700'
+                            onClick={() => handleConfirmOrder(order)}
+                            title='Xác nhận đơn hàng' // Tooltip cho icon này
+                          />
+                          <XCircleIcon
+                            className='w-5 cursor-pointer text-red-600 hover:text-red-700'
+                            onClick={() => handleCancelOrderPain(order)}
+                            title='Hủy đơn hàng' // Tooltip cho icon này
+                          />
+                        </div>
                       )}
                       {order.status === 'Đã xác nhận' && (
                         <TruckIcon
                           className='w-5 cursor-pointer text-blue-800'
                           onClick={() => handleMarkOrderAsShipping(order)}
+                          title='Đánh dấu đã giao hàng' // Tooltip cho icon này
                         />
                       )}
                       {order.status === 'Đã thanh toán' && (
@@ -299,10 +309,12 @@ function Transactions () {
                           <TruckIcon
                             className='w-5 cursor-pointer text-blue-800'
                             onClick={() => handleMarkOrderAsShipping(order)}
+                            title='Đánh dấu đã giao hàng' // Tooltip cho icon này
                           />
                           <XCircleIcon
                             className='w-5 cursor-pointer text-red-600 hover:text-red-700'
                             onClick={() => handleCancelOrderPain(order)}
+                            title='Hủy đơn hàng' // Tooltip cho icon này
                           />
                         </div>
                       )}
@@ -373,8 +385,6 @@ function Transactions () {
               </button>
             )}
 
-            
-
             {/* Nút chuyển đến trang sau */}
             <button
               className='join-item btn'
@@ -399,146 +409,155 @@ function Transactions () {
       {/* Modal hiển thị chi tiết đơn hàng */}
       {isModalOpen && selectedOrder && (
         <div className='modal modal-open'>
-  <div className='modal-box max-w-4xl bg-white dark:bg-gray-800'>
-    <h2 className='text-lg font-bold mb-4 bg-green-200 dark:bg-gray-700 p-2 rounded'>
-      Chi tiết đơn hàng
-    </h2>
-    <p className='mb-2 text-gray-800 dark:text-gray-200'>
-      <strong>Mã đơn hàng:</strong> {selectedOrder.orderID}
-    </p>
-    <div className='grid grid-cols-2 gap-4 mb-4'>
-      <div className='p-4 bg-white shadow rounded dark:bg-gray-700'>
-        <p className='text-gray-800 dark:text-gray-200'>
-          <strong>Khách hàng:</strong> {selectedOrder.customer.fullname}
-        </p>
-        <p className='text-gray-800 dark:text-gray-200'>
-          <strong>Số điện thoại:</strong>{' '}
-          {selectedOrder.orderPhone || 'Chưa cập nhật'}
-        </p>
-      </div>
-      <div className='p-4 bg-white shadow rounded dark:bg-gray-700'>
-        <p className='text-gray-800 dark:text-gray-200'>
-          <strong>Phí sản phẩm:</strong>{' '}
-          {selectedOrder?.totalProductPrice
-            ? selectedOrder.totalProductPrice.toLocaleString('vi-VN', {
-                style: 'currency',
-                currency: 'VND',
-              })
-            : 'Không sử dụng'}
-        </p>
-        <p className='text-gray-800 dark:text-gray-200'>
-          <strong>Phí giao hàng:</strong>{' '}
-          {selectedOrder?.shipFee
-            ? selectedOrder.shipFee.toLocaleString('vi-VN', {
-                style: 'currency',
-                currency: 'VND',
-              })
-            : 'Không sử dụng'}
-        </p>
-      </div>
-      <div className='p-4 bg-white shadow rounded dark:bg-gray-700'>
-        <p className='text-gray-800 dark:text-gray-200'>
-          <strong>Mã giảm giá:</strong>{' '}
-          {selectedOrder?.voucher || 'Không sử dụng'}
-        </p>
-        <p className='text-gray-800 dark:text-gray-200'>
-          <strong>Số tiền giảm:</strong>{' '}
-          {selectedOrder?.voucherDiscount
-            ? selectedOrder.voucherDiscount.toLocaleString('vi-VN', {
-                style: 'currency',
-                currency: 'VND',
-              })
-            : 'Không sử dụng'}
-        </p>
-      </div>
-      <div className='p-4 bg-white shadow rounded dark:bg-gray-700'>
-        <p className='text-gray-800 dark:text-gray-200'>
-          <strong>Tổng số tiền:</strong>{' '}
-          {selectedOrder?.money
-            ? selectedOrder.money.toLocaleString('vi-VN', {
-                style: 'currency',
-                currency: 'VND',
-              })
-            : 'Không sử dụng'}
-        </p>
-        <p className='text-gray-800 dark:text-gray-200'>
-          <strong>Thành tiền:</strong>{' '}
-          {selectedOrder?.totalMoney
-            ? selectedOrder.totalMoney.toLocaleString('vi-VN', {
-                style: 'currency',
-                currency: 'VND',
-              })
-            : 'Không sử dụng'}
-        </p>
-      </div>
-    </div>
-    <p className='mb-2 text-gray-800 dark:text-gray-200'>
-      <strong>Địa chỉ giao hàng:</strong>{' '}
-      {selectedOrder.orderAddress || 'Chưa cập nhật'}
-    </p>
-    <table className='table-auto w-full mt-4'>
-      <thead>
-        <tr className='bg-gray-100 dark:bg-gray-700'>
-          <th className='p-2 text-gray-800 dark:text-gray-200'>Sản phẩm</th>
-          <th className='p-2 text-gray-800 dark:text-gray-200'>Phiên bản</th>
-          <th className='p-2 text-gray-800 dark:text-gray-200'>Số lượng</th>
-          <th className='p-2 text-gray-800 dark:text-gray-200'>Giá gốc</th>
-          <th className='p-2 text-gray-800 dark:text-gray-200'>Giá khuyến mãi</th>
-          <th className='p-2 text-gray-800 dark:text-gray-200'>Tổng</th>
-        </tr>
-      </thead>
-      <tbody>
-        {selectedOrder?.orderDetails?.map((detail) => (
-          <tr
-            key={detail?.orderDetailID}
-            className='hover:bg-gray-50 dark:hover:bg-gray-600'
-          >
-            <td className='text-center p-2 text-gray-800 dark:text-gray-200'>
-              {detail?.productName}
-            </td>
-            <td className='text-center p-2 text-gray-800 dark:text-gray-200'>
-              {detail?.productVersionName}
-            </td>
-            <td className='text-center p-2 text-gray-800 dark:text-gray-200'>
-              {detail?.quantity}
-            </td>
-            <td className='text-center p-2 text-gray-800 dark:text-gray-200'>
-              {detail?.price.toLocaleString('vi-VN', {
-                style: 'currency',
-                currency: 'VND',
-              })}
-            </td>
-            <td className='text-center p-2 text-gray-800 dark:text-gray-200'>
-              {detail?.discountPrice.toLocaleString('vi-VN', {
-                style: 'currency',
-                currency: 'VND',
-              })}
-            </td>
-            <td className='text-center p-2 text-gray-800 dark:text-gray-200'>
-              {(detail?.discountPrice > 0
-                ? detail?.discountPrice * detail.quantity
-                : detail?.price * detail.quantity
-              ).toLocaleString('vi-VN', {
-                style: 'currency',
-                currency: 'VND',
-              })}
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+          <div className='modal-box max-w-4xl bg-white dark:bg-gray-800'>
+            <h2 className='text-lg font-bold mb-4 bg-green-200 dark:bg-gray-700 p-2 rounded'>
+              Chi tiết đơn hàng
+            </h2>
+            <p className='mb-2 text-gray-800 dark:text-gray-200'>
+              <strong>Mã đơn hàng:</strong> {selectedOrder.orderID}
+            </p>
+            <div className='grid grid-cols-2 gap-4 mb-4'>
+              <div className='p-4 bg-white shadow rounded dark:bg-gray-700'>
+                <p className='text-gray-800 dark:text-gray-200'>
+                  <strong>Khách hàng:</strong> {selectedOrder.customer.fullname}
+                </p>
+                <p className='text-gray-800 dark:text-gray-200'>
+                  <strong>Số điện thoại:</strong>{' '}
+                  {selectedOrder.orderPhone || 'Chưa cập nhật'}
+                </p>
+              </div>
+              <div className='p-4 bg-white shadow rounded dark:bg-gray-700'>
+                <p className='text-gray-800 dark:text-gray-200'>
+                  <strong>Phí sản phẩm:</strong>{' '}
+                  {selectedOrder?.totalProductPrice
+                    ? selectedOrder.totalProductPrice.toLocaleString('vi-VN', {
+                        style: 'currency',
+                        currency: 'VND'
+                      })
+                    : 'Không sử dụng'}
+                </p>
+                <p className='text-gray-800 dark:text-gray-200'>
+                  <strong>Phí giao hàng:</strong>{' '}
+                  {selectedOrder?.shipFee
+                    ? selectedOrder.shipFee.toLocaleString('vi-VN', {
+                        style: 'currency',
+                        currency: 'VND'
+                      })
+                    : 'Không sử dụng'}
+                </p>
+              </div>
+              <div className='p-4 bg-white shadow rounded dark:bg-gray-700'>
+                <p className='text-gray-800 dark:text-gray-200'>
+                  <strong>Mã giảm giá:</strong>{' '}
+                  {selectedOrder?.voucher || 'Không sử dụng'}
+                </p>
+                <p className='text-gray-800 dark:text-gray-200'>
+                  <strong>Số tiền giảm:</strong>{' '}
+                  {selectedOrder?.voucherDiscount
+                    ? selectedOrder.voucherDiscount.toLocaleString('vi-VN', {
+                        style: 'currency',
+                        currency: 'VND'
+                      })
+                    : 'Không sử dụng'}
+                </p>
+              </div>
+              <div className='p-4 bg-white shadow rounded dark:bg-gray-700'>
+                <p className='text-gray-800 dark:text-gray-200'>
+                  <strong>Tổng số tiền:</strong>{' '}
+                  {selectedOrder?.money
+                    ? selectedOrder.money.toLocaleString('vi-VN', {
+                        style: 'currency',
+                        currency: 'VND'
+                      })
+                    : 'Không sử dụng'}
+                </p>
+                <p className='text-gray-800 dark:text-gray-200'>
+                  <strong>Thành tiền:</strong>{' '}
+                  {selectedOrder?.totalMoney
+                    ? selectedOrder.totalMoney.toLocaleString('vi-VN', {
+                        style: 'currency',
+                        currency: 'VND'
+                      })
+                    : 'Không sử dụng'}
+                </p>
+              </div>
+            </div>
+            <p className='mb-2 text-gray-800 dark:text-gray-200'>
+              <strong>Địa chỉ giao hàng:</strong>{' '}
+              {selectedOrder.orderAddress || 'Chưa cập nhật'}
+            </p>
+            <table className='table-auto w-full mt-4'>
+              <thead>
+                <tr className='bg-gray-100 dark:bg-gray-700'>
+                  <th className='p-2 text-gray-800 dark:text-gray-200'>
+                    Sản phẩm
+                  </th>
+                  <th className='p-2 text-gray-800 dark:text-gray-200'>
+                    Phiên bản
+                  </th>
+                  <th className='p-2 text-gray-800 dark:text-gray-200'>
+                    Số lượng
+                  </th>
+                  <th className='p-2 text-gray-800 dark:text-gray-200'>
+                    Giá gốc
+                  </th>
+                  <th className='p-2 text-gray-800 dark:text-gray-200'>
+                    Giá khuyến mãi
+                  </th>
+                  <th className='p-2 text-gray-800 dark:text-gray-200'>Tổng</th>
+                </tr>
+              </thead>
+              <tbody>
+                {selectedOrder?.orderDetails?.map(detail => (
+                  <tr
+                    key={detail?.orderDetailID}
+                    className='hover:bg-gray-50 dark:hover:bg-gray-600'
+                  >
+                    <td className='text-center p-2 text-gray-800 dark:text-gray-200'>
+                      {detail?.productName}
+                    </td>
+                    <td className='text-center p-2 text-gray-800 dark:text-gray-200'>
+                      {detail?.productVersionName}
+                    </td>
+                    <td className='text-center p-2 text-gray-800 dark:text-gray-200'>
+                      {detail?.quantity}
+                    </td>
+                    <td className='text-center p-2 text-gray-800 dark:text-gray-200'>
+                      {detail?.price.toLocaleString('vi-VN', {
+                        style: 'currency',
+                        currency: 'VND'
+                      })}
+                    </td>
+                    <td className='text-center p-2 text-gray-800 dark:text-gray-200'>
+                      {detail?.discountPrice.toLocaleString('vi-VN', {
+                        style: 'currency',
+                        currency: 'VND'
+                      })}
+                    </td>
+                    <td className='text-center p-2 text-gray-800 dark:text-gray-200'>
+                      {(detail?.discountPrice > 0
+                        ? detail?.discountPrice * detail.quantity
+                        : detail?.price * detail.quantity
+                      ).toLocaleString('vi-VN', {
+                        style: 'currency',
+                        currency: 'VND'
+                      })}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
 
-    <div className='modal-action mt-4'>
-      <button
-        className='btn btn-primary'
-        onClick={() => setIsModalOpen(false)}
-      >
-        Đóng
-      </button>
-    </div>
-  </div>
-</div>
-
+            <div className='modal-action mt-4'>
+              <button
+                className='btn btn-primary'
+                onClick={() => setIsModalOpen(false)}
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
       )}
       {/* Modal xác nhận */}
       {isConfirmModalOpen && (

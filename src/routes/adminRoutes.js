@@ -1,7 +1,6 @@
 // adminRoutes.js
 import { lazy } from 'react';
 
-const Dashboard = lazy(() => import('../pages/protected/Dashboard'));
 const Welcome = lazy(() => import('../pages/protected/Welcome'));
 const Attribute = lazy(() => import('../pages/protected/Attribute'));
 const Brand = lazy(() => import('../pages/protected/Brand'));
@@ -13,7 +12,6 @@ const ProductVersion = lazy(() => import('../pages/protected/ProductVersion'));
 const Promotion = lazy(() => import('../pages/protected/Promotion'));
 const Rating = lazy(() => import('../pages/protected/Rating'));
 const Role = lazy(() => import('../pages/protected/Role'));
-const StatisticalInventory = lazy(() => import('../pages/protected/StatisticalInventory'));
 const StatisticalProduct = lazy(() => import('../pages/protected/StatisticalProduct'));
 const StatisticalRevenue = lazy(() => import('../pages/protected/StatisticalRevenue'));
 const Voucher = lazy(() => import('../pages/protected/Voucher'));
@@ -27,7 +25,6 @@ const ProfileSettings = lazy(() => import('../pages/protected/ProfileSettings'))
 const ChangePassword = lazy(() => import('../pages/protected/ChangePassword'));
 
 const adminRoutes = [
-  { path: '/dashboard', component: Dashboard, role: 'admin' },
   { path: '/welcome', component: Welcome, role: 'admin' },
   { path: '/attribute', component: Attribute, role: 'admin' },
   { path: '/brand', component: Brand, role: 'admin' },
@@ -39,7 +36,6 @@ const adminRoutes = [
   { path: '/promotion', component: Promotion, role: 'admin' },
   { path: '/rating', component: Rating, role: 'admin' },
   { path: '/role', component: Role, role: 'admin' },
-  { path: '/statistical-inventory', component: StatisticalInventory, role: 'admin' },
   { path: '/statistical-product', component: StatisticalProduct, role: 'admin' },
   { path: '/statistical-revenue', component: StatisticalRevenue, role: 'admin' },
   { path: '/voucher', component: Voucher, role: 'admin' },

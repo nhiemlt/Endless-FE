@@ -49,9 +49,6 @@ function LeftSidebar() {
                         )
                     })
                 }
-                <li className="mt-4">
-                    <img className="w-50" src="/robo-welcome.png" alt="Description of the image" />
-                </li>
 
             </ul>
         </div>

@@ -28,11 +28,6 @@ const submenuIconClasses = `h-5 w-5`
 const routes = [
 
   {
-    path: '/app/dashboard',
-    icon: <Squares2X2Icon className={iconClasses} />,
-    name: 'BẢNG ĐIỀU KHIỂN',
-  },
-  {
     path: '', //no url needed as this has submenu
     icon: <InboxIcon className={`${iconClasses} inline`} />, // icon component
     name: 'Sản phẩm', // name that appear in Sidebar

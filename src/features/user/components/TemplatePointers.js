@@ -1,14 +1,23 @@
 function TemplatePointers() {
-    return(
-        <>
-         <h1 className="text-2xl mt-8 font-bold">Chào Mừng Đến Với Hệ Thống Quản Lý Thiết Bị Công Nghệ</h1>
-          <p className="py-2 mt-4">✓ Quản lý sản phẩm, đơn hàng, khách hàng hiệu quả</p>
-          <p className="py-2">✓ Giao diện thân thiện, hỗ trợ chế độ sáng/tối</p>
-          <p className="py-2">✓ Theo dõi doanh thu và báo cáo chi tiết</p>
-          <p className="py-2">✓ Tích hợp <span className="font-semibold">Redux Toolkit</span> và <span className="font-semibold">Tailwind CSS</span></p>
-          <p className="py-2  mb-4">Cảm ơn bạn đã lựa chọn hệ thống của chúng tôi!</p>
-        </>
-    )
-}
-
-export default TemplatePointers
+    return (
+      <div className="flex items-center justify-center min-h-svh bg-white dark:bg-gray-800">
+        <div className="bg-white dark:bg-gray-800  max-w-md w-full text-center pb-20">
+          <div className="flex justify-center mb-25">
+            <img
+              src="../intro.png" 
+              className="w-32 h-32"
+            />
+          </div>
+          <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-4">
+            Chào Mừng Quay Lại!
+          </h1>
+          <p className="text-lg text-gray-600 dark:text-gray-300 mb-6">
+            Chúng tôi rất vui khi bạn trở lại hệ thống. Hãy tiếp tục quản lý công việc và các giao dịch một cách hiệu quả.
+          </p>  
+        </div>
+      </div>
+    );
+  }
+  
+  export default TemplatePointers;
+  
