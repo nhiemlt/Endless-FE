@@ -22,8 +22,10 @@ const CartService = {
                 // Xử lý các lỗi dựa trên mã trạng thái HTTP
                 const status = error.response.status;
                 const errorMessage = error.response.data.message || error.message;
-
-                if (status === 404) {
+                if (status === 403) {
+                    window.location.href = '/login';
+                }
+                else if (status === 404) {
                     throw new Error("Người dùng không tìm thấy");
                 } else if (status === 400) {
                     // Có thể có hai loại lỗi 400: phiên bản sản phẩm không tìm thấy hoặc số lượng vượt quá tồn kho
@@ -34,7 +36,7 @@ const CartService = {
                     }
                 }
             }
-            throw new Error("Đã xảy ra lỗi không mong muốn: " + (error.message || "Không xác định"));
+            throw new Error((error.message || "Không xác định"));
         }
     },
 

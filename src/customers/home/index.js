@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useRef } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from 'react-router-dom';
 import { showNotification } from "../../features/common/headerSlice";
 import CheckIcon from '@heroicons/react/24/outline/CheckIcon';
@@ -87,13 +87,13 @@ const Home = ({ categoryID }) => {
     };
 
     try {
-      const result = await CartService.addToCart(cartModel); // Gọi API thêm sản phẩm vào giỏ hàng
-      dispatch(showNotification({ message: "Sản phẩm đã được thêm vào giỏ hàng.", status: 1 })); // Hiển thị thông báo thành công
+      await CartService.addToCart(cartModel); // Gọi API
+      dispatch(showNotification({ message: "Sản phẩm đã được thêm vào giỏ hàng.", status: 1 }));
     } catch (error) {
-      dispatch(showNotification({ message: "Lỗi khi thêm vào giỏ hàng.", status: 0 })); // Hiển thị thông báo lỗi
-      console.error("Lỗi khi thêm vào giỏ hàng:", error); // In lỗi nếu có
+      dispatch(showNotification({ message: error.message || "Lỗi khi thêm vào giỏ hàng.", status: 0 }));
     }
-  };
+  }
+
 
   // Hàm xử lý khi hình ảnh sản phẩm được chọn
   const handleImageClick = (product) => {
@@ -401,7 +401,7 @@ const Home = ({ categoryID }) => {
                           </span>
                         </>
                       )}
-                      <br/>
+                      <br />
                       <span className="mt-1 text-xs text-gray-400">Đã bán: {product.quantitySold} | </span>
                       <span className="mt-1 text-xs text-gray-400">
                         Còn:{" "}

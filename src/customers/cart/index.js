@@ -59,7 +59,7 @@ const Cart = () => {
     try {
       await CartService.updateCartQuantity(updatedProduct); // Lưu vào database
     } catch (error) {
-      dispatch(showNotification({ message: "Lỗi khi cập nhật số lượng", status: 0 }));
+      dispatch(showNotification({ message: error.message || "Lỗi khi cập nhật số lượng", status: 0 }));
       // Khôi phục lại số lượng gốc nếu có lỗi
       updatedProduct.quantity = originalQuantity;
       setProducts((prevProducts) =>
@@ -96,7 +96,7 @@ const Cart = () => {
       try {
         await CartService.updateCartQuantity(updatedProduct); // Lưu vào database
       } catch (error) {
-        dispatch(showNotification({ message: "Lỗi khi cập nhật số lượng", status: 0 }));
+        dispatch(showNotification({ message: error.message || "Lỗi khi cập nhật số lượng", status: 0 }));
         // Khôi phục lại số lượng gốc nếu có lỗi
         updatedProduct.quantity = originalQuantity;
         setProducts((prevProducts) =>
@@ -135,7 +135,7 @@ const Cart = () => {
     try {
       await CartService.updateCartQuantity(updatedProduct); // Lưu vào database
     } catch (error) {
-      dispatch(showNotification({ message: "Lỗi khi cập nhật số lượng", status: 0 }));
+      dispatch(showNotification({ message: error.message || "Lỗi khi cập nhật số lượng", status: 0 }));
       // Khôi phục lại số lượng gốc nếu có lỗi
       updatedProduct.quantity = originalQuantity;
       setProducts((prevProducts) =>
