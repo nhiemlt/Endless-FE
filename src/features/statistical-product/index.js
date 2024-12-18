@@ -1,126 +1,355 @@
-// import React, { useState, useEffect } from "react";
-// import Chart from "react-apexcharts";
-// import TitleCard from "../../components/Cards/TitleCard";
-// import ReportService from "../../services/ReportService";
+import React, { useState, useEffect } from "react";
+import TitleCard from "../../components/Cards/TitleCard";
+import StatisticsService from "../../services/StatisticsService";
+import { Bar, Doughnut } from "react-chartjs-2";
+import Datepicker from "react-tailwindcss-datepicker";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement,
+} from "chart.js";
 
-// const StatisticalOverview = () => {
-//   const [stockReports, setStockReports] = useState([]);
-//   const [chartData, setChartData] = useState({
-//     series: [
-//       { name: "Sales", data: [] },
-//       { name: "Revenue", data: [] },
-//     ],
-//     options: {
-//       chart: { type: "line", height: 400 },
-//       stroke: { curve: "smooth" },
-//       xaxis: { categories: [] },
-//       colors: ["#4CAF50", "#2196F3"],
-//     },
-//   });
-//   const [selectedRange, setSelectedRange] = useState("7 days");
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement
+);
 
-//   useEffect(() => {
-//     const fetchReports = async () => {
-//       try {
-//         const stockData = await ReportService.fetchStockReport(selectedRange);
-//         setStockReports(stockData);
+const StatisticalOverview = () => {
+  const [topSellingProducts, setTopSellingProducts] = useState([]);
+  const [categoryRevenue, setCategoryRevenue] = useState([]);
+  const [unsoldProducts, setUnsoldProducts] = useState([]);
+  const [totalImportAndSales, setTotalImportAndSales] = useState([]);
+  const [revenueDateRange, setRevenueDateRange] = useState({
+    startDate: new Date(),
+    endDate: new Date(),
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(5);
+  const [searchTerm, setSearchTerm] = useState("");
 
-//         // Prepare chart data based on fetched stock data
-//         const categories = stockData.map((report) => report.versionName);
-//         const salesData = stockData.map((report) => report.totalOrderQuantity);
-//         const revenueData = stockData.map((report) => report.totalEntryQuantity);
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
 
-//         setChartData((prev) => ({
-//           ...prev,
-//           series: [
-//             { name: "Sales", data: salesData },
-//             { name: "Revenue", data: revenueData },
-//           ],
-//           options: { ...prev.options, xaxis: { categories } },
-//         }));
-//       } catch (error) {
-//         console.error("Error fetching reports:", error);
-//       }
-//     };
+      const startDate =
+        revenueDateRange.startDate || new Date().toISOString().split("T")[0];
+      const endDate =
+        revenueDateRange.endDate || new Date().toISOString().split("T")[0];
 
-//     fetchReports();
-//   }, [selectedRange]);
+      const formattedStartDate = formatDate(startDate);
+      const formattedEndDate = formatDate(endDate);
 
-//   const handleRangeChange = (range) => {
-//     setSelectedRange(range);
-//   };
+      try {
+        const [
+          top5Products,
+          revenueByCategory,
+          unsoldProductList,
+          importAndSalesData,
+        ] = await Promise.all([
+          StatisticsService.getTop5BestSellingProducts(
+            formattedStartDate,
+            formattedEndDate
+          ),
+          StatisticsService.getRevenueByCategory(
+            formattedStartDate,
+            formattedEndDate
+          ),
+          StatisticsService.getUnsoldProducts(),
+          StatisticsService.getTotalImportAndSales(),
+        ]);
 
-//   return (
-//     <TitleCard title="Thống kê tổng quan" topMargin="mt-2">
-//       <div className="max-w-6xl w-full bg-white rounded-lg shadow dark:bg-gray-800 p-4 md:p-6">
-//         <div className="flex justify-between">
-//           <div>
-//             <h5 className="leading-none text-3xl font-bold text-gray-900 dark:text-white pb-2">$12,423</h5>
-//             <p className="text-base font-normal text-gray-500 dark:text-gray-400">Sales this week</p>
-//           </div>
-//           <div
-//             className="flex items-center px-2.5 py-0.5 text-base font-semibold text-green-500 dark:text-green-500 text-center">
-//             23%
-//             <svg
-//               className="w-3 h-3 ms-1"
-//               aria-hidden="true"
-//               xmlns="http://www.w3.org/2000/svg"
-//               fill="none"
-//               viewBox="0 0 10 14"
-//             >
-//               <path
-//                 stroke="currentColor"
-//                 strokeLinecap="round"
-//                 strokeLinejoin="round"
-//                 strokeWidth="2"
-//                 d="M5 13V1m0 0L1 5m4-4 4 4"
-//               />
-//             </svg>
-//           </div>
-//         </div>
-//         <div className="flex justify-between items-center mt-4">
-//           <select
-//             value={selectedRange}
-//             onChange={(e) => handleRangeChange(e.target.value)}
-//             className="p-2 border rounded-md text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700"
-//           >
-//             <option value="7 days">Last 7 days</option>
-//             <option value="1 month">Last 1 month</option>
-//             <option value="1 quarter">Last 1 quarter</option>
-//             <option value="1 year">Last 1 year</option>
-//           </select>
-//         </div>
-//         <div id="data-series-chart" className="mt-6">
-//           <Chart
-//             options={chartData.options}
-//             series={chartData.series}
-//             type="line"
-//             height={400}
-//           />
-//         </div>
-//       </div>
-//       <div className="p-6">
-//         <table className="w-full table-auto border-collapse border border-gray-200 shadow-md">
-//           <thead>
-//             <tr className="bg-gray-100">
-//               <th className="border border-gray-300 px-4 py-2">Tên Phiên Bản</th>
-//               <th className="border border-gray-300 px-4 py-2">Tổng Nhập</th>
-//               <th className="border border-gray-300 px-4 py-2">Tổng Bán</th>
-//             </tr>
-//           </thead>
-//           <tbody>
-//             {stockReports.map((report, index) => (
-//               <tr key={index} className="text-center">
-//                 <td className="border border-gray-300 px-4 py-2">{report.versionName}</td>
-//                 <td className="border border-gray-300 px-4 py-2">{report.totalEntryQuantity}</td>
-//                 <td className="border border-gray-300 px-4 py-2">{report.totalOrderQuantity}</td>
-//               </tr>
-//             ))}
-//           </tbody>
-//         </table>
-//       </div>
-//     </TitleCard>
-//   );
-// };
+        setTopSellingProducts(top5Products || []);
+        setCategoryRevenue(revenueByCategory || []);
+        setUnsoldProducts(unsoldProductList || []);
+        setTotalImportAndSales(importAndSalesData || []);
+      } catch (error) {
+        setError("Đã có lỗi xảy ra khi tải dữ liệu.");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-// export default StatisticalOverview;
+    fetchData();
+  }, [revenueDateRange]);
+
+  const formatDate = (date) => {
+    const d = new Date(date);
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const year = d.getFullYear();
+
+    return `${year}-${month}-${day}`;
+  };
+
+  const handleRevenueDateChange = (newValue) => {
+    setRevenueDateRange(newValue);
+  };
+
+  // Phân trang
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = totalImportAndSales
+    .filter((item) =>
+      item.productName.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .slice(indexOfFirstItem, indexOfLastItem);
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  // Biểu đồ Bar (Top 5 sản phẩm bán chạy nhất)
+  const barChartData = {
+    labels: topSellingProducts.map((product) => product.productName),
+    datasets: [
+      {
+        label: "Tổng nhập",
+        data: topSellingProducts.map((product) => product.totalImport),
+        backgroundColor: "#4BC0C0",
+      },
+      {
+        label: "Tổng bán",
+        data: topSellingProducts.map((product) => product.totalSales),
+        backgroundColor: "#FF5733",
+      },
+    ],
+  };
+
+  // Biểu đồ Doughnut (Doanh thu theo danh mục)
+  const doughnutChartData = {
+    labels: categoryRevenue.map((item) => item.categoryname),
+    datasets: [
+      {
+        data: categoryRevenue.map((item) => item.totalrevenue),
+        backgroundColor: [
+          "rgba(255, 99, 132, 0.8)",
+          "rgba(54, 162, 235, 0.8)",
+          "rgba(255, 206, 86, 0.8)",
+          "rgba(75, 192, 192, 0.8)",
+          "rgba(153, 102, 255, 0.8)",
+          "rgba(255, 159, 64, 0.8)",
+        ],
+      },
+    ],
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <span className="text-xl">Đang tải dữ liệu...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <span className="text-xl text-red-600">{error}</span>
+      </div>
+    );
+  }
+
+  // Tính số trang
+  const totalPages = Math.ceil(
+    totalImportAndSales.filter((item) =>
+      item.productName.toLowerCase().includes(searchTerm.toLowerCase())
+    ).length / itemsPerPage
+  );
+
+  return (
+    <div className="container mx-auto p-6">
+      <div className="flex items-center justify-between mb-6">
+        {/* <div className="flex items-center">
+          <label className="font-semibold text-gray-700 dark:text-gray-300">
+            Chọn ngày:
+          </label>
+          <Datepicker
+            displayFormat="DD/MM/YYYY"
+            placeholder="Thống kê doanh thu từ ngày...."
+            startWeekOn="mon"
+            value={revenueDateRange}
+            useRange={false}
+            onChange={handleRevenueDateChange}
+            showShortcuts={true}
+            configs={{
+              shortcuts: {
+                nowday: {
+                  text: "Hôm nay",
+                  period: { start: new Date(), end: new Date() },
+                },
+                daybefore: {
+                  text: "Hôm qua",
+                  period: {
+                    start: new Date(
+                      new Date().setDate(new Date().getDate() - 1)
+                    ),
+                    end: new Date(new Date().setDate(new Date().getDate() - 1)),
+                  },
+                },
+                last7Days: {
+                  text: "7 ngày trước",
+                  period: {
+                    start: new Date(
+                      new Date().setDate(new Date().getDate() - 6)
+                    ),
+                    end: new Date(),
+                  },
+                },
+                lastMonth: {
+                  text: "1 tháng trước",
+                  period: {
+                    start: new Date(
+                      new Date().setMonth(new Date().getMonth() - 1)
+                    ),
+                    end: new Date(new Date().setDate(new Date().getDate() - 1)),
+                  },
+                },
+              },
+            }}
+            disabledDates={[
+              { startDate: new Date(), endDate: new Date("2100-01-01") },
+            ]}
+            popoverDirection="down"
+            inputClassName="input input-bordered w-full pr-10 bg-white dark:bg-gray-700 dark:text-white"
+            i18n="vi"
+          />
+        </div> */}
+      </div>
+
+      {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <TitleCard title="Top 5 Sản phẩm theo Doanh thu">
+          <Bar data={barChartData} options={{ responsive: true }} />
+        </TitleCard>
+
+        <TitleCard title="Doanh thu theo danh mục">
+          <div className="w-64 h-64">
+            <Doughnut data={doughnutChartData} options={{ responsive: true }} />
+          </div>
+        </TitleCard>
+      </div> */}
+
+      <div className="mb-6">
+        <TitleCard title="Tất cả sản phẩm">
+          <input
+            type="text"
+            className="input input-bordered w-full lg:w-64 mt-2 lg:mt-0"
+            placeholder="Tìm kiếm sản phẩm..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <table className="table-auto w-full border-collapse">
+            <thead>
+              <tr>
+                <th className="border p-2">Ảnh</th>
+                <th className="border p-2">Tên sản phẩm</th>
+                <th className="border p-2">Tổng nhập</th>
+                <th className="border p-2">Tổng bán</th>
+                <th className="border p-2">Tổng doanh thu</th>
+              </tr>
+            </thead>
+            <tbody>
+              {currentItems.length > 0 ? (
+                currentItems.map((item, index) => (
+                  <tr key={index}>
+                    <td className="border p-2">
+                      <img
+                        src={
+                          item.productImage || "https://via.placeholder.com/150"
+                        } // Nếu không có ảnh, dùng ảnh mặc định
+                        alt={item.productName}
+                        className="w-24 h-24 object-cover rounded-md"
+                      />
+                    </td>
+                    <td className="border p-2">{`${item.productName} - ${item.productVersion}`}</td>
+                    <td className="border p-2">{item.totalImport}</td>
+                    <td className="border p-2">{item.totalSales}</td>
+                    <td className="border p-2">{item.totalRevenue}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="5" className="text-center p-2">
+                    Không có dữ liệu
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+
+          {/* Phân trang */}
+          <div className="flex justify-center mt-6">
+            {/* Nút "Previous" */}
+            <button
+              className="btn btn-primary mx-2 px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1}
+            >
+              <span className="font-semibold">Previous</span>
+            </button>
+
+            {/* Hiển thị số trang */}
+            <div className="flex items-center space-x-2">
+              <span className="text-lg font-medium">
+                Trang {currentPage} của {totalPages}
+              </span>
+            </div>
+
+            {/* Nút "Next" */}
+            <button
+              className="btn btn-primary mx-2 px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+              onClick={() =>
+                setCurrentPage(Math.min(totalPages, currentPage + 1))
+              }
+              disabled={currentPage === totalPages}
+            >
+              <span className="font-semibold">Next</span>
+            </button>
+          </div>
+        </TitleCard>
+      </div>
+
+      <div className="mb-6">
+        <TitleCard title="Sản phẩm chưa bán">
+          <table className="table-auto w-full border-collapse">
+            <thead>
+              <tr>
+                <th className="border p-2">Tên sản phẩm</th>
+              </tr>
+            </thead>
+            <tbody>
+              {unsoldProducts && unsoldProducts.length > 0 ? (
+                unsoldProducts.map((item, index) => (
+                  <tr key={index}>
+                    <td className="border p-2">
+                      {`${item.productName} - ${item.productVersion}`}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="1" className="text-center p-2">
+                    Không có dữ liệu
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </TitleCard>
+      </div>
+    </div>
+  );
+};
+
+export default StatisticalOverview;
