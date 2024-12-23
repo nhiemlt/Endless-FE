@@ -428,8 +428,8 @@ function PurchaseHistory() {
 
               {order.status === "Đã giao hàng" &&
                 !order.orderDetails.every((detail) => detail.rated) && (
-                  <p className="text-yellow-500 text-sm mt-2 font-medium animate-pulse">
-                    Bạn có sản phẩm chưa đánh giá kìa
+                  <p className="text-warning text-sm mt-2 font-medium animate-pulse">
+                    Bạn có sản phẩm chưa đánh giá trong đơn hàng này
                   </p>
                 )}
 

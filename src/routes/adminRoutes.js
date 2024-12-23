@@ -17,7 +17,6 @@ const StatisticalRevenue = lazy(() => import('../pages/protected/StatisticalReve
 const Voucher = lazy(() => import('../pages/protected/Voucher'));
 const Customer = lazy(() => import('../pages/protected/Customer'));
 const Employee = lazy(() => import('../pages/protected/Employee'));
-const Leads = lazy(() => import('../pages/protected/Leads'));
 const Team = lazy(() => import('../pages/protected/Team'));
 const Calendar = lazy(() => import('../pages/protected/Calendar'));
 const Transactions = lazy(() => import('../pages/protected/Transactions'));
@@ -41,7 +40,6 @@ const adminRoutes = [
   { path: '/voucher', component: Voucher, role: 'admin' },
   { path: '/customer', component: Customer, role: 'admin' },
   { path: '/employee', component: Employee, role: 'admin' },
-  { path: '/leads', component: Leads, role: 'admin' },
   { path: '/settings-team', component: Team, role: 'admin' },
   { path: '/calendar', component: Calendar, role: 'admin' },
   { path: '/transactions', component: Transactions, role: 'admin' },

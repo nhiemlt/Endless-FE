@@ -9,7 +9,7 @@ function Footer() {
                 <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
                     <div>
                         <div className="flex justify-center text-teal-600 sm:justify-start">
-                            <img className="w-60" src="./logo-theme.png"></img>
+                            <img className="w-32" src="https://firebasestorage.googleapis.com/v0/b/endlesstechstoreecommerce.appspot.com/o/sources%2Flogo.png?alt=media&token=1f4b928e-9eee-42ff-b561-7fc62dfa7645"></img>
                         </div>
 
                         <p className="max-w-md text-center leading-relaxed sm:max-w-xs sm:text-left">

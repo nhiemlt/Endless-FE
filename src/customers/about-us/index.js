@@ -1,8 +1,12 @@
-import { useState, useRef } from "react";
-import { Link } from "react-router-dom";
+import { useEffect } from "react";
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
 
 function AboutUs() {
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+  
   return (
     <div className="bg-base-200 min-h-screen py-12">
       <div className="bg-white dark:bg-gray-800 rounded-lg">

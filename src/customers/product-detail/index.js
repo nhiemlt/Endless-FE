@@ -15,16 +15,20 @@ function ProductDetail() {
   const [selectedProductVersionID, setSelectedProductVersionID] = useState(null);
   const [ratings, setRatings] = useState([]);  // State to store all the ratings
   const [selectedTab, setSelectedTab] = useState("all"); // Default to 5 stars tab
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  
   useEffect(() => {
     if (productID) {
-      // Lấy thông tin sản phẩm theo ID
       productInfoService
         .getProductById(productID)
         .then((data) => {
           console.log(data);
           setProduct(data); // Lưu dữ liệu sản phẩm
 
-          // Nếu có các phiên bản sản phẩm
           if (data.productVersionDTOs && data.productVersionDTOs.length > 0) {
             console.log('Sản phẩm đầu tiên', data.productVersionDTOs[0]);
             setSelectedProductVersion(data.productVersionDTOs[0]);
@@ -318,7 +322,7 @@ function ProductDetail() {
                             />
                           ))
                         ) : (
-                          <p className="text-sm text-gray-800 dark:text-gray-100">No images available</p>
+                          <></>
                         )}
                       </div>
                       <p className="text-sm mt-4 text-gray-800 dark:text-gray-100">{rating?.comment}</p>

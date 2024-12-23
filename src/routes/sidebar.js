@@ -83,11 +83,6 @@ const routes = [
         name: 'Thống kê xuất nhập', // name that appear in Sidebar
       },
       {
-        path: '/app/statistical-inventory', //url
-        icon: <ArchiveBoxIcon className={submenuIconClasses} />, // icon component
-        name: 'Thống kê kho', // name that appear in Sidebar
-      },
-      {
         path: '/app/rating', // url
         icon: <StarIcon className={iconClasses} />, // icon component
         name: 'Đánh giá', // name that appear in Sidebar

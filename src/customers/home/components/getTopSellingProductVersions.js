@@ -22,7 +22,7 @@ function TopSellingProducts() {
         <div>
             {/* Section 1: Product Image */}
             {products.length > 0 && (
-                <div className="bg-white dark:bg-base-100 overflow-hidden">
+                <div className="bg-white overflow-hidden">
                     <div className="container">
                         <div className="product-card">
                             <img

@@ -103,7 +103,7 @@ function Navbar() {
                         <li><Link to="/about-us">Về chúng tôi</Link></li>
                     </ul>
                 </div>
-                <Link to="/" className="btn btn-ghost text-xl"><img className="h-full" src="./logo-theme.png" alt="Logo" /></Link>
+                <Link to="/" className="btn btn-ghost text-xl"><img className="h-full" src="https://firebasestorage.googleapis.com/v0/b/endlesstechstoreecommerce.appspot.com/o/sources%2Flogo.png?alt=media&token=1f4b928e-9eee-42ff-b561-7fc62dfa7645" alt="Logo" /></Link>
             </div>
             <div className="navbar-center hidden lg:flex">
                 <ul className="menu menu-horizontal px-1">

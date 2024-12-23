@@ -11,7 +11,6 @@ const CustomerLayout = lazy(() => import('./containers/CustomerLayout'));
 const Login = lazy(() => import('./pages/Login'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const Register = lazy(() => import('./pages/Register'));
-const Documentation = lazy(() => import('./pages/Documentation'));
 
 initializeApp();
 
@@ -25,22 +24,13 @@ function App() {
   }, []);
 
 
-// useEffect(() => {
-//   // Tìm phần tử có id 'fpt_ai_livechat_display_container'
-//   const element = document.getElementById('fpt_ai_livechat_display_container');
-
-//   // Nếu phần tử tồn tại, xóa nó khỏi DOM
-//   if (element) {
-//     element.remove();
-//   }
-// }, []);
 
   useEffect(() => {
     const checkUserAuth = async () => {
       try {
         const authData = await checkAuth();
         setToken(authData.token);
-        setRole(authData.role || 'guest'); // Gán "guest" nếu role không tồn tại
+        setRole(authData.role || 'guest');
       } catch (error) {
         console.error("Error checking authentication:", error);
       } finally {
@@ -67,7 +57,6 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/documentation" element={<Documentation />} />
 
         {/* Chỉ admin mới vào được Layout */}
         <Route path="/app/*" element={role === 'admin' ? <Layout /> : <Navigate to={getRedirectPath()} replace />} />
